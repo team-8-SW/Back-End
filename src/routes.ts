@@ -1,8 +1,6 @@
-import express, { Express, Request, Response } from "express";
+import express, { Express, Request, Response } from 'express';
 
-function routes(app: Express) {
-  
-}
+// function routes(app: Express) { }
 
 const router = express.Router();
 import { User } from '../src/interfaces/user.js';
@@ -53,12 +51,11 @@ import { User } from '../src/interfaces/user.js';
  *                 $ref: '#/components/schemas/User'
  */
 router.get('/', (req: Request, res: Response) => {
-  const users: User[] = [
-    { id: '1', name: 'John Doe', email: 'john@example.com', createdAt: new Date() },
-    { id: '2', name: 'Jane Smith', email: 'jane@example.com', createdAt: new Date() }
-  ];
-  
-  res.json(users);
+	const users: User[] = [
+		{ id: '1', name: 'John Doe', email: 'john@example.com', createdAt: new Date() },
+		{ id: '2', name: 'Jane Smith', email: 'jane@example.com', createdAt: new Date() },
+	];
+	res.json(users);
 });
 
 /**
@@ -85,18 +82,18 @@ router.get('/', (req: Request, res: Response) => {
  *         description: User not found
  */
 router.get('/:id', (req: Request, res: Response) => {
-  // Mock implementation
-  if (req.params.id === '1') {
-    const user: User = {
-      id: '1', 
-      name: 'John Doe', 
-      email: 'john@example.com', 
-      createdAt: new Date()
-    };
-    res.json(user);
-  } else {
-    res.status(404).json({ message: 'User not found' });
-  }
+	// Mock implementation
+	if (req.params.id === '1') {
+		const user: User = {
+			id: '1',
+			name: 'John Doe',
+			email: 'john@example.com',
+			createdAt: new Date(),
+		};
+		res.json(user);
+	} else {
+		res.status(404).json({ message: 'User not found' });
+	}
 });
 
 /**
@@ -130,20 +127,19 @@ router.get('/:id', (req: Request, res: Response) => {
  *         description: Invalid request data
  */
 router.post('/', (req: Request, res: Response) => {
-  // Mock implementation
-  const { name, email } = req.body;
-  if (!name || !email) {
-    return res.status(400).json({ message: 'Name and email are required' });
-  }
-  
-  const newUser: User = {
-    id: Math.floor(Math.random() * 1000).toString(),
-    name,
-    email,
-    createdAt: new Date()
-  };
-  
-  res.status(201).json(newUser);
+	// Mock implementation
+	const { name, email } = req.body;
+	if (!name || !email) {
+		return res.status(400).json({ message: 'Name and email are required' });
+	}
+	const newUser: User = {
+		id: Math.floor(Math.random() * 1000).toString(),
+		name,
+		email,
+		createdAt: new Date(),
+	};
+
+	res.status(201).json(newUser);
 });
 
 export default router;
