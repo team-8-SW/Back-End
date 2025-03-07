@@ -53,8 +53,6 @@ tags:
     description: Endpoints related to saving and unsaving posts
   - name: Comment Engagement
     description: Endpoints related to liking and unliking comments
-
-  
     
   - name: Conversations
     description: Endpoints related to user messaging and conversations
@@ -68,7 +66,7 @@ tags:
     description: Endpoints related to searching for jobs and saving job postings
   - name: Job Applications
     description: Endpoints related to job applications and saved jobs
-  - name: Employers
+  - name: Company
     description: Endpoints related to job postings and application management
   - name: Company Management
     description: Endpoints related to company page management
@@ -78,18 +76,16 @@ tags:
     description: Endpoints related to posting and managing company updates
   - name: Privacy Controls
     description: Endpoints related to privacy settings and reporting content
-  - name: Content Moderation
-    description: Endpoints related to reviewing and managing reported content
-
   - name: User Management
     description: Endpoints related to managing user accounts and statistics
   - name: Job Management
     description: Endpoints for managing job postings, applications, and statuses.
   - name: Payments
     description: Endpoints for handling premium subscriptions and one-time payments.
-    
+  - name: Admin
+    description: Endpoints for admin functionalities such as moderation, user management, and content control.
 paths:
-  # 1. Get User Connections
+ 
   /api/connections:
     get:
       tags:
@@ -785,7 +781,7 @@ paths:
                     type: string
                     
   # 1. Get All Job Listings (Admin)
-  /api/admin/jobs:
+  /api/alljobs:
     get:
       tags:
         - Job Management
@@ -838,7 +834,7 @@ paths:
                     type: integer
 
   # 2. Approve or Reject Job Listing (Admin)
-  /api/admin/jobs/{jobId}/status:
+  /api/jobs/{jobId}/status:
     put:
       tags:
         - Job Management
@@ -875,7 +871,7 @@ paths:
   /api/admin/analytics/jobs:
     get:
       tags:
-        - Job Management
+        - Admin
       summary: Get Job Statistics
       description: Retrieves job statistics.
       responses:
@@ -1131,21 +1127,23 @@ paths:
                       type: string
                     headline:
                       type: string
+                      
   /api/users/{userId}/block:
     post:
       tags:
         - Blocking
-      summary: Block a User
-      description: Blocks a specific user.
+      summary: Block a user
+      description: Blocks a user, preventing them from sending connection requests or messages.
       parameters:
-        - in: path
-          name: userId
+        - name: userId
+          in: path
           required: true
           schema:
             type: string
+          description: The ID of the user to block.
       responses:
-        "200":
-          description: User blocked successfully
+        '200':
+          description: User blocked successfully.
           content:
             application/json:
               schema:
@@ -1153,6 +1151,8 @@ paths:
                 properties:
                   message:
                     type: string
+                    example: "User blocked successfully."
+                  
     delete:
       tags:
         - Blocking
@@ -1639,7 +1639,7 @@ paths:
                   message:
                     type: string
                     
-  /api/admin/users:
+  /api/allusers:
     get:
       tags:
         - User Management
@@ -1665,7 +1665,7 @@ paths:
                       type: string
                     status:
                       type: string
-  /api/admin/users/{userId}/suspend:
+  /api/users/{userId}/suspend:
     put:
       tags:
         - User Management
@@ -1687,32 +1687,11 @@ paths:
                 properties:
                   message:
                     type: string
-  /api/admin/users/{userId}/activate:
-    put:
-      tags:
-        - User Management
-      summary: Activate a User
-      description: Reactivates a suspended user account.
-      parameters:
-        - in: path
-          name: userId
-          required: true
-          schema:
-            type: string
-      responses:
-        "200":
-          description: User activated successfully
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
+ 
   /api/admin/users/statistics:
     get:
       tags:
-        - User Management
+        - Admin
       summary: Get User Statistics
       description: Retrieves overall user statistics for the platform.
       responses:
@@ -1730,10 +1709,10 @@ paths:
                   suspendedUsers:
                     type: integer
 
-  /api/moderation/reports:
+  /api/admin/reports:
     get:
       tags:
-        - Content Moderation
+        - Admin
       summary: Get Reported Content
       description: Retrieves a list of reported posts and comments for review.
       responses:
@@ -1759,10 +1738,11 @@ paths:
                       type: string
                     status:
                       type: string
-  /api/moderation/reports/{reportId}/resolve:
+
+  /api/admin/reports/{reportId}/resolve:
     put:
       tags:
-        - Content Moderation
+        - Admin
       summary: Resolve a Report
       description: Marks a report as resolved.
       parameters:
@@ -1781,10 +1761,10 @@ paths:
                 properties:
                   message:
                     type: string
-  /api/moderation/posts/{postId}:
+  /api/admin/posts/{postId}:
     delete:
       tags:
-        - Content Moderation
+        - Admin
       summary: Delete Reported Post
       description: Deletes a reported post.
       parameters:
@@ -1803,10 +1783,10 @@ paths:
                 properties:
                   message:
                     type: string
-  /api/moderation/comments/{commentId}:
+  /api/admin/comments/{commentId}:
     delete:
       tags:
-        - Content Moderation
+        - Admin
       summary: Delete Reported Comment
       description: Deletes a reported comment.
       parameters:
@@ -2070,10 +2050,10 @@ paths:
                     industry:
                       type: string
                     
-  /api/employers/jobs:
+  /api/company/jobs:
     post:
       tags:
-        - Employers
+        - Company
       summary: Post a New Job Listing
       description: Creates a new job listing for an employer.
       requestBody:
@@ -2105,10 +2085,10 @@ paths:
                 properties:
                   message:
                     type: string
-  /api/employers/jobs/{jobId}:
+  /api/company/jobs/{jobId}:
     put:
       tags:
-        - Employers
+        - Company
       summary: Update a Job Listing
       description: Updates an existing job listing.
       parameters:
@@ -2146,7 +2126,7 @@ paths:
                     type: string
     delete:
       tags:
-        - Employers
+        - Company
       summary: Delete a Job Listing
       description: Deletes a job listing.
       parameters:
@@ -2165,10 +2145,10 @@ paths:
                 properties:
                   message:
                     type: string
-  /api/employers/jobs/{jobId}/applications:
+  /api/company/jobs/{jobId}/applications:
     get:
       tags:
-        - Employers
+        - Company
       summary: Get Applications for a Job
       description: Retrieves job applications for a specific job listing.
       parameters:
@@ -2200,10 +2180,10 @@ paths:
                           type: string
                     status:
                       type: string
-  /api/employers/jobs/applications/{applicationId}/status:
+  /api/company/jobs/applications/{applicationId}/status:
     put:
       tags:
-        - Employers
+        - Company
       summary: Update Job Application Status
       description: Updates the status of a job application.
       parameters:
@@ -2388,3 +2368,21 @@ paths:
           required: false
           schema:
             type: integer
+          description: Page number for pagination.
+        - in: query
+          name: limit
+          required: false
+          schema:
+            type: integer
+          description: Number of results per page.
+      responses:
+        "200":
+          description: Jobs retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
