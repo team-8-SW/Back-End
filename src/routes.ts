@@ -1,6 +1,6 @@
 import express, { Express, Request, Response } from 'express';
 
-// function routes(app: Express) { }
+function routes(app: Express) { }
 
 const router = express.Router();
 import { User } from '../src/interfaces/user.js';
