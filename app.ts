@@ -1,9 +1,9 @@
 import express, { Express, Request, Response, NextFunction } from 'express';
 import dotenv from 'dotenv';
-import { setupSwagger } from './utils/swagger';
+import { setupSwagger } from './src/docs/swagger';
 //
 // Import routes
-import userRoutes from './src/routes'; // Adjust the path as needed
+import userRoutes from './src/routes/users.routes'; // Adjust the path as needed
 
 // Initialize environment variables
 dotenv.config();
@@ -41,10 +41,10 @@ app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
 });
 
 // Start server
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-	console.log(`Server running on port ${PORT}`);
-	console.log(`Swagger docs available at http://localhost:${PORT}/api-docs`);
+const port = process.env.port || 3000;
+app.listen(port, () => {
+	console.log(`Server running on port ${port}`);
+	console.log(`Swagger docs available at http://localhost:${port}/api-docs`);
 });
 
 export default app;
