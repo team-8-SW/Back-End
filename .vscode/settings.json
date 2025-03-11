@@ -1,14 +1,14 @@
 {
-    "notebook.defaultFormatter": "esbenp.prettier-vscode",
-    "editor.formatOnSave": true,
-    "editor.formatOnType": true,
-    "[typescript]": {
-        "editor.formatOnSave": false
-    },
-    "[javascript]": {
-        "editor.formatOnSave": false
-    },
-    "editor.codeActionsOnSave": {
-        "source.fixAll.eslint": "explicit"
-    }
+	"notebook.defaultFormatter": "esbenp.prettier-vscode",
+	"editor.formatOnSave": true,
+	"editor.formatOnType": true,
+	"[typescript]": {
+		"editor.formatOnSave": false
+	},
+	"[javascript]": {
+		"editor.formatOnSave": false
+	},
+	"editor.codeActionsOnSave": {
+		"source.fixAll.eslint": "explicit"
+	}
 }
