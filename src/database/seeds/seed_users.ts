@@ -13,15 +13,15 @@ export async function seed(knex: Knex): Promise<void> {
 		for (let i = 0; i < 10; i++) {
 			const is_premium = faker.datatype.boolean();
 			const reset_token_expiry = faker.datatype.boolean() ? faker.date.future() : null;
-			const reset_token = reset_token_expiry ? faker.string.uuid() : null;
+			const reset_token = reset_token_expiry ? faker.datatype.uuid() : null;
 
 			users.push({
 				id: uuidv4(),
 				user_name: faker.internet.userName(),
 				email: faker.internet.email(),
 				password_hash: faker.internet.password(),
-				first_name: faker.person.firstName(),
-				last_name: faker.person.lastName(),
+				first_name: faker.name.firstName(),
+				last_name: faker.name.lastName(),
 				email_verified: faker.datatype.boolean(),
 				is_premium: is_premium,
 				premium_expiry: is_premium ? faker.date.future() : null,

@@ -509,10 +509,10 @@
   resolved "https://registry.npmjs.org/@eslint/js/-/js-8.57.1.tgz"
   integrity sha512-d9zaMRSTIKDLhctzH12MtXvJKSSUhaHcjV+2Z+GK+EEY7XKpP5yR4x+N3TAcHTcu963nIr+TMcCb4DBCYX1z6Q==
 
-"@faker-js/faker@^9.6.0":
-  version "9.6.0"
-  resolved "https://registry.npmjs.org/@faker-js/faker/-/faker-9.6.0.tgz"
-  integrity sha512-3vm4by+B5lvsFPSyep3ELWmZfE3kicDtmemVpuwl1yH7tqtnHdsA6hG8fbXedMVdkzgtvzWoRgjSB4Q+FHnZiw==
+"@faker-js/faker@^7.6.0":
+  version "7.6.0"
+  resolved "https://registry.npmjs.org/@faker-js/faker/-/faker-7.6.0.tgz"
+  integrity sha512-XK6BTq1NDMo9Xqw/YkYyGjSsg44fbNwYRx7QK2CuoQgyy+f1rrTDHoExVM5PsyXCtfl2vs2vVJ0MN0yN6LppRw==
 
 "@humanwhocodes/config-array@^0.13.0":
   version "0.13.0"
@@ -1092,6 +1092,13 @@
     "@types/express-serve-static-core" "^4.17.33"
     "@types/qs" "*"
     "@types/serve-static" "*"
+
+"@types/faker@^6.6.8":
+  version "6.6.8"
+  resolved "https://registry.npmjs.org/@types/faker/-/faker-6.6.8.tgz"
+  integrity sha512-9moiFKhmFMlI/7v5jVsPS8bbtIN1Rfo03hTPf1HPgWnZCksDup2xDTyBVC6xzjmUL/i6N6ecOJQIj5LrVJbYcg==
+  dependencies:
+    faker "*"
 
 "@types/http-errors@*":
   version "2.0.4"
@@ -2314,6 +2321,11 @@ eyes@0.1.x:
   version "0.1.8"
   resolved "https://registry.npmjs.org/eyes/-/eyes-0.1.8.tgz"
   integrity sha512-GipyPsXO1anza0AOZdy69Im7hGFCNB7Y/NGjDlZGJ3GJJLtwNSb2vrzYrTYJRrRloVx7pl+bhUaTB8yiccPvFQ==
+
+faker@*:
+  version "6.6.6"
+  resolved "https://registry.npmjs.org/faker/-/faker-6.6.6.tgz"
+  integrity sha512-9tCqYEDHI5RYFQigXFwF1hnCwcWCOJl/hmll0lr5D2Ljjb0o4wphb69wikeJDz5qCEzXCoPvG6ss5SDP6IfOdg==
 
 fast-deep-equal@^3.1.1, fast-deep-equal@^3.1.3:
   version "3.1.3"
