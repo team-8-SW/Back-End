@@ -7,7 +7,10 @@ export async function seed(knex: Knex): Promise<void> {
 	console.log('Seeding joblistings..');
 	await knex('joblistings').del(); //delete existing rows
 
-	const joblistings = []; //geneerate joblistings
+    const joblistings = []; //geneerate joblistings
+    const employmentTypes = ['full-time', 'part-time', 'contract', 'internship'];
+    const workplaceTypes = ['On-site', 'Hybrid', 'Remote'];
+    const experienceLevels = ['Entry', 'Mid', 'Senior', 'Executive'];
 	const companies = await knex('companypages').select('id','name','location'); //fetch things from companypages
     for (let i = 0; i < 20; i++) { //20 job listings
         const company = companies[i % companies.length]; // Cycle through companies
@@ -16,12 +19,12 @@ export async function seed(knex: Knex): Promise<void> {
 			user_id: uuidv4(),
             company_id: company.id,
             company_name: company.name,
-            title: faker.person.jobTitle(),,
+            title: faker.person.jobTitle(), // Generate a random job title
             description: faker.lorem.paragraphs(3), // Generate a random job description
             location: faker.location.city(), // Generate a random city for the job location
-            employment_type: faker.helpers.arrayElement(['full-time', 'part-time', 'contract', 'internship']),
-            workplace_type: faker.helpers.arrayElement(['On-site', 'Hybrid', 'Remote']),
-            experience_level: faker.helpers.arrayElement(['Entry', 'Mid', 'Senior', 'Executive']), // Random experience level
+            employment_type: employmentTypes[Math.floor(Math.random() * employmentTypes.length)], // Random employment type
+            workplace_type: workplaceTypes[Math.floor(Math.random() * workplaceTypes.length)], // Random workplace type
+            experience_level: experienceLevels[Math.floor(Math.random() * experienceLevels.length)], // Random experience level
 			posted_at: faker.date.recent(), // Generate a recent timestamp for the posting date
             expires_at: faker.date.future(), // Generate a future timestamp for the expiration date
 		});
