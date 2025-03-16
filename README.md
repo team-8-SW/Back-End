@@ -71,7 +71,7 @@ npm install --save-dev eslint @typescript-eslint/parser @typescript-eslint/eslin
 You can run ESLint and Prettier using:
 
 ```sh
-npx eslint . --fix  # Lint and auto-fix issues
+npx eslint . --fix  # Lint and auto-fix issue
 npx prettier --write .  # Format files using Prettier
 ```
 
