@@ -16,13 +16,13 @@ export async function seed(knex: Knex): Promise<void> {
 			company_id: companies[i % companies.length].id,
 			content: faker.lorem.paragraphs(3),
 			media_url: faker.internet.url(),
-			media_type: faker.system.mimeType().substring(0,50),
+			media_type: faker.system.mimeType().substring(0, 50),
 			like_count: faker.datatype.number({ min: 0, max: 1000 }),
 			comment_count: faker.datatype.number({ min: 0, max: 1000 }),
 			repost_count: faker.datatype.number({ min: 0, max: 1000 }),
 			created_at: faker.date.recent(),
 			edited_at: faker.date.recent(),
-            visibility: faker.helpers.arrayElement(['public', 'private', 'friends-only']),
+			visibility: faker.helpers.arrayElement(['public', 'private', 'friends-only']),
 		});
 	}
 

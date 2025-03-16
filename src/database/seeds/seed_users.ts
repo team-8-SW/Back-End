@@ -1,6 +1,7 @@
 import { Knex } from 'knex';
 import { v4 as uuidv4 } from 'uuid';
 import { faker } from '@faker-js/faker';
+import bcrypt from 'bcrypt';
 
 export async function seed(knex: Knex): Promise<void> {
 	console.log('Seeding users...');
@@ -14,12 +15,13 @@ export async function seed(knex: Knex): Promise<void> {
 			const is_premium = faker.datatype.boolean();
 			const reset_token_expiry = faker.datatype.boolean() ? faker.date.future() : null;
 			const reset_token = reset_token_expiry ? faker.datatype.uuid() : null;
+			const hashedPassword = await bcrypt.hash('password123', 10); // Set a default hashed password
 
 			users.push({
 				id: uuidv4(),
 				user_name: faker.internet.userName(),
 				email: faker.internet.email(),
-				password_hash: faker.internet.password(),
+				password_hash: hashedPassword, // Use the hashed password
 				first_name: faker.name.firstName(),
 				last_name: faker.name.lastName(),
 				email_verified: faker.datatype.boolean(),
