@@ -2,7 +2,7 @@
 	"name": "sw-project",
 	"version": "1.0.0",
 	"description": "",
-	"main": "index.js",
+	"main": "app.ts",
 	"scripts": {
 		"test": "echo \"Error: no test specified\" && exit 1",
 		"build": "tsc",
@@ -65,7 +65,7 @@
 		"eslint": "8.57.1",
 		"eslint-config-prettier": "10.1.1",
 		"eslint-plugin-prettier": "5.2.3",
-		"pg": "^8.13.3",
+		"pg": "^8.14.1",
 		"pino": "^7.0.2",
 		"pino-pretty": "^7.1.0",
 		"prettier": "^3.5.3",
