@@ -410,3 +410,209 @@ export const getEducation = async (req: Request, res: Response) => {
 		res.status(500).json({ error: 'Error fetching education' });
 	}
 };
+
+export const addEducation = async (req: Request, res: Response) => {
+	try {
+		const userId = (req as any).user?.id;
+		const { schoolName, degree, startDate, endDate } = req.body;
+
+		if (!schoolName || !degree || !startDate) {
+			return res
+				.status(400)
+				.json({ error: 'School name, degree, field of study and start date are required' });
+		}
+
+		const educationData = {
+			school_name: schoolName,
+			degree,
+			field_of_study: null,
+			start_date: startDate,
+			end_date: endDate || null,
+			grade: null,
+			activities: null,
+		};
+
+		const newEducation = await profileService.addEducation(userId, educationData);
+		if (!newEducation) {
+			return res.status(500).json({ error: 'Error adding education' });
+		}
+		res.status(201).json({ message: 'Education added successfully' });
+	} catch (error) {
+		res.status(500).json({ error: 'Internal server error' });
+	}
+};
+
+export const updateEducation = async (req: Request, res: Response) => {
+	try {
+		const userId = (req as any).user?.id;
+		const educationId = req.params.educationId;
+		const { schoolName, degree, startDate, endDate } = req.body;
+
+		if (!schoolName || !degree || !startDate) {
+			return res
+				.status(400)
+				.json({ error: 'School name, degree, field of study and start date are required' });
+		}
+
+		const educationData = {
+			school_name: schoolName,
+			degree,
+			field_of_study: null,
+			start_date: startDate,
+			end_date: endDate || null,
+			grade: null,
+			activities: null,
+		};
+
+		const updatedEducation = await profileService.updateEducation(
+			userId,
+			educationId,
+			educationData,
+		);
+
+		if (!updatedEducation) {
+			return res.status(404).json({ error: 'Education not found' });
+		}
+
+		res.json({ message: 'Education updated successfully' });
+	} catch (error) {
+		res.status(500).json({ error: 'Internal server error' });
+	}
+};
+
+export const deleteEducation = async (req: Request, res: Response) => {
+	try {
+		const userId = (req as any).user?.id;
+		const educationId = req.params.educationId;
+
+		const deletedEducation = await profileService.deleteEducation(userId, educationId);
+
+		if (!deletedEducation) {
+			return res.status(404).json({ error: 'Education not found' });
+		}
+
+		res.json({ message: 'Education deleted successfully' });
+	} catch (error) {
+		res.status(500).json({ error: 'Internal server error' });
+	}
+};
+
+//--------------------Certifications--------------------//
+
+export const getCertifications = async (req: Request, res: Response) => {
+	// Get userId from req.user
+	const userId = (req as any).user?.id;
+
+	// Validate userId
+	if (!userId) {
+		return res.status(400).json({ error: 'User ID is required' });
+	}
+
+	try {
+		const certifications = await profileService.getCertifications(userId);
+
+		if (!certifications || certifications.length === 0) {
+			return res.status(404).json({ error: 'No certifications found' });
+		}
+
+		// Return an array of certifications
+		res.json(
+			certifications.map((cert) => ({
+				id: cert.id,
+				name: cert.name,
+				issuedBy: cert.issuingOrganization,
+				issueDate: cert.issueDate,
+				expirationDate: cert.expirationDate,
+			})),
+		);
+	} catch (error) {
+		res.status(500).json({ error: 'Error fetching certifications' });
+	}
+};
+
+export const addCertification = async (req: Request, res: Response) => {
+	try {
+		const userId = (req as any).user?.id;
+		const { name, issuedBy, issueDate, expirationDate } = req.body;
+
+		if (!name || !issuedBy || !issueDate) {
+			return res
+				.status(400)
+				.json({ error: 'Name, issuing organization and issue date are required' });
+		}
+
+		const certificationData = {
+			name,
+			issuing_organization: issuedBy,
+			issue_date: issueDate,
+			expiration_date: expirationDate || null,
+			credential_id: null,
+			credential_url: null,
+		};
+
+		const newCertification = await profileService.addCertification(userId, certificationData);
+		if (!newCertification) {
+			return res.status(500).json({ error: 'Error adding certification' });
+		}
+		res.status(201).json({ message: 'Certification added successfully' });
+	} catch (error) {
+		res.status(500).json({ error: 'Internal server error' });
+	}
+};
+
+export const updateCertification = async (req: Request, res: Response) => {
+	try {
+		const userId = (req as any).user?.id;
+		const certificationId = req.params.certificationId;
+		const { name, issuedBy, issueDate, expirationDate } = req.body;
+
+		if (!name || !issuedBy || !issueDate) {
+			return res
+				.status(400)
+				.json({ error: 'Name, issuing organization and issue date are required' });
+		}
+
+		const certificationData = {
+			name,
+			issuing_organization: issuedBy,
+			issue_date: issueDate,
+			expiration_date: expirationDate || null,
+			credential_id: null,
+			credential_url: null,
+		};
+
+		const updatedCertification = await profileService.updateCertification(
+			userId,
+			certificationId,
+			certificationData,
+		);
+
+		if (!updatedCertification) {
+			return res.status(404).json({ error: 'Certification not found' });
+		}
+
+		res.json({ message: 'Certification updated successfully' });
+	} catch (error) {
+		res.status(500).json({ error: 'Internal server error' });
+	}
+};
+
+export const deleteCertification = async (req: Request, res: Response) => {
+	try {
+		const userId = (req as any).user?.id;
+		const certificationId = req.params.certificationId;
+
+		const deletedCertification = await profileService.deleteCertification(
+			userId,
+			certificationId,
+		);
+
+		if (!deletedCertification) {
+			return res.status(404).json({ error: 'Certification not found' });
+		}
+
+		res.json({ message: 'Certification deleted successfully' });
+	} catch (error) {
+		res.status(500).json({ error: 'Internal server error' });
+	}
+};

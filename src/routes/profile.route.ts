@@ -65,13 +65,34 @@ router.delete('/me/experience/:experienceId', authMiddleware, profileController.
 router.get('/me/education', authMiddleware, profileController.getEducation);
 
 //POST /api/profiles/me/education
-//router.post('/me/education', authMiddleware, profileController.addEducation);
+router.post('/me/education', authMiddleware, profileController.addEducation);
 
 //PUT /api/profiles/me/education/:educationId
-//router.put('/me/education/:educationId', authMiddleware, profileController.updateEducation);
+router.put('/me/education/:educationId', authMiddleware, profileController.updateEducation);
 
 //DELETE /api/profiles/me/education/:educationId
-//router.delete('/me/education/:educationId', authMiddleware, profileController.deleteEducation);
+router.delete('/me/education/:educationId', authMiddleware, profileController.deleteEducation);
+
+//--------------------Certifications--------------------//
+//GET /api/profiles/me/certifications
+router.get('/me/certifications', authMiddleware, profileController.getCertifications);
+
+//POST /api/profiles/me/certifications
+router.post('/me/certifications', authMiddleware, profileController.addCertification);
+
+//PUT /api/profiles/me/certifications/:certificationId
+router.put(
+	'/me/certifications/:certificationId',
+	authMiddleware,
+	profileController.updateCertification,
+);
+
+//DELETE /api/profiles/me/certifications/:certificationId
+router.delete(
+	'/me/certifications/:certificationId',
+	authMiddleware,
+	profileController.deleteCertification,
+);
 
 //--------------------Skills--------------------//
 //GET /api/profiles/me/skills
@@ -85,19 +106,6 @@ router.get('/me/education', authMiddleware, profileController.getEducation);
 
 ///POST /api/profiles/users/:userId/skills/:skillId/endorse
 //router.post('/users/:userId/skills/:skillId/endorse', authMiddleware, profileController.endorseSkill);
-
-//--------------------Certifications--------------------//
-//GET /api/profiles/me/certifications
-//router.get('/me/certifications', authMiddleware, profileController.getCertifications);
-
-//POST /api/profiles/me/certifications
-//router.post('/me/certifications', authMiddleware, profileController.addCertification);
-
-//PUT /api/profiles/me/certifications/:certificationId
-//router.put('/me/certifications/:certificationId', authMiddleware, profileController.updateCertification);
-
-//DELETE /api/profiles/me/certifications/:certificationId
-//router.delete('/me/certifications/:certificationId', authMiddleware, profileController.deleteCertification);
 
 //--------------------Privacy--------------------//
 //GET /api/profiles/me/privacy

@@ -44,6 +44,15 @@ export interface University {
 	universityName: string;
 }
 
+export interface Certification {
+	id: UUID;
+	userId: UUID;
+	name: string;
+	issuingOrganization: string;
+	issueDate: Date;
+	expirationDate?: Date | null;
+	credentialUrl?: string | null;
+}
 export interface UserPrivacySettings {
 	id: UUID;
 	userId: UUID;
