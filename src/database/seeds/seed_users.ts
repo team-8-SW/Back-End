@@ -11,8 +11,11 @@ export async function seed(knex: Knex): Promise<void> {
 
 		const users = [];
 		for (let i = 0; i < 10; i++) {
+			// eslint-disable-next-line @typescript-eslint/naming-convention
 			const is_premium = faker.datatype.boolean();
+			// eslint-disable-next-line @typescript-eslint/naming-convention
 			const reset_token_expiry = faker.datatype.boolean() ? faker.date.future() : null;
+			// eslint-disable-next-line @typescript-eslint/naming-convention
 			const reset_token = reset_token_expiry ? faker.datatype.uuid() : null;
 
 			users.push({

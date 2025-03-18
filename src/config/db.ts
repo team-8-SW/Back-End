@@ -1,6 +1,8 @@
 import { Pool } from 'pg';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import dotenv from 'dotenv';
+import Knex from 'knex';
+import knexConfig from '../database/knexfile';
 
 dotenv.config();
 
@@ -12,4 +14,9 @@ const pool = new Pool({
 	port: parseInt(process.env.DATABASE_PORT || '5432', 10),
 });
 
-export default pool;
+const environment = process.env.NODE_ENV || 'development';
+const configOptions = knexConfig[environment];
+
+const knexInstance = Knex(configOptions);
+
+export { pool, knexInstance };

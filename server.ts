@@ -1,6 +1,6 @@
-import app from './app.js';
+import app from './app.ts';
 import dotenv from 'dotenv';
-dotenv.config({ path: './config.env' });
+dotenv.config({ path: './.env' });
 
 console.log(process.env);
 
