@@ -1,20 +1,28 @@
-import { knex } from 'knex';
-//Defines the Structure of the Data:
+import { knex } from 'knex'; // Import your Knex instance
+
 export interface Notification {
     id: string;
     user_id: string;
     type: string;
     content: string;
     is_read: boolean;
-    unseen_count: number;
     created_at: Date;
 }
-//Perform Database Operations
+
 export const Notifications = {
     // Get all notifications for a user
     async getByUserId(userId: string): Promise<Notification[]> {
         return knex('notifications').where({ user_id: userId }).select('*');
-    }, // result -> array of Notification objects filtered le specific user
+    },
+
+    // Get the count of unread notifications for a user
+    async getUnreadCount(userId: string): Promise<number> {
+        const result = await knex('notifications')
+            .where({ user_id: userId, is_read: false })
+            .count('* as unreadCount')
+            .first();
+        return Number(result?.unreadCount);
+    },
 
     // Mark a notification as read
     async markAsRead(notificationId: string): Promise<Notification> {
@@ -24,8 +32,9 @@ export const Notifications = {
             .returning('*')
             .then((rows) => rows[0]);
     },
-     // Create a new notification
-     async create(notification: Omit<Notification, 'id' | 'created_at'>): Promise<Notification> {
+
+    // Create a new notification
+    async create(notification: Omit<Notification, 'id' | 'created_at'>): Promise<Notification> {
         return knex('notifications')
             .insert(notification)
             .returning('*')
