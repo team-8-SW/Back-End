@@ -108,6 +108,12 @@
 		// "skipDefaultLibCheck": true,                      /* Skip type checking .d.ts files that are included with TypeScript. */
 		"skipLibCheck": true /* Skip type checking all .d.ts files. */
 	},
+<<<<<<< HEAD
 	"include": ["src/**/*", "src/database/knexfile.ts"],
+||||||| ddff044
+	"include": ["src/**/*", "knexfile.ts"],
+=======
+	"include": ["src/**/*", "src/knexfile.ts"],
+>>>>>>> origin/main
 	"exclude": ["node_modules"]
 }
