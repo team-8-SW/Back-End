@@ -1,5 +1,6 @@
 import { Notifications, Notification } from '../models/notifications.model';
-//akenena ben call what we did fi models
+
+// eslint-disable-next-line @typescript-eslint/naming-convention
 export const NotificationService = {
 	// Get all notifications for a user
 	async getNotifications(userId: string): Promise<Notification[]> {
@@ -21,5 +22,10 @@ export const NotificationService = {
 	// Delete a notification
 	async deleteNotification(notificationId: string): Promise<void> {
 		return Notifications.delete(notificationId);
+	},
+
+	// Get the count of unread notifications for a user
+	async getUnreadCount(userId: string): Promise<number> {
+		return Notifications.getUnreadCount(userId);
 	},
 };

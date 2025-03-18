@@ -1,5 +1,5 @@
-import { knex } from 'knex';
-//Defines the Structure of the Data:
+import { knex } from 'knex'; // Import your Knex instance
+
 export interface Notification {
 	id: string;
 	user_id: string;
@@ -9,7 +9,8 @@ export interface Notification {
 	unseen_count: number;
 	created_at: Date;
 }
-//Perform Database Operations
+
+// eslint-disable-next-line @typescript-eslint/naming-convention
 export const Notifications = {
 	// Get all notifications for a user
 	async getByUserId(userId: string): Promise<Notification[]> {
@@ -35,5 +36,14 @@ export const Notifications = {
 	// Delete a notification
 	async delete(notificationId: string): Promise<void> {
 		return knex('notifications').where({ id: notificationId }).del();
+	},
+
+	// Get the count of unread notifications for a user
+	async getUnreadCount(userId: string): Promise<number> {
+		const result = await knex('notifications')
+			.where({ user_id: userId, is_read: false })
+			.count('* as unreadCount')
+			.first();
+		return Number(result?.unreadCount);
 	},
 };

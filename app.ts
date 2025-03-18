@@ -4,8 +4,10 @@ import { setupSwagger } from './src/docs/swagger';
 //
 // Import routes
 import userRoutes from './src/routes/users.routes'; // Adjust the path as needed
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import companyRoutes from './src/routes/company.route';
 
+import notificationsRouter from './src/routes/notifications.route';
 // Initialize environment variables
 dotenv.config();
 
@@ -26,14 +28,14 @@ app.get('/', (req: Request, res: Response) => {
 
 // API routes
 app.use('/api/users', userRoutes);
-app.use('/api/companies', companyRoutes);
-
+app.use('/api/notifications', notificationsRouter);
 // 404 handler
 app.use((req: Request, res: Response) => {
 	res.status(404).json({ message: 'Resource not found' });
 });
 
 // Global error handler
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
 	console.error(err.stack);
 	res.status(500).json({

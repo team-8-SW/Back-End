@@ -1,3 +1,4 @@
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { knexInstance } from '../config/db';
 
 export interface company {
