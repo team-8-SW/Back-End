@@ -538,23 +538,25 @@ export const addCertification = async (req: Request, res: Response) => {
 		if (!name || !issuedBy || !issueDate) {
 			return res
 				.status(400)
-				.json({ error: 'Name, issuing organization and issue date are required' });
+				.json({ error: 'Name, issuing organization, and issue date are required' });
 		}
 
 		const certificationData = {
 			name,
-			issuing_organization: issuedBy,
-			issue_date: issueDate,
-			expiration_date: expirationDate || null,
-			credential_id: null,
-			credential_url: null,
+			issuingOrganization: issuedBy,
+			issueDate: issueDate,
+			expirationDate: expirationDate || null,
 		};
 
 		const newCertification = await profileService.addCertification(userId, certificationData);
+
 		if (!newCertification) {
 			return res.status(500).json({ error: 'Error adding certification' });
 		}
-		res.status(201).json({ message: 'Certification added successfully' });
+
+		res.status(201).json({
+			message: 'Certification added successfully',
+		});
 	} catch (error) {
 		res.status(500).json({ error: 'Internal server error' });
 	}
@@ -565,20 +567,17 @@ export const updateCertification = async (req: Request, res: Response) => {
 		const userId = (req as any).user?.id;
 		const certificationId = req.params.certificationId;
 		const { name, issuedBy, issueDate, expirationDate } = req.body;
-
 		if (!name || !issuedBy || !issueDate) {
 			return res
 				.status(400)
-				.json({ error: 'Name, issuing organization and issue date are required' });
+				.json({ error: 'Name, issuing organization, and issue date are required' });
 		}
 
 		const certificationData = {
 			name,
-			issuing_organization: issuedBy,
-			issue_date: issueDate,
-			expiration_date: expirationDate || null,
-			credential_id: null,
-			credential_url: null,
+			issuingOrganization: issuedBy,
+			issueDate: issueDate,
+			expirationDate: expirationDate || null,
 		};
 
 		const updatedCertification = await profileService.updateCertification(

@@ -249,8 +249,10 @@ export const getCertifications = async (userId: string) => {
 	return await knexInstance('certifications')
 		.select(
 			'id',
-			'certification_name as certificationName',
-			'certification_date as certificationDate',
+			'name',
+			'issuing_organization as issuingOrganization',
+			'issue_date as issueDate',
+			'expiration_date as expirationDate',
 		)
 		.where({ user_id: userId });
 };
@@ -260,11 +262,31 @@ export const addCertification = async (userId: string, certification: any) => {
 		throw new Error('User ID is missing in addCertification function');
 	}
 
-	const [newCertification] = await knexInstance('certifications')
-		.insert({ id: uuidv4(), user_id: userId, ...certification })
-		.returning('*');
+	const newCertification = {
+		id: uuidv4(),
+		user_id: userId,
+		name: certification.name,
+		issuing_organization: certification.issuingOrganization,
+		issue_date: certification.issueDate,
+		expiration_date: certification.expirationDate || null,
+		credential_url: null,
+	};
 
-	return newCertification;
+	try {
+		const [insertedCertification] = await knexInstance('certifications')
+			.insert(newCertification)
+			.returning([
+				'id',
+				'name',
+				'issuing_organization as issuedBy',
+				'issue_date as issueDate',
+				'expiration_date as expirationDate',
+			]);
+
+		return insertedCertification;
+	} catch (error) {
+		throw new Error('Database error: Unable to add certification');
+	}
 };
 
 export const updateCertification = async (
@@ -276,13 +298,22 @@ export const updateCertification = async (
 		throw new Error('User ID is missing in updateCertification function');
 	}
 
+	const updatedCertification = {
+		name: certification.name,
+		issuing_organization: certification.issuingOrganization,
+		issue_date: certification.issueDate,
+		expiration_date: certification.expirationDate || null,
+		credential_url: null,
+	};
+
 	const rowsUpdated = await knexInstance('certifications')
 		.where({ id: certificationId, user_id: userId })
-		.update(certification);
+		.update(updatedCertification)
+		.returning('*');
 
-	if (rowsUpdated === 0) return null;
+	if (rowsUpdated.length === 0) return null;
 
-	return knexInstance('certifications').where({ id: certificationId }).first();
+	return rowsUpdated[0];
 };
 
 export const deleteCertification = async (userId: string, certificationId: string) => {
@@ -290,7 +321,7 @@ export const deleteCertification = async (userId: string, certificationId: strin
 		throw new Error('User ID is missing in deleteCertification function');
 	}
 
-	const deletedCertification = await knexInstance('certifications')
+	const [deletedCertification] = await knexInstance('certifications')
 		.where({ id: certificationId, user_id: userId })
 		.del()
 		.returning('*');

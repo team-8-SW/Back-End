@@ -53,6 +53,7 @@ export interface Certification {
 	expirationDate?: Date | null;
 	credentialUrl?: string | null;
 }
+
 export interface UserPrivacySettings {
 	id: UUID;
 	userId: UUID;
