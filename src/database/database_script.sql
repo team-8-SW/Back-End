@@ -231,7 +231,6 @@ CREATE TABLE IF NOT EXISTS notifications (
     type VARCHAR(50) NOT NULL CHECK (type IN ('like', 'comment', 'connection', 'message')),
     content TEXT NOT NULL,
     is_read BOOLEAN NOT NULL DEFAULT FALSE,
-    unseen_count INTEGER NOT NULL DEFAULT 0,
     created_at TIMESTAMP NOT NULL DEFAULT NOW()
 );
 

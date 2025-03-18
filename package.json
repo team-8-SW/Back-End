@@ -14,7 +14,6 @@
 		"knex": "npx knex --knexfile knexfile.ts",
 		"prettier": "prettier --write .",
 		"seed:run": "npx knex seed:run --knexfile knexfile.ts"
-
 	},
 	"repository": {
 		"type": "git",
