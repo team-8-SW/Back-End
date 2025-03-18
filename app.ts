@@ -4,7 +4,8 @@ import { setupSwagger } from './src/docs/swagger';
 //
 // Import routes
 import userRoutes from './src/routes/users.routes'; // Adjust the path as needed
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
+import authRoutes from './src/routes/auth.route';
+//import router from './src/routes/users.routes';
 import companyRoutes from './src/routes/company.route';
 
 import notificationsRouter from './src/routes/notifications.route';
@@ -28,7 +29,10 @@ app.get('/', (req: Request, res: Response) => {
 
 // API routes
 app.use('/api/users', userRoutes);
+app.use('/api/auth', authRoutes);
 app.use('/api/notifications', notificationsRouter);
+app.use('/api/company', companyRoutes);
+
 // 404 handler
 app.use((req: Request, res: Response) => {
 	res.status(404).json({ message: 'Resource not found' });
@@ -44,8 +48,24 @@ app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
 	});
 });
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function printRoutes(stack: any[], prefix = '') {
+	stack.forEach((layer) => {
+		if (layer.route) {
+			// This layer is a route
+			console.log(`${prefix}${layer.route.path}`);
+		} else if (layer.name === 'router' && layer.handle.stack) {
+			// This layer is a router, recursively print its routes
+			printRoutes(layer.handle.stack, prefix + (layer.regexp?.toString() || ''));
+		}
+	});
+}
+
+printRoutes(app._router.stack);
+
 // Start server
 const port = process.env.port || 3000;
+
 app.listen(port, () => {
 	console.log(`Server running on port ${port}`);
 	console.log(`Swagger docs available at http://localhost:${port}/api-docs`);

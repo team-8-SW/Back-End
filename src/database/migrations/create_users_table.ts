@@ -7,7 +7,7 @@ export async function up(knex: Knex): Promise<void> {
 			table.uuid('id').primary();
 			table.string('user_name', 100).notNullable().unique();
 			table.string('email', 255).notNullable().unique();
-			table.string('password_hash', 255).notNullable().unique();
+			table.string('password_hash', 255).notNullable();
 			table.string('first_name', 100).notNullable();
 			table.string('last_name', 100).notNullable();
 			table.boolean('email_verified').notNullable().defaultTo(false);
