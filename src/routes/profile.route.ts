@@ -55,14 +55,14 @@ router.get('/me/experience', authMiddleware, profileController.getExperience);
 router.post('/me/experience', authMiddleware, profileController.addExperience);
 
 //PUT /api/profiles/me/experience/:experienceId
-//router.put('/me/experience/:Id', authMiddleware, profileController.updateExperience);
+router.put('/me/experience/:experienceId', authMiddleware, profileController.updateExperience);
 
 //DELETE /api/profiles/me/experience/:experienceId
-//router.delete('/me/experience/:Id', authMiddleware, profileController.deleteExperience);
+router.delete('/me/experience/:experienceId', authMiddleware, profileController.deleteExperience);
 
 //--------------------Eductaion--------------------//
 //GET /api/profiles/me/education
-//router.get('/me/education', authMiddleware, profileController.getEducation);
+router.get('/me/education', authMiddleware, profileController.getEducation);
 
 //POST /api/profiles/me/education
 //router.post('/me/education', authMiddleware, profileController.addEducation);
@@ -72,13 +72,6 @@ router.post('/me/experience', authMiddleware, profileController.addExperience);
 
 //DELETE /api/profiles/me/education/:educationId
 //router.delete('/me/education/:educationId', authMiddleware, profileController.deleteEducation);
-
-//--------------------Privacy--------------------//
-//GET /api/profiles/me/privacy
-//router.get('/me/privacy', authMiddleware, profileController.getPrivacySettings);
-
-//PUT /api/profiles/me/privacy
-//router.put('/me/privacy', authMiddleware, profileController.updatePrivacySettings);
 
 //--------------------Skills--------------------//
 //GET /api/profiles/me/skills
@@ -105,6 +98,13 @@ router.post('/me/experience', authMiddleware, profileController.addExperience);
 
 //DELETE /api/profiles/me/certifications/:certificationId
 //router.delete('/me/certifications/:certificationId', authMiddleware, profileController.deleteCertification);
+
+//--------------------Privacy--------------------//
+//GET /api/profiles/me/privacy
+//router.get('/me/privacy', authMiddleware, profileController.getPrivacySettings);
+
+//PUT /api/profiles/me/privacy
+//router.put('/me/privacy', authMiddleware, profileController.updatePrivacySettings);
 
 //--------------------Profile Visibility--------------------//
 //PUT /api/profiles/me/visibility

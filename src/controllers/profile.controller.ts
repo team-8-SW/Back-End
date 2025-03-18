@@ -1,6 +1,5 @@
 import { Request, Response } from 'express';
 import * as profileService from '../services/profile.service';
-import { describe } from 'node:test';
 /**
  * Function to get profile by Id
  * @param req gets userId
@@ -286,19 +285,16 @@ export const addExperience = async (req: Request, res: Response) => {
 		const { companyName, position, startDate, endDate, currentJob, description, location } =
 			req.body;
 
-		// ✅ Validate required fields
 		if (!companyName || !position || !startDate || currentJob === undefined) {
 			return res
 				.status(400)
 				.json({ error: 'Company name, position, start date and current job are required' });
 		}
 
-		// ✅ Ensure current_job is boolean
 		if (typeof currentJob !== 'boolean') {
 			return res.status(400).json({ error: 'Current job must be true or false' });
 		}
 
-		// ✅ Ensure end_date is null if current_job is true
 		const experienceData = {
 			company_name: companyName,
 			position,
@@ -310,10 +306,107 @@ export const addExperience = async (req: Request, res: Response) => {
 		};
 
 		const newExperience = await profileService.addExperience(userId, experienceData);
-
-		res.status(201).json(newExperience);
+		if (!newExperience) {
+			return res.status(500).json({ error: 'Error adding experience' });
+		}
+		res.status(201).json({ message: 'Experience added successfully' });
 	} catch (error) {
-		console.error('❌ Error adding experience:', error);
 		res.status(500).json({ error: 'Internal server error' });
+	}
+};
+
+export const updateExperience = async (req: Request, res: Response) => {
+	try {
+		const userId = (req as any).user?.id;
+		const experienceId = req.params.experienceId;
+		const { companyName, position, startDate, endDate, currentJob, description, location } =
+			req.body;
+
+		if (!companyName || !position || !startDate || currentJob === undefined) {
+			return res
+				.status(400)
+				.json({ error: 'Company name, position, start date and current job are required' });
+		}
+
+		if (typeof currentJob !== 'boolean') {
+			return res.status(400).json({ error: 'Current job must be true or false' });
+		}
+
+		const experienceData = {
+			company_name: companyName,
+			position,
+			start_date: startDate,
+			end_date: currentJob ? null : endDate, // Set null if current job
+			current_job: currentJob,
+			description: description || null, // Default to null
+			location: location || null,
+		};
+
+		const updatedExperience = await profileService.updateExperience(
+			userId,
+			experienceId,
+			experienceData,
+		);
+
+		if (!updatedExperience) {
+			return res.status(404).json({ error: 'Experience not found' });
+		}
+
+		res.json({ message: 'Experience updated successfully' });
+	} catch (error) {
+		res.status(500).json({ error: 'Internal server error' });
+	}
+};
+
+export const deleteExperience = async (req: Request, res: Response) => {
+	try {
+		const userId = (req as any).user?.id;
+		const experienceId = req.params.experienceId;
+
+		const deletedExperience = await profileService.deleteExperience(userId, experienceId);
+
+		if (!deletedExperience) {
+			return res.status(404).json({ error: 'Experience not found' });
+		}
+
+		res.json({ message: 'Experience deleted successfully' });
+	} catch (error) {
+		res.status(500).json({ error: 'Internal server error' });
+	}
+};
+
+//--------------------Eductaion--------------------//
+
+export const getEducation = async (req: Request, res: Response) => {
+	// Get userId from req.user
+	const userId = (req as any).user?.id;
+
+	// Validate userId
+	if (!userId) {
+		return res.status(400).json({ error: 'User ID is required' });
+	}
+
+	try {
+		const education = await profileService.getEducation(userId);
+
+		if (!education || education.length === 0) {
+			return res.status(404).json({ error: 'No education found' });
+		}
+
+		// Return an array of education
+		res.json(
+			education.map((edu) => ({
+				id: edu.id,
+				school: edu.schoolName,
+				degree: edu.degree,
+				fieldOfStudy: edu.fieldOfStudy,
+				startDate: edu.startDate,
+				endDate: edu.endDate,
+				grade: edu.grade,
+				activities: edu.activities,
+			})),
+		);
+	} catch (error) {
+		res.status(500).json({ error: 'Error fetching education' });
 	}
 };

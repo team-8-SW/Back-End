@@ -153,3 +153,49 @@ export const addExperience = async (userId: string, experience: any) => {
 
 	return newExperience;
 };
+
+export const updateExperience = async (userId: string, experienceId: string, experience: any) => {
+	if (!userId) {
+		throw new Error('User ID is missing in updateExperience function');
+	}
+
+	const rowsUpdated = await knexInstance('workexperience')
+		.where({ id: experienceId, user_id: userId })
+		.update(experience);
+
+	if (rowsUpdated === 0) return null;
+
+	return knexInstance('workexperience').where({ id: experienceId }).first();
+};
+
+export const deleteExperience = async (userId: string, experienceId: string) => {
+	if (!userId) {
+		throw new Error('User ID is missing in deleteExperience function');
+	}
+
+	const deletedExperience = await knexInstance('workexperience')
+		.where({ id: experienceId, user_id: userId })
+		.del()
+		.returning('*');
+
+	return deletedExperience;
+};
+
+//--------------------Eductaion--------------------//
+
+export const getEducation = async (userId: string) => {
+	if (!userId) {
+		throw new Error('User ID is missing in getEducation function');
+	}
+
+	return await knexInstance('education')
+		.select(
+			'id',
+			'school',
+			'degree',
+			'field_of_study as fieldOfStudy',
+			'start_date as startDate',
+			'end_date as endDate',
+		)
+		.where({ user_id: userId });
+};
