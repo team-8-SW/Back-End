@@ -5,6 +5,7 @@ import { setupSwagger } from './src/docs/swagger';
 // Import routes
 import userRoutes from './src/routes/users.routes'; // Adjust the path as needed
 import profileRoutes from './src/routes/profile.route';
+import followingRoutes from './src/routes/following.route';
 
 // Initialize environment variables
 dotenv.config();
@@ -27,6 +28,7 @@ app.get('/', (req: Request, res: Response) => {
 // API routes
 app.use('/api/users', userRoutes);
 app.use('/api/profiles', profileRoutes);
+app.use('/api/following', followingRoutes);
 
 // 404 handler
 app.use((req: Request, res: Response) => {

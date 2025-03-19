@@ -323,6 +323,15 @@ export const deleteCertification = async (userId: string, certificationId: strin
 };
 
 //--------------------Profile Visibility--------------------//
+export const getProfileVisibility = async (userId: string) => {
+	if (!userId) {
+		throw new Error('User ID is missing in getProfileVisibility function');
+	}
+	return knexInstance('userprivacysettings')
+		.select('profile_visibility as visibility')
+		.where({ user_id: userId })
+		.first();
+};
 
 export const updateProfileVisibility = async (userId: string, visibility: string) => {
 	if (!userId) {

@@ -613,6 +613,24 @@ export const deleteCertification = async (req: Request, res: Response) => {
 };
 
 //--------------------Profile Visibility--------------------//
+export const getProfileVisibility = async (req: Request, res: Response) => {
+	try {
+		const userId = (req as any).user?.id;
+		if (!userId) {
+			return res.status(400).json({ error: 'User ID is required' });
+		}
+
+		const profileVisibility = await profileService.getProfileVisibility(userId);
+		if (!profileVisibility) {
+			return res.status(404).json({ error: 'No profile visibility found' });
+		}
+		res.json({
+			visibility: profileVisibility.visibility,
+		});
+	} catch (error) {
+		res.status(500).json({ error: 'Internal server error' });
+	}
+};
 export const updateProfileVisibility = async (req: Request, res: Response) => {
 	try {
 		const userId = (req as any).user?.id;
