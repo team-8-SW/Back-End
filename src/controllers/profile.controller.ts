@@ -611,6 +611,72 @@ export const deleteCertification = async (req: Request, res: Response) => {
 		res.status(500).json({ error: 'Internal server error' });
 	}
 };
+//--------------------Skills--------------------//
+
+export const getSkills = async (req: Request, res: Response) => {
+	try {
+		const userId = (req as any).user?.id;
+		if (!userId) {
+			return res.status(400).json({ error: 'User ID is required' });
+		}
+
+		const skills = await profileService.getSkills(userId);
+		if (!skills || skills.length === 0) {
+			return res.status(404).json({ error: 'No skill found' });
+		}
+		res.json(skills);
+	} catch (error) {
+		res.status(500).json({ error: 'Internal server error' });
+	}
+};
+
+export const addSkill = async (req: Request, res: Response) => {
+	try {
+		const userId = (req as any).user?.id;
+		const { name } = req.body;
+
+		if (!userId) {
+			return res.status(400).json({ error: 'User ID is required' });
+		}
+		if (!name) {
+			return res.status(400).json({ error: 'Skill name is required' });
+		}
+
+		const newSkill = await profileService.addSkill(userId, name);
+		if (!newSkill) {
+			return res.status(404).json({ error: 'Error adding skill' });
+		}
+
+		res.status(201).json({
+			message: 'Skill added successfully',
+		});
+	} catch (error) {
+		res.status(500).json({ error: 'Internal server error' });
+	}
+};
+
+export const deleteSkill = async (req: Request, res: Response) => {
+	try {
+		const userId = (req as any).user?.id;
+		const skillId = req.params.skillId;
+
+		if (!userId) {
+			return res.status(400).json({ error: 'User ID is required' });
+		}
+		if (!skillId) {
+			return res.status(400).json({ error: 'Skill ID is required' });
+		}
+
+		const deletedSkill = await profileService.deleteSkill(userId, skillId);
+		if (!deletedSkill) {
+			return res.status(404).json({ error: 'Skill not found' });
+		}
+
+		res.json({ message: 'Skill deleted successfully' });
+	} catch (error) {
+		res.status(500).json({ error: 'Internal server error' });
+	}
+};
 
 //--------------------Profile Visibility--------------------//
 export const getProfileVisibility = async (req: Request, res: Response) => {

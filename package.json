@@ -51,6 +51,7 @@
 		"uuid": "^11.1.0"
 	},
 	"devDependencies": {
+		"@types/axios": "^0.9.36",
 		"@types/bcrypt": "^5.0.0",
 		"@types/body-parser": "^1.19.1",
 		"@types/config": "^0.0.39",

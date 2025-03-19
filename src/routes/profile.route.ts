@@ -97,23 +97,16 @@ router.delete(
 
 //--------------------Skills--------------------//
 //GET /api/profiles/me/skills
-//router.get('/me/skills', authMiddleware, profileController.getSkills);
+router.get('/me/skills', authMiddleware, profileController.getSkills);
 
 //POST /api/profiles/me/skills
-//router.post('/me/skills', authMiddleware, profileController.addSkill);
+router.post('/me/skills', authMiddleware, profileController.addSkill);
 
 //DELETE /api/profiles/me/skills/:skillId
-//router.delete('/me/skills/:skillId', authMiddleware, profileController.deleteSkill);
+router.delete('/me/skills/:skillId', authMiddleware, profileController.deleteSkill);
 
 ///POST /api/profiles/users/:userId/skills/:skillId/endorse
 //router.post('/users/:userId/skills/:skillId/endorse', authMiddleware, profileController.endorseSkill);
-
-//--------------------Privacy--------------------//
-//GET /api/profiles/me/privacy
-//router.get('/me/privacy', authMiddleware, profileController.getPrivacySettings);
-
-//PUT /api/profiles/me/privacy
-//router.put('/me/privacy', authMiddleware, profileController.updatePrivacySettings);
 
 //--------------------Profile Visibility--------------------//\
 //GET /api/profiles/me/visibility

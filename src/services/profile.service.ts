@@ -321,6 +321,76 @@ export const deleteCertification = async (userId: string, certificationId: strin
 
 	return deletedCertification;
 };
+//--------------------Skills--------------------//
+
+export const getSkills = async (userId: string) => {
+	if (!userId) {
+		throw new Error('User ID is missing in getSkills function');
+	}
+
+	const skills = await knexInstance('user_skills')
+		.join('skills', 'user_skills.skill_id', 'skills.id')
+		.select('skills.id', 'skills.skill_name as name')
+		.where('user_skills.user_id', userId);
+
+	return skills;
+};
+
+export const addSkill = async (userId: string, skillName: string) => {
+	if (!userId) {
+		throw new Error('User ID is missing in addSkill function');
+	}
+	if (!skillName) {
+		throw new Error('Skill name is required');
+	}
+
+	// Check if skill already exists in `skills` table
+	let skill = await knexInstance('skills').select('id').where({ skill_name: skillName }).first();
+
+	// If skill does not exist, add it to `skills` table
+	if (!skill) {
+		const [newSkill] = await knexInstance('skills')
+			.insert({ id: uuidv4(), skill_name: skillName })
+			.returning('*');
+		skill = newSkill;
+	}
+
+	// Add skill to `user_skills` table if not already added
+	const existingSkill = await knexInstance('user_skills')
+		.where({ user_id: userId, skill_id: skill.id })
+		.first();
+
+	if (existingSkill) {
+		throw new Error('Skill already added');
+	}
+
+	await knexInstance('user_skills').insert({
+		user_id: userId,
+		skill_id: skill.id,
+	});
+
+	return { id: skill.id, name: skillName };
+};
+
+export const deleteSkill = async (userId: string, skillId: string) => {
+	if (!userId || !skillId) {
+		throw new Error('User ID and Skill ID are required');
+	}
+
+	// Check if skill exists in user_skills table
+	const skill = await knexInstance('user_skills')
+		.where({ user_id: userId, skill_id: skillId })
+		.first();
+
+	if (!skill) {
+		throw new Error('Skill not found for this user');
+	}
+
+	return await knexInstance('user_skills')
+		.where({ user_id: userId, skill_id: skillId })
+		.del()
+		.returning('*');
+};
 
 //--------------------Profile Visibility--------------------//
 export const getProfileVisibility = async (userId: string) => {
