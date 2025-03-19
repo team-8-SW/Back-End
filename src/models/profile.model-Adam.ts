@@ -26,22 +26,17 @@ export interface WorkExperience {
 	location?: string | null;
 }
 
-export interface UserEducation {
+export interface Education {
 	id: UUID;
 	userId: UUID;
-	universityId: string;
-	degree?: string;
-	fieldOfStudy?: string;
-	startDate: Date;
-	endDate?: Date | null;
+	institution: string;
+	degree?: string | null;
+	fieldOfStudy?: string | null;
+	startDate: string;
+	endDate?: string | null;
 	currentEducation: boolean;
-	description?: string;
-	grade?: string;
-}
-
-export interface University {
-	id: UUID;
-	universityName: string;
+	description?: string | null;
+	grade?: string | null;
 }
 
 export interface Certification {

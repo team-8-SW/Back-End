@@ -15,10 +15,11 @@ const storage = multer.diskStorage({
 const upload = multer({ storage });
 
 const router = express.Router();
-//--------------------Profile Managment--------------------//
+//--------------------View Other user Profiles--------------------//
 // GET /api/profiles/:userId
 router.get('/:userId', profileController.getProfileById);
 
+//--------------------Profile Managment--------------------//
 // POST /api/profiles/me/profile-picture
 router.post(
 	'/me/profile-picture',
@@ -114,8 +115,11 @@ router.delete(
 //PUT /api/profiles/me/privacy
 //router.put('/me/privacy', authMiddleware, profileController.updatePrivacySettings);
 
-//--------------------Profile Visibility--------------------//
+//--------------------Profile Visibility--------------------//\
+//GET /api/profiles/me/visibility
+router.get('/me/visibility', authMiddleware, profileController.getProfileVisibility);
+
 //PUT /api/profiles/me/visibility
-//router.put('/me/visibility', authMiddleware, profileController.updateProfileVisibility);
+router.put('/me/visibility', authMiddleware, profileController.updateProfileVisibility);
 
 export default router;
