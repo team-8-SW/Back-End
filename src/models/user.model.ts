@@ -1,6 +1,10 @@
 import knex from 'knex';
 import { v4 as uuidv4 } from 'uuid';
 import { pool } from '../config/db'; // Still using pg.Pool for connection
+import bcrypt from 'bcrypt';
+
+// eslint-disable-next-line @typescript-eslint/naming-convention
+const SALT_ROUNDS = 10;
 
 export interface User {
 	id: string;
@@ -77,4 +81,25 @@ export const createUser = async (user: User): Promise<User> => {
 		]);
 
 	return createdUser;
+};
+
+export const updateUser = async (
+	userId: string,
+	updates: Partial<{
+		first_name: string;
+		last_name: string;
+		email: string;
+		password: string;
+		email_verified: boolean;
+	}>,
+) => {
+	const updateData: any = { ...updates };
+
+	// ✅ Hash password if updating it
+	if (updates.password) {
+		updateData.password_hash = await bcrypt.hash(updates.password, SALT_ROUNDS);
+		delete updateData.password; // Remove plain text password
+	}
+
+	return db('users').where({ id: userId }).update(updateData).returning('*');
 };
