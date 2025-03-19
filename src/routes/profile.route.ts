@@ -116,6 +116,6 @@ router.delete(
 
 //--------------------Profile Visibility--------------------//
 //PUT /api/profiles/me/visibility
-//router.put('/me/visibility', authMiddleware, profileController.updateProfileVisibility);
+router.put('/me/visibility', authMiddleware, profileController.updateProfileVisibility);
 
 export default router;

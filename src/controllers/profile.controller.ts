@@ -397,13 +397,10 @@ export const getEducation = async (req: Request, res: Response) => {
 		res.json(
 			education.map((edu) => ({
 				id: edu.id,
-				school: edu.schoolName,
+				school: edu.institution,
 				degree: edu.degree,
-				fieldOfStudy: edu.fieldOfStudy,
 				startDate: edu.startDate,
 				endDate: edu.endDate,
-				grade: edu.grade,
-				activities: edu.activities,
 			})),
 		);
 	} catch (error) {
@@ -414,25 +411,27 @@ export const getEducation = async (req: Request, res: Response) => {
 export const addEducation = async (req: Request, res: Response) => {
 	try {
 		const userId = (req as any).user?.id;
-		const { schoolName, degree, startDate, endDate } = req.body;
+		const { school, degree, startDate, endDate } = req.body;
 
-		if (!schoolName || !degree || !startDate) {
+		if (!school || !degree || !startDate) {
 			return res
 				.status(400)
 				.json({ error: 'School name, degree, field of study and start date are required' });
 		}
 
 		const educationData = {
-			school_name: schoolName,
+			institution: school,
 			degree,
 			field_of_study: null,
 			start_date: startDate,
 			end_date: endDate || null,
 			grade: null,
-			activities: null,
+			current_education: endDate === null || endDate === undefined ? true : false,
+			description: null,
 		};
 
 		const newEducation = await profileService.addEducation(userId, educationData);
+
 		if (!newEducation) {
 			return res.status(500).json({ error: 'Error adding education' });
 		}
@@ -446,22 +445,19 @@ export const updateEducation = async (req: Request, res: Response) => {
 	try {
 		const userId = (req as any).user?.id;
 		const educationId = req.params.educationId;
-		const { schoolName, degree, startDate, endDate } = req.body;
+		const { school, degree, startDate, endDate } = req.body;
 
-		if (!schoolName || !degree || !startDate) {
+		if (!school || !degree || !startDate) {
 			return res
 				.status(400)
 				.json({ error: 'School name, degree, field of study and start date are required' });
 		}
 
 		const educationData = {
-			school_name: schoolName,
+			institution: school,
 			degree,
-			field_of_study: null,
 			start_date: startDate,
 			end_date: endDate || null,
-			grade: null,
-			activities: null,
 		};
 
 		const updatedEducation = await profileService.updateEducation(
@@ -611,6 +607,32 @@ export const deleteCertification = async (req: Request, res: Response) => {
 		}
 
 		res.json({ message: 'Certification deleted successfully' });
+	} catch (error) {
+		res.status(500).json({ error: 'Internal server error' });
+	}
+};
+
+//--------------------Profile Visibility--------------------//
+export const updateProfileVisibility = async (req: Request, res: Response) => {
+	try {
+		const userId = (req as any).user?.id;
+		const { visibility } = req.body;
+
+		if (visibility != 'public' && visibility != 'private' && visibility != 'connections-only') {
+			return res.status(400).json({
+				error: 'Profile Visibility can only be public, private or connections-only',
+			});
+		}
+
+		const updatedProfileVisibility = await profileService.updateProfileVisibility(
+			userId,
+			visibility,
+		);
+		if (!updatedProfileVisibility) {
+			return res.status(404).json({ error: 'Privacy Setting not found' });
+		}
+
+		res.json({ message: 'Profile Visibility updated successfully' });
 	} catch (error) {
 		res.status(500).json({ error: 'Internal server error' });
 	}

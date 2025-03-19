@@ -189,14 +189,7 @@ export const getEducation = async (userId: string) => {
 	}
 
 	return await knexInstance('education')
-		.select(
-			'id',
-			'school',
-			'degree',
-			'field_of_study as fieldOfStudy',
-			'start_date as startDate',
-			'end_date as endDate',
-		)
+		.select('id', 'institution', 'degree', 'start_date as startDate', 'end_date as endDate')
 		.where({ user_id: userId });
 };
 
@@ -327,4 +320,21 @@ export const deleteCertification = async (userId: string, certificationId: strin
 		.returning('*');
 
 	return deletedCertification;
+};
+
+//--------------------Profile Visibility--------------------//
+
+export const updateProfileVisibility = async (userId: string, visibility: string) => {
+	if (!userId) {
+		throw new Error('User ID is missing in updateProfileVisibility function');
+	}
+
+	const rowsUpdated = await knexInstance('userprivacysettings')
+		.where({ user_id: userId })
+		.update({ profile_visibility: visibility })
+		.returning('*');
+
+	if (rowsUpdated.length === 0) return null;
+
+	return rowsUpdated[0];
 };
