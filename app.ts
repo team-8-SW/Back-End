@@ -7,6 +7,7 @@ import userRoutes from './src/routes/users.routes'; // Adjust the path as needed
 import authRoutes from './src/routes/auth.route';
 //import router from './src/routes/users.routes';
 import companyRoutes from './src/routes/company.route';
+import profileRoutes from './src/routes/profile.route';
 
 import notificationsRouter from './src/routes/notifications.route';
 // Initialize environment variables
@@ -32,6 +33,7 @@ app.use('/api/users', userRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/notifications', notificationsRouter);
 app.use('/api/company', companyRoutes);
+app.use('/api/profiles', profileRoutes);
 
 // 404 handler
 app.use((req: Request, res: Response) => {

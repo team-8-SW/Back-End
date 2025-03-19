@@ -9,4 +9,3 @@ export interface notifications {
 	is_read: boolean;
 	created_at: Date;
 }
-
