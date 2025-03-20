@@ -420,6 +420,9 @@ export const addEducation = async (req: Request, res: Response) => {
 		}
 
 		const university = await profileService.findUniversity(school);
+		if (!university) {
+			return res.status(400).json({ error: 'School is invalid' });
+		}
 
 		const educationData = {
 			user_id: userId,

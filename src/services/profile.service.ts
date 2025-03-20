@@ -206,10 +206,6 @@ export const findUniversity = async (school: string) => {
 		.where({ university_name: school })
 		.first();
 
-	if (!university) {
-		throw new Error(`University '${school}' not found`);
-	}
-
 	return university;
 };
 
@@ -431,7 +427,7 @@ export const getProfileVisibility = async (userId: string) => {
 	if (!userId) {
 		throw new Error('User ID is missing in getProfileVisibility function');
 	}
-	return knexInstance('userprivacysettings')
+	return knexInstance('user_privacy_settings')
 		.select('profile_visibility as visibility')
 		.where({ user_id: userId })
 		.first();
@@ -442,7 +438,7 @@ export const updateProfileVisibility = async (userId: string, visibility: string
 		throw new Error('User ID is missing in updateProfileVisibility function');
 	}
 
-	const rowsUpdated = await knexInstance('userprivacysettings')
+	const rowsUpdated = await knexInstance('user_privacy_settings')
 		.where({ user_id: userId })
 		.update({ profile_visibility: visibility })
 		.returning('*');

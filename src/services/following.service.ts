@@ -8,12 +8,12 @@ export const getFollowing = async (userId: string) => {
 
 	return await knexInstance('following')
 		.join('users', 'following.followed_id', 'users.id') // Get followed users' details
-		.leftJoin('userprofiles', 'users.id', 'userprofiles.user_id')
+		.leftJoin('user_profiles', 'users.id', 'user_profiles.user_id')
 		.select(
 			'users.id',
 			'users.first_name as firstName',
 			'users.last_name as lastName',
-			'userprofiles.headline',
+			'user_profiles.headline',
 		)
 		.where('following.follower_id', userId); // Get users the current user is following
 };
@@ -25,12 +25,12 @@ export const getFollowers = async (userId: string) => {
 
 	const followers = await knexInstance('following')
 		.join('users', 'following.follower_id', 'users.id') // Get follower details
-		.leftJoin('userprofiles', 'users.id', 'userprofiles.user_id') // Join to get headline
+		.leftJoin('user_profiles', 'users.id', 'user_profiles.user_id') // Join to get headline
 		.select(
 			'users.id',
 			'users.first_name as firstName',
 			'users.last_name as lastName',
-			'userprofiles.headline',
+			'user_profiles.headline',
 		)
 		.where('following.followed_id', userId); // Get followers of this user
 
