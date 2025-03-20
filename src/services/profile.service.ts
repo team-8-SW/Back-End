@@ -129,7 +129,7 @@ export const getExperience = async (userId: string) => {
 		throw new Error('User ID is missing in getExperience function');
 	}
 
-	return await knexInstance('workexperience')
+	return await knexInstance('work_experience')
 		.select(
 			'id',
 			'company_name as companyName',
@@ -147,7 +147,7 @@ export const addExperience = async (userId: string, experience: any) => {
 		throw new Error('User ID is missing in addExperience function');
 	}
 
-	const [newExperience] = await knexInstance('workexperience')
+	const [newExperience] = await knexInstance('work_experience')
 		.insert({ id: uuidv4(), user_id: userId, ...experience })
 		.returning('*');
 
@@ -159,13 +159,13 @@ export const updateExperience = async (userId: string, experienceId: string, exp
 		throw new Error('User ID is missing in updateExperience function');
 	}
 
-	const rowsUpdated = await knexInstance('workexperience')
+	const rowsUpdated = await knexInstance('work_experience')
 		.where({ id: experienceId, user_id: userId })
 		.update(experience);
 
 	if (rowsUpdated === 0) return null;
 
-	return knexInstance('workexperience').where({ id: experienceId }).first();
+	return knexInstance('work_experience').where({ id: experienceId }).first();
 };
 
 export const deleteExperience = async (userId: string, experienceId: string) => {
@@ -173,7 +173,7 @@ export const deleteExperience = async (userId: string, experienceId: string) => 
 		throw new Error('User ID is missing in deleteExperience function');
 	}
 
-	const deletedExperience = await knexInstance('workexperience')
+	const deletedExperience = await knexInstance('work_experience')
 		.where({ id: experienceId, user_id: userId })
 		.del()
 		.returning('*');
@@ -445,5 +445,110 @@ export const updateProfileVisibility = async (userId: string, visibility: string
 
 	if (rowsUpdated.length === 0) return null;
 
+	return rowsUpdated[0];
+};
+//--------------------Create/Update new User--------------------//
+
+export const createUserProfile = async (userId: string, profileData: any) => {
+	if (!userId) {
+		throw new Error('User ID is required');
+	}
+
+	try {
+		await knexInstance('user_profiles').insert({
+			id: uuidv4(),
+			user_id: userId,
+			headline: profileData.headline || null,
+			bio: profileData.bio || null,
+			location: profileData.location || null,
+			industry: profileData.industry || null,
+			last_updated: knexInstance.fn.now(),
+		});
+
+		if (profileData.skills?.length) {
+			for (const skillName of profileData.skills) {
+				let skill = await knexInstance('skills')
+					.select('id')
+					.where({ skill_name: skillName })
+					.first();
+
+				if (!skill) {
+					const [newSkill] = await knexInstance('skills')
+						.insert({ id: uuidv4(), skill_name: skillName })
+						.returning('*');
+					skill = newSkill;
+				}
+
+				await knexInstance('user_skills').insert({
+					user_id: userId,
+					skill_id: skill.id,
+				});
+			}
+		}
+
+		if (profileData.workExperience?.length) {
+			for (const experience of profileData.workExperience) {
+				await knexInstance('work_experience').insert({
+					id: uuidv4(),
+					user_id: userId,
+					company_name: experience.companyName,
+					position: experience.position,
+					start_date: experience.startDate,
+					end_date: experience.endDate || null,
+					current_job: experience.currentJob || false,
+					description: experience.description || null,
+					location: experience.location || null,
+				});
+			}
+		}
+
+		if (profileData.education?.length) {
+			for (const edu of profileData.education) {
+				const university = await knexInstance('universities')
+					.select('id')
+					.where({ university_name: edu.school })
+					.first();
+
+				if (!university) {
+					throw new Error(`University '${edu.school}' not found in the database.`);
+				}
+				await knexInstance('user_education').insert({
+					id: uuidv4(),
+					user_id: userId,
+					university_id: university.id,
+					degree: edu.degree || null,
+					start_date: edu.startDate,
+					end_date: edu.endDate || null,
+					current_education: !edu.endDate,
+					description: edu.description || null,
+					grade: edu.grade || null,
+				});
+			}
+		}
+		return await knexInstance('user_profiles').where({ user_id: userId }).first();
+	} catch (error) {
+		throw new Error('Failed to create user profile');
+	}
+};
+
+export const updateUserProfile = async (userId: string, profileData: any) => {
+	if (!userId) {
+		throw new Error('User ID is required');
+	}
+
+	const updatedProfile = {
+		headline: profileData.headline || null,
+		bio: profileData.bio || null,
+		location: profileData.location || null,
+		industry: profileData.industry || null,
+		last_updated: knexInstance.fn.now(),
+	};
+
+	const rowsUpdated = await knexInstance('user_profiles')
+		.where({ user_id: userId })
+		.update(updatedProfile)
+		.returning('*');
+
+	if (rowsUpdated.length === 0) return null;
 	return rowsUpdated[0];
 };

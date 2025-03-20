@@ -108,11 +108,18 @@ router.delete('/me/skills/:skillId', authMiddleware, profileController.deleteSki
 ///POST /api/profiles/users/:userId/skills/:skillId/endorse
 //router.post('/users/:userId/skills/:skillId/endorse', authMiddleware, profileController.endorseSkill);
 
-//--------------------Profile Visibility--------------------//\
+//--------------------Profile Visibility--------------------//
 //GET /api/profiles/me/visibility
 router.get('/me/visibility', authMiddleware, profileController.getProfileVisibility);
 
 //PUT /api/profiles/me/visibility
 router.put('/me/visibility', authMiddleware, profileController.updateProfileVisibility);
+
+//--------------------Create/Update new User--------------------//
+//POST /api/profiles/me
+router.post('/me', authMiddleware, profileController.createUserProfile);
+
+//PUT /api/profiles/me
+router.put('/me', authMiddleware, profileController.updateUserProfile);
 
 export default router;

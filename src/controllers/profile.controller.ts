@@ -728,3 +728,58 @@ export const updateProfileVisibility = async (req: Request, res: Response) => {
 		res.status(500).json({ error: 'Internal server error' });
 	}
 };
+//--------------------Create/Update new User--------------------//
+
+export const createUserProfile = async (req: Request, res: Response) => {
+	try {
+		const userId = (req as any).user?.id;
+		if (!userId) {
+			return res.status(400).json({ error: 'User ID is required' });
+		}
+
+		const { headline, bio, location, industry, skills, workExperience, education } = req.body;
+
+		const newProfile = await profileService.createUserProfile(userId, {
+			headline,
+			bio,
+			location,
+			industry,
+			skills,
+			workExperience,
+			education,
+		});
+		if (!newProfile) {
+			return res.status(404).json({ error: 'Failed to create user profile' });
+		}
+
+		res.status(201).json({ message: 'User profile created successfully' });
+	} catch (error) {
+		res.status(500).json({ error: 'Internal server error' });
+	}
+};
+
+export const updateUserProfile = async (req: Request, res: Response) => {
+	try {
+		const userId = (req as any).user?.id;
+		if (!userId) {
+			return res.status(400).json({ error: 'User ID is required' });
+		}
+
+		const { headline, bio, location, industry } = req.body;
+
+		const updatedProfile = await profileService.updateUserProfile(userId, {
+			headline,
+			bio,
+			location,
+			industry,
+		});
+
+		if (!updatedProfile) {
+			return res.status(404).json({ error: 'Profile not found' });
+		}
+
+		res.json({ message: 'User profile updated successfully' });
+	} catch (error) {
+		res.status(500).json({ error: 'Internal server error' });
+	}
+};
