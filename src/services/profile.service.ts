@@ -2,17 +2,17 @@ import { v4 as uuidv4 } from 'uuid'; // Import UUID generator
 import { knexInstance } from '../config/db';
 
 export const getProfileById = async (id: string) => {
-	return await knexInstance('userprofiles')
+	return await knexInstance('user_profiles')
 		.select(
-			'userprofiles.id', // Specify the table for the id
+			'user_profiles.id', // Specify the table for the id
 			'users.first_name as firstName',
 			'users.last_name as lastName',
-			'userprofiles.headline',
-			'userprofiles.location',
-			'userprofiles.profile_picture_url as profilePictureUrl',
+			'user_profiles.headline',
+			'user_profiles.location',
+			'user_profiles.profile_picture_url as profilePictureUrl',
 		)
-		.join('users', 'userprofiles.user_id', 'users.id') // Join with users table
-		.where({ 'userprofiles.user_id': id })
+		.join('users', 'user_profiles.user_id', 'users.id') // Join with users table
+		.where({ 'user_profiles.user_id': id })
 		.first();
 };
 
@@ -23,13 +23,13 @@ export const updateProfilePicture = async (userId: string, profilePictureUrl: st
 		throw new Error('User ID is missing in updateProfilePicture function');
 	}
 
-	const rowsUpdated = await knexInstance('userprofiles')
+	const rowsUpdated = await knexInstance('user_profiles')
 		.where({ user_id: userId })
 		.update({ profile_picture_url: profilePictureUrl });
 
 	if (rowsUpdated === 0) return null;
 
-	return knexInstance('userprofiles')
+	return knexInstance('user_profiles')
 		.select('profile_picture_url as profilePictureUrl')
 		.where({ user_id: userId })
 		.first();
@@ -40,13 +40,13 @@ export const deleteProfilePicture = async (userId: string) => {
 		throw new Error('User ID is missing in deleteProfilePicture function');
 	}
 
-	const rowsUpdated = await knexInstance('userprofiles')
+	const rowsUpdated = await knexInstance('user_profiles')
 		.where({ user_id: userId })
 		.update({ profile_picture_url: null });
 
 	if (rowsUpdated === 0) return null;
 
-	return knexInstance('userprofiles')
+	return knexInstance('user_profiles')
 		.select('profile_picture_url as profilePictureUrl')
 		.where({ user_id: userId })
 		.first();
@@ -59,13 +59,13 @@ export const updateCoverPicture = async (userId: string, coverPhotoUrl: string) 
 		throw new Error('User ID is missing in updateCoverPicture function');
 	}
 
-	const rowsUpdated = await knexInstance('userprofiles')
+	const rowsUpdated = await knexInstance('user_profiles')
 		.where({ user_id: userId })
 		.update({ cover_photo_url: coverPhotoUrl });
 
 	if (rowsUpdated === 0) return null;
 
-	return knexInstance('userprofiles')
+	return knexInstance('user_profiles')
 		.select('cover_photo_url as coverPhotoUrl')
 		.where({ user_id: userId })
 		.first();
@@ -76,13 +76,13 @@ export const deleteCoverPicture = async (userId: string) => {
 		throw new Error('User ID is missing in deleteCoverPicture function');
 	}
 
-	const rowsUpdated = await knexInstance('userprofiles')
+	const rowsUpdated = await knexInstance('user_profiles')
 		.where({ user_id: userId })
 		.update({ cover_photo_url: null });
 
 	if (rowsUpdated === 0) return null;
 
-	return knexInstance('userprofiles')
+	return knexInstance('user_profiles')
 		.select('cover_photo_url as coverPhotoUrl')
 		.where({ user_id: userId })
 		.first();
@@ -94,13 +94,13 @@ export const updateResume = async (userId: string, resumeUrl: string) => {
 		throw new Error('User ID is missing in updateResume function');
 	}
 
-	const rowsUpdated = await knexInstance('userprofiles')
+	const rowsUpdated = await knexInstance('user_profiles')
 		.where({ user_id: userId })
 		.update({ resume_url: resumeUrl });
 
 	if (rowsUpdated === 0) return null;
 
-	return knexInstance('userprofiles')
+	return knexInstance('user_profiles')
 		.select('resume_url as resumeUrl')
 		.where({ user_id: userId })
 		.first();
@@ -111,13 +111,13 @@ export const deleteResume = async (userId: string) => {
 		throw new Error('User ID is missing in deleteResume function');
 	}
 
-	const rowsUpdated = await knexInstance('userprofiles')
+	const rowsUpdated = await knexInstance('user_profiles')
 		.where({ user_id: userId })
 		.update({ resume_url: null });
 
 	if (rowsUpdated === 0) return null;
 
-	return knexInstance('userprofiles')
+	return knexInstance('user_profiles')
 		.select('resume_url as resumeUrl')
 		.where({ user_id: userId })
 		.first();
@@ -188,9 +188,29 @@ export const getEducation = async (userId: string) => {
 		throw new Error('User ID is missing in getEducation function');
 	}
 
-	return await knexInstance('education')
-		.select('id', 'institution', 'degree', 'start_date as startDate', 'end_date as endDate')
-		.where({ user_id: userId });
+	return await knexInstance('user_education')
+		.join('universities', 'user_education.university_id', 'universities.id') // Join to get university name
+		.select(
+			'user_education.id',
+			'universities.university_name as universityName',
+			'user_education.degree',
+			'user_education.start_date as startDate',
+			'user_education.end_date as endDate',
+		)
+		.where({ 'user_education.user_id': userId });
+};
+
+export const findUniversity = async (school: string) => {
+	const university = await knexInstance('universities')
+		.select('id')
+		.where({ university_name: school })
+		.first();
+
+	if (!university) {
+		throw new Error(`University '${school}' not found`);
+	}
+
+	return university;
 };
 
 export const addEducation = async (userId: string, education: any) => {
@@ -198,7 +218,7 @@ export const addEducation = async (userId: string, education: any) => {
 		throw new Error('User ID is missing in addEducation function');
 	}
 
-	const [newEducation] = await knexInstance('education')
+	const [newEducation] = await knexInstance('user_education')
 		.insert({ id: uuidv4(), user_id: userId, ...education })
 		.returning('*');
 
@@ -210,13 +230,27 @@ export const updateEducation = async (userId: string, educationId: string, educa
 		throw new Error('User ID is missing in updateEducation function');
 	}
 
-	const rowsUpdated = await knexInstance('education')
+	const university = await findUniversity(education.school);
+	if (!university) {
+		throw new Error(`University '${education.school}' not found`);
+	}
+
+	const updatedEducation = {
+		university_id: university.id,
+		degree: education.degree,
+		start_date: education.startDate,
+		end_date: education.endDate || null,
+		current_education: !education.endDate,
+	};
+
+	const rowsUpdated = await knexInstance('user_education')
 		.where({ id: educationId, user_id: userId })
-		.update(education);
+		.update(updatedEducation)
+		.returning('*');
 
-	if (rowsUpdated === 0) return null;
+	if (rowsUpdated.length === 0) return null;
 
-	return knexInstance('education').where({ id: educationId }).first();
+	return rowsUpdated[0];
 };
 
 export const deleteEducation = async (userId: string, educationId: string) => {
@@ -224,7 +258,7 @@ export const deleteEducation = async (userId: string, educationId: string) => {
 		throw new Error('User ID is missing in deleteEducation function');
 	}
 
-	const deletedEducation = await knexInstance('education')
+	const deletedEducation = await knexInstance('user_education')
 		.where({ id: educationId, user_id: userId })
 		.del()
 		.returning('*');

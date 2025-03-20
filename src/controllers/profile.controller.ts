@@ -397,7 +397,7 @@ export const getEducation = async (req: Request, res: Response) => {
 		res.json(
 			education.map((edu) => ({
 				id: edu.id,
-				school: edu.institution,
+				school: edu.universityName,
 				degree: edu.degree,
 				startDate: edu.startDate,
 				endDate: edu.endDate,
@@ -416,18 +416,21 @@ export const addEducation = async (req: Request, res: Response) => {
 		if (!school || !degree || !startDate) {
 			return res
 				.status(400)
-				.json({ error: 'School name, degree, field of study and start date are required' });
+				.json({ error: 'School name, degree, and start date are required' });
 		}
 
+		const university = await profileService.findUniversity(school);
+
 		const educationData = {
-			institution: school,
+			user_id: userId,
+			university_id: university.id,
 			degree,
 			field_of_study: null,
 			start_date: startDate,
 			end_date: endDate || null,
 			grade: null,
-			current_education: endDate === null || endDate === undefined ? true : false,
 			description: null,
+			current_education: !endDate, // Assume current education if no endDate
 		};
 
 		const newEducation = await profileService.addEducation(userId, educationData);
@@ -435,9 +438,10 @@ export const addEducation = async (req: Request, res: Response) => {
 		if (!newEducation) {
 			return res.status(500).json({ error: 'Error adding education' });
 		}
+
 		res.status(201).json({ message: 'Education added successfully' });
 	} catch (error) {
-		res.status(500).json({ error: 'Internal server error' });
+		res.status(400).json({ error: 'Internal server srror' });
 	}
 };
 
@@ -448,16 +452,16 @@ export const updateEducation = async (req: Request, res: Response) => {
 		const { school, degree, startDate, endDate } = req.body;
 
 		if (!school || !degree || !startDate) {
-			return res
-				.status(400)
-				.json({ error: 'School name, degree, field of study and start date are required' });
+			return res.status(400).json({
+				error: 'School name, degree, and start date are required',
+			});
 		}
 
 		const educationData = {
-			institution: school,
+			school,
 			degree,
-			start_date: startDate,
-			end_date: endDate || null,
+			startDate,
+			endDate,
 		};
 
 		const updatedEducation = await profileService.updateEducation(
@@ -467,12 +471,12 @@ export const updateEducation = async (req: Request, res: Response) => {
 		);
 
 		if (!updatedEducation) {
-			return res.status(404).json({ error: 'Education not found' });
+			return res.status(404).json({ error: 'Education record not found' });
 		}
 
 		res.json({ message: 'Education updated successfully' });
 	} catch (error) {
-		res.status(500).json({ error: 'Internal server error' });
+		res.status(400).json({ error: 'Internal server error' });
 	}
 };
 
