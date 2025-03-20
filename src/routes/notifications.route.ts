@@ -4,7 +4,7 @@ import * as notificationsController from '../controllers/notifications.controlle
 
 const router = express.Router();
 
-router.get('/:user_id', notificationsController.getAllNotifications);
+router.get('/:user_id', notificationsController.getAllNotifications); //neshouf law mehtaga me
 router.get('/unread-count/:user_id', notificationsController.getUnreadCount);
 router.put('/read/:id', notificationsController.markNotificationAsRead);
 
