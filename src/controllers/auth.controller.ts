@@ -1,16 +1,22 @@
 import { Request, Response } from 'express';
 import axios from 'axios';
-import { loginService, registerService } from '../services/auth.service';
 import dotenv from 'dotenv';
 import jwt from 'jsonwebtoken';
 import * as userModel from '../models/user.model';
 import { sendEmail } from '../utils/email';
+import {
+	loginService,
+	registerService,
+	forgotPasswordService,
+	resetPasswordRequestService,
+	updatePasswordService,
+	socialLoginGoogleService,
+} from '../services/auth.service';
+import { AuthenticatedRequest } from '../middleware/auth.middleware';
+import { verifyRecaptcha } from '../utils/recaptcha';
 
 dotenv.config();
 
-/**
- * Login Controller
- */
 export const login = async (req: Request, res: Response) => {
 	try {
 		const { email, password } = req.body;
@@ -22,9 +28,6 @@ export const login = async (req: Request, res: Response) => {
 	}
 };
 
-/**
- * Register User Controller (with Google reCAPTCHA)
- */
 export const register = async (req: Request, res: Response) => {
 	try {
 		const {
@@ -39,21 +42,23 @@ export const register = async (req: Request, res: Response) => {
 			verification_token,
 		} = req.body;
 
-		// Verify Google reCAPTCHA
-		// const verifyRecaptcha = await axios.post(
-		// 	`https://www.google.com/recaptcha/api/siteverify`,
-		// 	null,
-		// 	{
-		// 		params: {
-		// 			secret: process.env.RECAPTCHA_SECRET_KEY,
-		// 			response: recaptchaToken,
-		// 		},
-		// 	}
-		// );
+		// Verify reCAPTCHA before registering the user
+		const isRecaptchaValid = await verifyRecaptcha(recaptchaToken);
+		if (!isRecaptchaValid) {
+			return res.status(400).json({ message: 'reCAPTCHA verification failed' });
+		}
 
-		// if (!verifyRecaptcha.data.success) {
-		// 	return res.status(400).json({ message: 'reCAPTCHA verification failed' });
-		// }
+		// Now correctly pass six arguments to registerService
+		const newUser = await registerService(
+			userName,
+			email,
+			password,
+			firstName,
+			lastName,
+			recaptchaToken,
+			emailVerified,
+			verification_token,
+		);
 
 		// Register the user (Fix: use `password_hash`)
 		const oldUser = await userModel.findUserByEmail(email); //dev2
@@ -61,15 +66,6 @@ export const register = async (req: Request, res: Response) => {
 			res.json({ message: 'Email already in use' }); //dev2
 		}
 
-		const newUser = await registerService(
-			userName,
-			email,
-			password,
-			firstName,
-			lastName,
-			emailVerified,
-			verification_token,
-		);
 		const token = jwt.sign({ userId: newUser.id }, process.env.JWT_SECRET!, {
 			expiresIn: '1h',
 		});
@@ -85,7 +81,7 @@ export const register = async (req: Request, res: Response) => {
 		return res.status(500).json({ message: error.message || 'User registration failed' });
 	}
 };
-//dev2
+
 export const resendVerificationEmail = async (req: Request, res: Response) => {
 	try {
 		const { email } = req.body;
@@ -202,5 +198,61 @@ export const deleteAccount = async (req: Request, res: Response) => {
 	} catch (error) {
 		console.error('Error in deleting account', error);
 		res.status(500).json({ message: 'Internal Server Error' });
+	}
+};
+
+export const resetPassword = async (req: Request, res: Response) => {
+	try {
+		const { token, newPassword } = req.body;
+
+		await resetPasswordRequestService(token, newPassword);
+		return res.status(200).json({ message: 'Password reset successfully' });
+	} catch (error: any) {
+		return res.status(400).json({ message: error.message || 'Failed to reset password' });
+	}
+};
+
+export const forgotPassword = async (req: Request, res: Response) => {
+	try {
+		const { email } = req.body;
+
+		await forgotPasswordService(email);
+		return res.status(200).json({ message: 'Password reset email sent' });
+	} catch (error: any) {
+		return res.status(400).json({ message: error.message || 'Failed to send reset email' });
+	}
+};
+
+/**
+ * (Logged-In User)
+ */
+export const updatePassword = async (req: AuthenticatedRequest, res: Response) => {
+	try {
+		if (!req.user) {
+			return res.status(401).json({ message: 'Unauthorized' });
+		}
+
+		const userId = req.user.id;
+		const { currentPassword, newPassword } = req.body;
+
+		await updatePasswordService(userId, currentPassword, newPassword);
+		return res.status(200).json({ message: 'Password updated successfully' });
+	} catch (error: any) {
+		return res.status(400).json({ message: error.message || 'Failed to update password' });
+	}
+};
+
+export const socialLoginGoogle = async (req: Request, res: Response) => {
+	try {
+		const { idToken } = req.body;
+
+		const jwtToken = await socialLoginGoogleService(idToken);
+
+		return res.status(200).json({
+			message: 'Successfully authenticated with Google',
+			accessToken: jwtToken,
+		});
+	} catch (error: any) {
+		return res.status(400).json({ message: error.message || 'Google authentication failed' });
 	}
 };

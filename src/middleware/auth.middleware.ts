@@ -1,35 +1,25 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 
-// Extend the Request interface to include the 'user' property
-declare global {
-	// eslint-disable-next-line @typescript-eslint/no-namespace
-	namespace Express {
-		interface Request {
-			// eslint-disable-next-line @typescript-eslint/no-explicit-any
-			user?: any;
-		}
-	}
+export interface AuthenticatedRequest extends Request {
+	user?: { id: string; email: string };
 }
 
-export const authMiddleware = (req: Request, res: Response, next: NextFunction) => {
-	const token = req.header('Authorization')?.replace('Bearer ', '');
-
-	console.log('Token:', token); // Debug: Log the token
+export const authMiddleware = (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+	const token = req.headers.authorization?.split(' ')[1]; // Extract token from header
 
 	if (!token) {
-		return res.status(401).json({ message: 'Access denied. No token provided.' });
+		return res.status(401).json({ message: 'Unauthorized' });
 	}
 
 	try {
-		const decoded = jwt.verify(token, process.env.JWT_SECRET!);
-		console.log('Decoded User:', decoded); // Debug: Log the decoded user
-
-		req.user = decoded; // Attach the decoded user to the request object
+		const decoded = jwt.verify(token, process.env.JWT_SECRET as string) as {
+			id: string;
+			email: string;
+		};
+		req.user = decoded; // Attach decoded user data to request
 		next();
 	} catch (error) {
-		console.error('Token Verification Error:', error); // Debug: Log the error
-		res.status(400).json({ message: 'Invalid token.' });
+		return res.status(401).json({ message: 'Invalid token' });
 	}
 };
-//Middleware functions can be used to perform tasks like authentication, logging, or request validation before the request reaches the controller.
