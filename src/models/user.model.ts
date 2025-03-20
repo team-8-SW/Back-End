@@ -17,6 +17,7 @@ export interface User {
 	isPremium: boolean;
 	isActive: boolean;
 	isAdmin: boolean;
+	verification_token?: string | null;
 }
 
 // Initialize Knex with existing PostgreSQL connection
@@ -41,6 +42,7 @@ export const findUserByEmail = async (email: string): Promise<User | null> => {
 			'is_premium as isPremium',
 			'is_active as isActive',
 			'isadmin as isAdmin',
+			'verification_token',
 		])
 		.where('email', email)
 		.first(); // Get only one user
@@ -63,8 +65,8 @@ export const createUser = async (user: User): Promise<User> => {
 		is_premium: user.isPremium ?? false,
 		is_active: user.isActive ?? true,
 		isadmin: user.isAdmin ?? false,
+		verification_token: user.verification_token ?? null,
 	};
-
 	const [createdUser] = await db('users')
 		.insert(newUser)
 		.returning([
@@ -78,6 +80,7 @@ export const createUser = async (user: User): Promise<User> => {
 			'is_premium as isPremium',
 			'is_active as isActive',
 			'isadmin as isAdmin',
+			'verification_token',
 		]);
 
 	return createdUser;
@@ -91,6 +94,7 @@ export const updateUser = async (
 		email: string;
 		password: string;
 		email_verified: boolean;
+		verification_token: string | null;
 	}>,
 ) => {
 	const updateData: any = { ...updates };
@@ -102,4 +106,15 @@ export const updateUser = async (
 	}
 
 	return db('users').where({ id: userId }).update(updateData).returning('*');
+};
+
+export const getUserById = async (userId: string) => {
+	return db('users').where({ id: userId }).first();
+};
+
+export const updateUsername = async (userId: string, userName: string) => {
+	return db('users')
+		.where({ id: userId })
+		.update({ user_name: userName })
+		.returning(['user_name as userName', 'id']);
 };

@@ -2,6 +2,7 @@ import { Knex } from 'knex';
 import { v4 as uuidv4 } from 'uuid';
 import { faker } from '@faker-js/faker';
 import bcrypt from 'bcrypt';
+import jwt from 'jsonwebtoken';
 
 export async function seed(knex: Knex): Promise<void> {
 	console.log('Seeding users...');
@@ -19,9 +20,14 @@ export async function seed(knex: Knex): Promise<void> {
 			// eslint-disable-next-line @typescript-eslint/naming-convention
 			const reset_token = reset_token_expiry ? faker.datatype.uuid() : null;
 			const hashedPassword = await bcrypt.hash('password123', 10); // Set a default hashed password
+			const id = uuidv4();
+			// eslint-disable-next-line @typescript-eslint/naming-convention
+			const verification_token = jwt.sign({ userId: id }, process.env.JWT_SECRET!, {
+				expiresIn: '1h',
+			});
 
 			users.push({
-				id: uuidv4(),
+				id: id,
 				user_name: faker.internet.userName(),
 				email: faker.internet.email(),
 				password_hash: hashedPassword, // Use the hashed password
@@ -34,6 +40,7 @@ export async function seed(knex: Knex): Promise<void> {
 				reset_token: reset_token,
 				reset_token_expiry: reset_token_expiry,
 				isadmin: faker.datatype.boolean(),
+				verification_token: null,
 			});
 		}
 

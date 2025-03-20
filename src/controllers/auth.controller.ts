@@ -27,8 +27,17 @@ export const login = async (req: Request, res: Response) => {
  */
 export const register = async (req: Request, res: Response) => {
 	try {
-		const { userName, email, password, firstName, lastName, recaptchaToken, emailVerified } =
-			req.body;
+		const {
+			userName,
+			email,
+			password,
+			firstName,
+			lastName,
+			recaptchaToken,
+			emailVerified,
+			// eslint-disable-next-line @typescript-eslint/naming-convention
+			verification_token,
+		} = req.body;
 
 		// Verify Google reCAPTCHA
 		// const verifyRecaptcha = await axios.post(
@@ -59,10 +68,12 @@ export const register = async (req: Request, res: Response) => {
 			firstName,
 			lastName,
 			emailVerified,
+			verification_token,
 		);
 		const token = jwt.sign({ userId: newUser.id }, process.env.JWT_SECRET!, {
 			expiresIn: '1h',
 		});
+		await userModel.updateUser(newUser.id, { verification_token: token });
 		const verficationLink = `${process.env.FRONTEND_URL}/api/auth/verify-email?token=${token}`;
 		await sendEmail(email, 'Verify your account', `Click here to verify ${verficationLink}`); //dev2
 		console.log('Generated token:', token);
@@ -92,6 +103,8 @@ export const resendVerificationEmail = async (req: Request, res: Response) => {
 			expiresIn: '1h',
 		});
 		console.log(`Generated token: ${token}`);
+
+		await userModel.updateUser(user.id, { verification_token: token });
 		const verficationLink = `${process.env.FRONTEND_URL}/api/auth/verify-email?token=${token}`;
 		await sendEmail(
 			email,
@@ -107,9 +120,18 @@ export const resendVerificationEmail = async (req: Request, res: Response) => {
 //Email verfication dev2
 export const verifyEmail = async (req: Request, res: Response) => {
 	try {
-		const { token } = req.body;
+		const token = req.body.token || req.query.token;
 
 		const decoded = jwt.verify(token, process.env.JWT_SECRET!) as { userId: string };
+
+		const user = await userModel.getUserById(decoded.userId);
+
+		if (!user) return res.status(404).json({ message: 'User not found' });
+
+		if (user.email_verified) return res.status(400).json({ message: 'user verified' });
+
+		if (user.verification_token !== token)
+			return res.status(404).json({ message: 'Invalid Token' });
 
 		await userModel.updateUser(decoded.userId, { email_verified: true });
 
@@ -117,5 +139,31 @@ export const verifyEmail = async (req: Request, res: Response) => {
 	} catch (error) {
 		console.error('Error verifying email:', error);
 		res.status(400).json({ message: 'Invalid or expired token' });
+	}
+};
+
+export const updateUserName = async (req: Request, res: Response) => {
+	try {
+		const { id } = req.params;
+		const { userName } = req.body;
+
+		if (!userName) {
+			return res.status(400).json({ message: 'Username not found' });
+		}
+
+		const user = await userModel.getUserById(id);
+
+		if (!user) return res.status(404).json({ message: 'Invalid user' });
+
+		const updateUser = await userModel.updateUsername(id, userName);
+
+		if (!updateUser) {
+			return res.status(404).json({ message: 'Username not found' });
+		}
+
+		res.json({ message: 'Username updated successfully', user: updateUser[0] });
+	} catch (error) {
+		console.error('Error in updating username', error);
+		res.status(500).json({ message: 'Internal Server Error' });
 	}
 };

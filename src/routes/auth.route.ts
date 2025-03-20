@@ -13,7 +13,10 @@ router.post('/login', validateLogin, handleValidationErrors, login);
 router.post('/registerwithcaptcha', validateRegister, handleValidationErrors, register);
 
 router.post('/verify-email', authcontroller.verifyEmail);
+router.get('/verify-email', authcontroller.verifyEmail);
 
 router.post('/resend-confirmation', authcontroller.resendVerificationEmail);
+
+router.put('/:id/username', authcontroller.updateUserName);
 
 export default router;

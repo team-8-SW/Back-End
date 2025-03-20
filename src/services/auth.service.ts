@@ -37,6 +37,8 @@ export const registerService = async (
 	firstName: string,
 	lastName: string,
 	emailVerified: boolean,
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars, @typescript-eslint/naming-convention
+	verification_token: string,
 ) => {
 	// Check if email already exists
 	const existingUser = await findUserByEmail(email);
@@ -58,6 +60,7 @@ export const registerService = async (
 		isPremium: false,
 		isActive: true,
 		isAdmin: false,
+		verification_token: null,
 	};
 
 	const created = await createUser(newUser);
