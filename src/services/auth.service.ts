@@ -40,10 +40,10 @@ export const registerService = async (
 	password: string,
 	firstName: string,
 	lastName: string,
+	recaptchaToken: string,
 	emailVerified: boolean,
 	// eslint-disable-next-line @typescript-eslint/no-unused-vars, @typescript-eslint/naming-convention
-	verification_token: string,
-	recaptchaToken: string,
+	verificationToken: string,
 ) => {
 	const isRecaptchaValid = await verifyRecaptcha(recaptchaToken);
 	if (!isRecaptchaValid) {
@@ -78,6 +78,7 @@ export const registerService = async (
 		firstName: created.firstName,
 		lastName: created.lastName,
 		emailVerified: created.emailVerified,
+		verification_token: created.verification_token,
 	};
 };
 

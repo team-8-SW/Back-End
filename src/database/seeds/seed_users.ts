@@ -30,7 +30,7 @@ export async function seed(knex: Knex): Promise<void> {
 			const hasGoogleId = faker.datatype.boolean();
 			const google_id = hasGoogleId ? faker.datatype.uuid() : null;
 
-			// ✅ FIX: Ensure password_hash is never NULL
+			//  FIX: Ensure password_hash is never NULL
 			const hashedPassword = hasGoogleId
 				? await bcrypt.hash('google_dummy_password', 10) // Dummy password for Google users
 				: await bcrypt.hash('password123', 10); // Normal hashed password for regular users
@@ -39,7 +39,7 @@ export async function seed(knex: Knex): Promise<void> {
 				id: id,
 				user_name: faker.internet.userName(),
 				email: faker.internet.email(),
-				password_hash: hashedPassword, // ✅ Ensure it is NEVER NULL
+				password_hash: hashedPassword,
 				first_name: faker.name.firstName(),
 				last_name: faker.name.lastName(),
 				email_verified: faker.datatype.boolean(),

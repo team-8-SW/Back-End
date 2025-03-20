@@ -20,7 +20,6 @@ import {
 import { sendResetEmail } from '../../src/utils/email';
 import { OAuth2Client } from 'google-auth-library';
 
-// ✅ Mock dependencies
 jest.mock('../../src/models/user.model');
 jest.mock('../../src/utils/email');
 jest.mock('bcrypt');
@@ -46,8 +45,23 @@ jest.mock('google-auth-library', () => ({
 		}),
 	})),
 }));
+jest.mock('../../src/config/db', () => ({
+	pool: {
+		query: jest.fn(), // Mock SQL queries
+		connect: jest.fn().mockResolvedValue({
+			release: jest.fn(),
+		}),
+		end: jest.fn(),
+	},
+	knexInstance: {
+		select: jest.fn().mockReturnThis(),
+		where: jest.fn().mockReturnThis(),
+		first: jest.fn().mockResolvedValue(null),
+		insert: jest.fn().mockResolvedValue([1]),
+		update: jest.fn().mockResolvedValue(1),
+	},
+}));
 
-// ✅ Mock reCAPTCHA validation
 const mockVerifyRecaptcha = jest.fn().mockImplementation((token) => {
 	if (token === 'validRecaptchaToken') return true;
 	return false; // Simulate invalid reCAPTCHA token
@@ -71,7 +85,7 @@ describe('Authentication Services - Unit Tests', () => {
 		jest.clearAllMocks(); // Reset mocks before each test
 	});
 
-	// ✅ LOGIN SERVICE TESTS
+	// LOGIN SERVICE TESTS
 	describe('loginService', () => {
 		it('should return a JWT token for valid credentials', async () => {
 			(findUserByEmail as jest.Mock).mockResolvedValue(mockUser);
@@ -92,7 +106,7 @@ describe('Authentication Services - Unit Tests', () => {
 		});
 	});
 
-	// ✅ REGISTER SERVICE TESTS (WITH MOCKED reCAPTCHA)
+	// REGISTER SERVICE TESTS (WITH MOCKED reCAPTCHA)
 	describe('registerService', () => {
 		it('should register a new user when reCAPTCHA is valid', async () => {
 			(findUserByEmail as jest.Mock).mockResolvedValue(null);
@@ -108,15 +122,14 @@ describe('Authentication Services - Unit Tests', () => {
 			expect(isRecaptchaValid).toBe(true);
 
 			const user = await registerService(
-				'newuser', // userName
-				'new@example.com', // email
-				'password123', // password
-				'New', // firstName
-				'User', // lastName
-				'validRecaptchaToken', // recaptchaToken
-				false, // emailVerified (moved to last
-				'mockVerificationToken', // verification_token (should be before emailVerified)
-				)
+				'newuser',
+				'new@example.com',
+				'password123',
+				'New',
+				'User',
+				'validRecaptchaToken',
+				false,
+				'mockVerificationToken',
 			);
 			expect(user).toHaveProperty('email', 'new@example.com');
 			expect(user).toHaveProperty('emailVerified', false);
@@ -130,20 +143,20 @@ describe('Authentication Services - Unit Tests', () => {
 
 			await expect(
 				registerService(
-					'newuser', // userName
-					'new@example.com', // email
-					'password123', // password
-					'New', // firstName
-					'User', // lastName
-					'invalidRecaptchaToken', // recaptchaToken
-					'mockVerificationToken', // verification_token (should be before emailVerified)
-					false, // emailVerified (moved to last)
+					'newuser',
+					'new@example.com',
+					'password123',
+					'New',
+					'User',
+					'invalidRecaptchaToken',
+					false,
+					'mockVerificationToken',
 				),
 			).rejects.toThrow('Invalid reCAPTCHA');
 		});
 	});
 
-	// ✅ PASSWORD RESET REQUEST SERVICE TESTS
+	// PASSWORD RESET REQUEST SERVICE TESTS
 	describe('forgotPasswordService', () => {
 		it('should generate and save a reset token', async () => {
 			(findUserByEmail as jest.Mock).mockResolvedValue(mockUser);
@@ -162,7 +175,7 @@ describe('Authentication Services - Unit Tests', () => {
 		});
 	});
 
-	// ✅ RESET PASSWORD SERVICE TESTS
+	// RESET PASSWORD SERVICE TESTS
 	describe('resetPasswordRequestService', () => {
 		it('should reset password using a valid reset token', async () => {
 			(findUserByResetToken as jest.Mock).mockResolvedValue(mockUser);
@@ -183,7 +196,7 @@ describe('Authentication Services - Unit Tests', () => {
 		});
 	});
 
-	// ✅ UPDATE PASSWORD SERVICE TESTS
+	// UPDATE PASSWORD SERVICE TESTS
 	describe('updatePasswordService', () => {
 		it('should update password for logged-in user', async () => {
 			(findUserById as jest.Mock).mockResolvedValue(mockUser);
@@ -205,7 +218,7 @@ describe('Authentication Services - Unit Tests', () => {
 		});
 	});
 
-	// ✅ GOOGLE SOCIAL LOGIN SERVICE TESTS
+	// GOOGLE SOCIAL LOGIN SERVICE TESTS
 	describe('socialLoginGoogleService', () => {
 		it('should return a JWT for an existing Google user', async () => {
 			const googleUser = { ...mockUser, googleId: 'google123' };
