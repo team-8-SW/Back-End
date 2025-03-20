@@ -19,4 +19,8 @@ router.post('/resend-confirmation', authcontroller.resendVerificationEmail);
 
 router.put('/:id/username', authcontroller.updateUserName);
 
+router.put('/:id/email', authcontroller.updateEmail);
+
+router.delete('/:id', authcontroller.deleteAccount);
+
 export default router;

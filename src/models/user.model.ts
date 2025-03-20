@@ -118,3 +118,11 @@ export const updateUsername = async (userId: string, userName: string) => {
 		.update({ user_name: userName })
 		.returning(['user_name as userName', 'id']);
 };
+
+export const updateEmail = async (userId: string, email: string) => {
+	return db('users').where({ id: userId }).update({ email: email }).returning(['email', 'id']);
+};
+
+export const deleteUser = async (userId: string) => {
+	return db('users').where({ id: userId }).del().returning(['email', 'id']);
+};

@@ -167,3 +167,40 @@ export const updateUserName = async (req: Request, res: Response) => {
 		res.status(500).json({ message: 'Internal Server Error' });
 	}
 };
+
+export const updateEmail = async (req: Request, res: Response) => {
+	try {
+		const { id } = req.params;
+		const { email } = req.body;
+
+		if (!email) return res.status(400).json({ message: 'Email not found' });
+
+		const user = await userModel.getUserById(id);
+		if (!user) return res.status(404).json({ message: 'User not found' });
+
+		const updateUser = await userModel.updateEmail(id, email);
+		if (!updateUser) return res.status(404).json({ message: 'Email not found' });
+
+		res.json({ message: 'Email updated successfully', user: updateUser[0] });
+	} catch (error) {
+		console.error('Error in updating email', error);
+		res.status(500).json({ message: 'Internal Server Error' });
+	}
+};
+
+export const deleteAccount = async (req: Request, res: Response) => {
+	try {
+		const { id } = req.params;
+
+		const user = await userModel.getUserById(id);
+		if (!user) return res.status(404).json({ message: 'Invalid user' });
+
+		const deletedUser = await userModel.deleteUser(id);
+		if (!deletedUser) return res.status(404).json({ message: 'User not found' });
+
+		res.json({ message: 'Account deleted successfully', user: deletedUser[0] });
+	} catch (error) {
+		console.error('Error in deleting account', error);
+		res.status(500).json({ message: 'Internal Server Error' });
+	}
+};
