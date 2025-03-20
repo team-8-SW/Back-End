@@ -36,6 +36,7 @@ export const registerService = async (
 	password: string,
 	firstName: string,
 	lastName: string,
+	emailVerified: boolean,
 ) => {
 	// Check if email already exists
 	const existingUser = await findUserByEmail(email);
@@ -67,5 +68,6 @@ export const registerService = async (
 		email: created.email,
 		firstName: created.firstName,
 		lastName: created.lastName,
+		emailVerified: created.emailVerified,
 	};
 };

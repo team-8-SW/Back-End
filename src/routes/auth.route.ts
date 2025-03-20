@@ -14,4 +14,6 @@ router.post('/registerwithcaptcha', validateRegister, handleValidationErrors, re
 
 router.post('/verify-email', authcontroller.verifyEmail);
 
+router.post('/resend-confirmation', authcontroller.resendVerificationEmail);
+
 export default router;

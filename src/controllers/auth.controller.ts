@@ -4,6 +4,7 @@ import { loginService, registerService } from '../services/auth.service';
 import dotenv from 'dotenv';
 import jwt from 'jsonwebtoken';
 import * as userModel from '../models/user.model';
+import { sendEmail } from '../utils/email';
 
 dotenv.config();
 
@@ -26,7 +27,8 @@ export const login = async (req: Request, res: Response) => {
  */
 export const register = async (req: Request, res: Response) => {
 	try {
-		const { userName, email, password, firstName, lastName, recaptchaToken } = req.body;
+		const { userName, email, password, firstName, lastName, recaptchaToken, emailVerified } =
+			req.body;
 
 		// Verify Google reCAPTCHA
 		// const verifyRecaptcha = await axios.post(
@@ -45,18 +47,64 @@ export const register = async (req: Request, res: Response) => {
 		// }
 
 		// Register the user (Fix: use `password_hash`)
-		const newUser = await registerService(userName, email, password, firstName, lastName);
+		const oldUser = await userModel.findUserByEmail(email); //dev2
+		if (oldUser) {
+			res.json({ message: 'Email already in use' }); //dev2
+		}
+
+		const newUser = await registerService(
+			userName,
+			email,
+			password,
+			firstName,
+			lastName,
+			emailVerified,
+		);
 		const token = jwt.sign({ userId: newUser.id }, process.env.JWT_SECRET!, {
 			expiresIn: '1h',
 		});
+		const verficationLink = `${process.env.FRONTEND_URL}/api/auth/verify-email?token=${token}`;
+		await sendEmail(email, 'Verify your account', `Click here to verify ${verficationLink}`); //dev2
 		console.log('Generated token:', token);
-		return res.status(201).json({ message: 'User registered successfully', user: newUser });
+		return res.status(201).json({
+			message: 'User registered successfully check your email for verification',
+			user: newUser,
+		});
 	} catch (error: any) {
 		return res.status(500).json({ message: error.message || 'User registration failed' });
 	}
 };
+//dev2
+export const resendVerificationEmail = async (req: Request, res: Response) => {
+	try {
+		const { email } = req.body;
 
-//Email verfication
+		const user = await userModel.findUserByEmail(email);
+		if (!user) {
+			return res.status(404).json({ message: 'User not found' });
+		}
+
+		if (user?.emailVerified) {
+			return res.status(400).json({ message: 'Email already verified' });
+		}
+
+		const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET!, {
+			expiresIn: '1h',
+		});
+		console.log(`Generated token: ${token}`);
+		const verficationLink = `${process.env.FRONTEND_URL}/api/auth/verify-email?token=${token}`;
+		await sendEmail(
+			email,
+			'Resend: Verify your account',
+			`Click here to verify ${verficationLink}`,
+		);
+		res.json({ message: 'Verification email resent successfully!' });
+	} catch (error) {
+		res.status(500).json({ message: 'Internal Server Error' });
+	}
+};
+
+//Email verfication dev2
 export const verifyEmail = async (req: Request, res: Response) => {
 	try {
 		const { token } = req.body;
