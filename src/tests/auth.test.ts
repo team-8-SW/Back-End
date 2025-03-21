@@ -550,6 +550,10 @@ describe('PUT /api/auth/:id/email', () => {
 jest.mock('jsonwebtoken', () => ({
 	verify: jest.fn(),
 }));
+jest.mock('jsonwebtoken', () => ({
+	sign: jest.fn(() => 'mockedJwtToken'),
+	verify: jest.fn(),
+}));
 
 describe('POST /api/auth/resend-confirmation-email', () => {
 	let req: Partial<Request>;
