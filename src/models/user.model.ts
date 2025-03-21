@@ -124,5 +124,5 @@ export const updateEmail = async (userId: string, email: string) => {
 };
 
 export const deleteUser = async (userId: string) => {
-	return db('users').where({ id: userId }).del().returning(['email', 'id']);
+	return db('users').where({ id: userId }).del().returning(['email', 'id', 'user_name']);
 };
