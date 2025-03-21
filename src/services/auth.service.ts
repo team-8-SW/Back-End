@@ -12,7 +12,7 @@ import {
 	findUserById,
 	User,
 } from '../models/user.model';
-import { sendResetEmail } from '../utils/email';
+import { sendResetEmail, sendEmail } from '../utils/email';
 import { verifyRecaptcha } from '../utils/recaptcha';
 
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
@@ -176,3 +176,16 @@ export const socialLoginGoogleService = async (idToken: string): Promise<string>
 
 	return jwtToken;
 };
+
+//dev2
+// export const sendVerificationService = async (
+// 	email: string,
+// ): Promise<void> => {
+// 	try {
+// 		const subject = 'Verify your email address';
+// 		const html =  `<p>Please verify your email by clicking the link below:</p>
+// 		<a href="http://localhost:3000/api/auth/verify-email?email=${email}">
+// 		Verify Email</a>`;
+// 		await sendEmail(email, )
+// 	}
+// };

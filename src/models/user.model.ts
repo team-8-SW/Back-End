@@ -130,10 +130,9 @@ export const updateUser = async (
 ) => {
 	const updateData: any = { ...updates };
 
-	// ✅ Hash password if updating it
 	if (updates.password) {
 		updateData.password_hash = await bcrypt.hash(updates.password, SALT_ROUNDS);
-		delete updateData.password; // Remove plain text password
+		delete updateData.password;
 	}
 
 	return db('users').where({ id: userId }).update(updateData).returning('*');

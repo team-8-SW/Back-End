@@ -63,7 +63,7 @@ export const register = async (req: Request, res: Response) => {
 		// Register the user (Fix: use `password_hash`)
 		const oldUser = await userModel.findUserByEmail(email); //dev2
 		if (oldUser) {
-			res.json({ message: 'Email already in use' }); //dev2
+			return res.json({ message: 'Email already in use' }); //dev2
 		}
 
 		const token = jwt.sign({ userId: newUser.id }, process.env.JWT_SECRET!, {
@@ -100,14 +100,15 @@ export const resendVerificationEmail = async (req: Request, res: Response) => {
 		});
 		console.log(`Generated token: ${token}`);
 
-		await userModel.updateUser(user.id, { verification_token: token });
+		const updateUser = await userModel.updateUser(user.id, { verification_token: token });
+
 		const verficationLink = `${process.env.FRONTEND_URL}/api/auth/verify-email?token=${token}`;
 		await sendEmail(
 			email,
 			'Resend: Verify your account',
 			`Click here to verify ${verficationLink}`,
 		);
-		res.json({ message: 'Verification email resent successfully!' });
+		res.status(200).json({ message: 'Verification email resent successfully!' });
 	} catch (error) {
 		res.status(500).json({ message: 'Internal Server Error' });
 	}
@@ -131,7 +132,7 @@ export const verifyEmail = async (req: Request, res: Response) => {
 
 		await userModel.updateUser(decoded.userId, { email_verified: true });
 
-		res.json({ message: 'Email verified successfully!' });
+		res.status(200).json({ message: 'Email verified successfully!' });
 	} catch (error) {
 		console.error('Error verifying email:', error);
 		res.status(400).json({ message: 'Invalid or expired token' });
@@ -153,11 +154,11 @@ export const updateUserName = async (req: Request, res: Response) => {
 
 		const updateUser = await userModel.updateUsername(id, userName);
 
-		if (!updateUser) {
-			return res.status(404).json({ message: 'Username not found' });
+		if (!updateUser || updateUser.length === 0) {
+			return res.status(400).json({ message: 'Failed to update username' });
 		}
 
-		res.json({ message: 'Username updated successfully', user: updateUser[0] });
+		res.status(200).json({ message: 'Username updated successfully', user: updateUser[0] });
 	} catch (error) {
 		console.error('Error in updating username', error);
 		res.status(500).json({ message: 'Internal Server Error' });
@@ -169,15 +170,14 @@ export const updateEmail = async (req: Request, res: Response) => {
 		const { id } = req.params;
 		const { email } = req.body;
 
-		if (!email) return res.status(400).json({ message: 'Email not found' });
-
 		const user = await userModel.getUserById(id);
 		if (!user) return res.status(404).json({ message: 'User not found' });
 
 		const updateUser = await userModel.updateEmail(id, email);
-		if (!updateUser) return res.status(404).json({ message: 'Email not found' });
+		if (!updateUser || updateUser.length === 0)
+			return res.status(400).json({ message: 'Failed to update email' });
 
-		res.json({ message: 'Email updated successfully', user: updateUser[0] });
+		res.status(200).json({ message: 'Email updated successfully', user: updateUser[0] });
 	} catch (error) {
 		console.error('Error in updating email', error);
 		res.status(500).json({ message: 'Internal Server Error' });
@@ -192,9 +192,10 @@ export const deleteAccount = async (req: Request, res: Response) => {
 		if (!user) return res.status(404).json({ message: 'Invalid user' });
 
 		const deletedUser = await userModel.deleteUser(id);
-		if (!deletedUser) return res.status(404).json({ message: 'User not found' });
+		if (!deletedUser || deletedUser.length === 0)
+			return res.status(404).json({ message: 'User not found' });
 
-		res.json({ message: 'Account deleted successfully', user: deletedUser[0] });
+		res.status(200).json({ message: 'Account deleted successfully', user: deletedUser[0] });
 	} catch (error) {
 		console.error('Error in deleting account', error);
 		res.status(500).json({ message: 'Internal Server Error' });
