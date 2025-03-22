@@ -109,7 +109,9 @@
 
 		/* Completeness */
 		// "skipDefaultLibCheck": true,                      /* Skip type checking .d.ts files that are included with TypeScript. */
-		"skipLibCheck": true /* Skip type checking all .d.ts files. */
+		"skipLibCheck": true /* Skip type checking all .d.ts files. */,
+		"emitDecoratorMetadata": true, // Required for TypeORM
+		"experimentalDecorators": true // Required for TypeORM
 	},
 	"include": ["src/**/*", "knexfile.ts"],
 	"exclude": ["node_modules"]

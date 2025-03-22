@@ -100,7 +100,7 @@ export const resendVerificationEmail = async (req: Request, res: Response) => {
 		});
 		console.log(`Generated token: ${token}`);
 
-		const updateUser = await userModel.updateUser(user.id, { verification_token: token });
+		await userModel.updateUser(user.id, { verification_token: token });
 
 		const verficationLink = `${process.env.FRONTEND_URL}/api/auth/verify-email?token=${token}`;
 		await sendEmail(
