@@ -13,7 +13,7 @@ import {
 	socialLoginGoogleService,
 } from '../services/auth.service';
 import { AuthenticatedRequest } from '../middleware/auth.middleware';
-import { verifyRecaptcha } from '../utils/recaptcha';
+// import { verifyRecaptcha } from '../utils/recaptcha';
 
 dotenv.config();
 
@@ -43,10 +43,10 @@ export const register = async (req: Request, res: Response) => {
 		} = req.body;
 
 		// Verify reCAPTCHA before registering the user
-		const isRecaptchaValid = await verifyRecaptcha(recaptchaToken);
-		if (!isRecaptchaValid) {
-			return res.status(400).json({ message: 'reCAPTCHA verification failed' });
-		}
+		// const isRecaptchaValid = await verifyRecaptcha(recaptchaToken);
+		// if (!isRecaptchaValid) {
+		// 	return res.status(400).json({ message: 'reCAPTCHA verification failed' });
+		// }
 
 		// Now correctly pass six arguments to registerService
 		const newUser = await registerService(
