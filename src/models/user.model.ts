@@ -47,7 +47,7 @@ export const findUserByEmail = async (email: string): Promise<User | null> => {
 			'reset_token_expiry as resetTokenExpiry',
 			'google_id as googleId',
 		])
-		.where('email', email)
+		.whereRaw('LOWER(email) = ?', [email.toLowerCase()])
 		.first();
 
 	return user || null;
