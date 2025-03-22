@@ -61,15 +61,16 @@ export const register = async (req: Request, res: Response) => {
 		);
 
 		// Register the user (Fix: use `password_hash`)
-		const oldUser = await userModel.findUserByEmail(email); //dev2
-		if (oldUser) {
-			return res.json({ message: 'Email already in use' }); //dev2
-		}
+		// const oldUser = await userModel.findUserByEmail(email); //dev2
+		// if (oldUser) {
+		// 	return res.json({ message: 'Email already in use' }); //dev2
+		// }
 
 		const token = jwt.sign({ userId: newUser.id }, process.env.JWT_SECRET!, {
 			expiresIn: '1h',
 		});
 		await userModel.updateUser(newUser.id, { verification_token: token });
+		const finalUser = await userModel.getUserById(newUser.id);
 		const verficationLink = `${process.env.FRONTEND_URL}/api/auth/verify-email?token=${token}`;
 		await sendEmail(email, 'Verify your account', `Click here to verify ${verficationLink}`); //dev2
 		console.log('Generated token:', token);

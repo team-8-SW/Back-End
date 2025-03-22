@@ -31,8 +31,14 @@ jest.mock('../../src/models/user.model', () => ({
 	updateEmail: jest.fn(),
 	createUser: jest.fn(),
 	findUserByEmail: jest.fn(),
+	updateResetToken: jest.fn(),
+	findUserByResetToken: jest.fn(),
+	updatePassword: jest.fn(),
+	clearResetToken: jest.fn(),
+	findUserById: jest.fn(),
 }));
 jest.mock('../../src/utils/email', () => ({
+	sendResetEmail: jest.fn(),
 	sendEmail: jest.fn(),
 }));
 jest.mock('bcrypt');
