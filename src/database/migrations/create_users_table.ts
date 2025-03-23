@@ -16,7 +16,8 @@ export async function up(knex: Knex): Promise<void> {
 			table.boolean('is_active').notNullable().defaultTo(true);
 			table.string('reset_token', 255).nullable();
 			table.timestamp('reset_token_expiry').nullable();
-			table.boolean('is_admin').nullable().defaultTo(false);
+			table.boolean('isadmin').nullable().defaultTo(false);
+			table.string('google_id', 255).nullable().unique();
 			table.timestamps(true, true); //created_at & updated_at
 		});
 	}

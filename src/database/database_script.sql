@@ -223,7 +223,26 @@ CREATE TABLE IF NOT EXISTS job_listings (
     workplace_type VARCHAR(50) CHECK (workplace_type IN ('On-site', 'Hybrid', 'Remote')),
     experience_level VARCHAR(50),
     posted_at TIMESTAMP NOT NULL DEFAULT NOW(),
-    expires_at TIMESTAMP
+    expires_at TIMESTAMP);
+CREATE TABLE IF NOT EXISTS public.users
+(
+    id uuid NOT NULL,
+    user_name character varying(100) COLLATE pg_catalog."default" NOT NULL,
+    email character varying(255) COLLATE pg_catalog."default" NOT NULL,
+    password_hash character varying(255) COLLATE pg_catalog."default" NOT NULL,
+    first_name character varying(100) COLLATE pg_catalog."default" NOT NULL,
+    last_name character varying(100) COLLATE pg_catalog."default" NOT NULL,
+    email_verified boolean NOT NULL DEFAULT false,
+    is_premium boolean NOT NULL DEFAULT false,
+    premium_expiry timestamp without time zone,
+    is_active boolean NOT NULL DEFAULT true,
+    google_id character varying(255) COLLATE pg_catalog."default",
+    reset_token character varying(255) COLLATE pg_catalog."default",
+    reset_token_expiry timestamp without time zone,
+    isadmin boolean DEFAULT false,
+    CONSTRAINT users_pkey PRIMARY KEY (id),
+    CONSTRAINT users_email_key UNIQUE (email),
+    CONSTRAINT users_user_name_key UNIQUE (user_name)
 );
 
 -- JobApplications table

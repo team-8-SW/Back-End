@@ -1,6 +1,7 @@
 import { knexInstance } from '../config/db';
 import { notifications } from '../models/notifications.model';
 
+// eslint-disable-next-line @typescript-eslint/naming-convention
 export const getAllNotifications = async (user_id: string): Promise<notifications[]> => {
 	try {
 		const notifications = await knexInstance('notifications').where({ user_id }).select('*');
@@ -63,6 +64,7 @@ export const deleteNotification = async (notificationId: string): Promise<void> 
 	}
 };
 
+// eslint-disable-next-line @typescript-eslint/naming-convention
 export const getUnreadNotificationCount = async (user_id: string): Promise<number> => {
 	try {
 		const result = await knexInstance('notifications')
