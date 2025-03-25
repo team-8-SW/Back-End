@@ -18,15 +18,16 @@ export const sendEmail = async (
 	to: string,
 	subject: string,
 	text: string,
-	html?: string,
+	// html?: string,
+	isHtml = false,
 ): Promise<void> => {
 	try {
 		await transporter.sendMail({
 			from: `"CareerHub" <${process.env.EMAIL_USER}>`,
 			to,
 			subject,
-			text,
-			html,
+			text: isHtml ? undefined : text,
+			html: isHtml ? text : undefined,
 		});
 		console.log(`Email sent to ${to}`);
 	} catch (error) {

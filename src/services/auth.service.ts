@@ -49,7 +49,7 @@ export const registerService = async (
 	// if (!isRecaptchaValid) {
 	// 	throw new Error('Invalid reCAPTCHA token');
 	// }
-	const existingUser = await findUserByEmail(email);
+	const existingUser = await findUserByEmail(email.toLowerCase());
 	if (existingUser) {
 		throw new Error('Email is already registered');
 	}
