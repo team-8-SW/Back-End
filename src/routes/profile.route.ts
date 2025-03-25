@@ -106,7 +106,7 @@ router.post('/me/skills', authMiddleware2, profileController.addSkill);
 router.delete('/me/skills/:skillId', authMiddleware2, profileController.deleteSkill);
 
 ///POST /api/profiles/users/:userId/skills/:skillId/endorse
-//router.post('/users/:userId/skills/:skillId/endorse', authMiddleware, profileController.endorseSkill);
+//router.post('/users/:userId/skills/:skillId/endorse', authMiddleware2, profileController.endorseSkill);
 
 //--------------------Profile Visibility--------------------//
 //GET /api/profiles/me/visibility

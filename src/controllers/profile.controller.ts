@@ -7,13 +7,15 @@ import * as profileService from '../services/profile.service';
  */
 export const getProfileById = async (req: Request, res: Response) => {
 	try {
-		const profile = await profileService.getProfileById(req.params.userId);
+		const userId = req.params.userId;
+		const profile = await profileService.getProfileById(userId);
+
 		if (!profile) {
 			return res.status(404).json({ error: 'Profile not found' });
 		}
-		res.json(profile);
+
+		res.status(200).json(profile);
 	} catch (error) {
-		console.error('Error fetching profile:', error);
 		res.status(500).json({ error: 'Internal server error' });
 	}
 };
@@ -24,17 +26,17 @@ export const getProfileById = async (req: Request, res: Response) => {
  * @returns message: 'Profile picture updated successfully', profilePictureUrl
  */
 export const updateProfilePicture = async (req: Request, res: Response) => {
-	// Check if file exists
-	if (!req.file) {
-		return res.status(400).json({ error: 'No file uploaded' });
-	}
-
 	// Get userId from req.user
 	const userId = (req as any).user?.id;
 
 	// Validate userId
 	if (!userId) {
-		return res.status(400).json({ error: 'User ID is required' });
+		return res.status(401).json({ error: 'User ID is required' });
+	}
+
+	// Check if file exists
+	if (!req.file) {
+		return res.status(400).json({ error: 'No file uploaded' });
 	}
 
 	try {
@@ -52,7 +54,7 @@ export const updateProfilePicture = async (req: Request, res: Response) => {
 				.json({ error: 'Profile Picture update failed, please try again' });
 		}
 
-		res.json({
+		res.status(200).json({
 			message: 'Profile picture updated successfully',
 			profilePictureUrl: profilePictureUrl,
 		});
@@ -71,7 +73,7 @@ export const deleteProfilePicture = async (req: Request, res: Response) => {
 
 	// Validate userId
 	if (!userId) {
-		return res.status(400).json({ error: 'User ID is required' });
+		return res.status(401).json({ error: 'User ID is required' });
 	}
 
 	try {
@@ -85,7 +87,7 @@ export const deleteProfilePicture = async (req: Request, res: Response) => {
 			return res.status(404).json({ error: 'Profile Picture not found' });
 		}
 
-		res.json({
+		res.status(200).json({
 			message: 'Profile picture deleted successfully',
 		});
 	} catch (error) {
@@ -109,7 +111,7 @@ export const updateCoverPhoto = async (req: Request, res: Response) => {
 
 	// Validate userId
 	if (!userId) {
-		return res.status(400).json({ error: 'User ID is required' });
+		return res.status(401).json({ error: 'User ID is required' });
 	}
 
 	try {
@@ -122,10 +124,10 @@ export const updateCoverPhoto = async (req: Request, res: Response) => {
 			return res.status(404).json({ error: 'User not found' });
 		}
 		if (updatedProfile.coverPhotoUrl === null) {
-			return res.status(500).json({ error: 'Cover Photo update failed, please try again' });
+			return res.status(404).json({ error: 'Cover Photo update failed, please try again' });
 		}
 
-		res.json({
+		res.status(200).json({
 			message: 'Cover Photo updated successfully',
 			coverPhotoUrl: coverPhotoUrl,
 		});
@@ -145,7 +147,7 @@ export const deleteCoverPhoto = async (req: Request, res: Response) => {
 
 	// Validate userId
 	if (!userId) {
-		return res.status(400).json({ error: 'User ID is required' });
+		return res.status(401).json({ error: 'User ID is required' });
 	}
 
 	try {
@@ -159,7 +161,7 @@ export const deleteCoverPhoto = async (req: Request, res: Response) => {
 			return res.status(404).json({ error: 'Cover Photo not found' });
 		}
 
-		res.json({
+		res.status(200).json({
 			message: 'Cover Photo deleted successfully',
 		});
 	} catch (error) {
@@ -183,7 +185,7 @@ export const updateResume = async (req: Request, res: Response) => {
 
 	// Validate userId
 	if (!userId) {
-		return res.status(400).json({ error: 'User ID is required' });
+		return res.status(401).json({ error: 'User ID is required' });
 	}
 
 	try {
@@ -199,7 +201,7 @@ export const updateResume = async (req: Request, res: Response) => {
 			return res.status(500).json({ error: 'Resume update failed, please try again' });
 		}
 
-		res.json({
+		res.status(200).json({
 			message: 'Resume updated successfully',
 			resumeUrl: resumeUrl,
 		});
@@ -218,7 +220,7 @@ export const deleteResume = async (req: Request, res: Response) => {
 
 	// Validate userId
 	if (!userId) {
-		return res.status(400).json({ error: 'User ID is required' });
+		return res.status(401).json({ error: 'User ID is required' });
 	}
 
 	try {
@@ -252,7 +254,7 @@ export const getExperience = async (req: Request, res: Response) => {
 
 	// Validate userId
 	if (!userId) {
-		return res.status(400).json({ error: 'User ID is required' });
+		return res.status(401).json({ error: 'User ID is required' });
 	}
 
 	try {
@@ -304,12 +306,15 @@ export const addExperience = async (req: Request, res: Response) => {
 			description: description || null, // Default to null
 			location: location || null,
 		};
+		if (endDate && new Date(endDate) < new Date(startDate)) {
+			return res.status(400).json({ error: 'End date must be after start date' });
+		}
 
 		const newExperience = await profileService.addExperience(userId, experienceData);
 		if (!newExperience) {
 			return res.status(500).json({ error: 'Error adding experience' });
 		}
-		res.status(201).json({ message: 'Experience added successfully' });
+		res.status(200).json({ message: 'Experience added successfully' });
 	} catch (error) {
 		res.status(500).json({ error: 'Internal server error' });
 	}
@@ -383,7 +388,7 @@ export const getEducation = async (req: Request, res: Response) => {
 
 	// Validate userId
 	if (!userId) {
-		return res.status(400).json({ error: 'User ID is required' });
+		return res.status(401).json({ error: 'User ID is required' });
 	}
 
 	try {
@@ -411,6 +416,12 @@ export const getEducation = async (req: Request, res: Response) => {
 export const addEducation = async (req: Request, res: Response) => {
 	try {
 		const userId = (req as any).user?.id;
+
+		// Validate userId
+		if (!userId) {
+			return res.status(401).json({ error: 'User ID is required' });
+		}
+
 		const { school, degree, startDate, endDate } = req.body;
 
 		if (!school || !degree || !startDate) {
@@ -435,22 +446,28 @@ export const addEducation = async (req: Request, res: Response) => {
 			description: null,
 			current_education: !endDate, // Assume current education if no endDate
 		};
-
+		if (endDate && new Date(endDate) < new Date(startDate)) {
+			return res.status(400).json({ error: 'End date must be after start date' });
+		}
 		const newEducation = await profileService.addEducation(userId, educationData);
 
 		if (!newEducation) {
-			return res.status(500).json({ error: 'Error adding education' });
+			return res.status(404).json({ error: 'Error adding education' });
 		}
 
-		res.status(201).json({ message: 'Education added successfully' });
+		res.status(200).json({ message: 'Education added successfully' });
 	} catch (error) {
-		res.status(400).json({ error: 'Internal server srror' });
+		res.status(500).json({ error: 'Internal server error' });
 	}
 };
 
 export const updateEducation = async (req: Request, res: Response) => {
 	try {
 		const userId = (req as any).user?.id;
+		// Validate userId
+		if (!userId) {
+			return res.status(401).json({ error: 'User ID is required' });
+		}
 		const educationId = req.params.educationId;
 		const { school, degree, startDate, endDate } = req.body;
 
@@ -479,13 +496,17 @@ export const updateEducation = async (req: Request, res: Response) => {
 
 		res.json({ message: 'Education updated successfully' });
 	} catch (error) {
-		res.status(400).json({ error: 'Internal server error' });
+		res.status(500).json({ error: 'Internal server error' });
 	}
 };
 
 export const deleteEducation = async (req: Request, res: Response) => {
 	try {
 		const userId = (req as any).user?.id;
+		// Validate userId
+		if (!userId) {
+			return res.status(401).json({ error: 'User ID is required' });
+		}
 		const educationId = req.params.educationId;
 
 		const deletedEducation = await profileService.deleteEducation(userId, educationId);
@@ -508,7 +529,7 @@ export const getCertifications = async (req: Request, res: Response) => {
 
 	// Validate userId
 	if (!userId) {
-		return res.status(400).json({ error: 'User ID is required' });
+		return res.status(401).json({ error: 'User ID is required' });
 	}
 
 	try {
@@ -536,6 +557,10 @@ export const getCertifications = async (req: Request, res: Response) => {
 export const addCertification = async (req: Request, res: Response) => {
 	try {
 		const userId = (req as any).user?.id;
+		// Validate userId
+		if (!userId) {
+			return res.status(401).json({ error: 'User ID is required' });
+		}
 		const { name, issuedBy, issueDate, expirationDate } = req.body;
 
 		if (!name || !issuedBy || !issueDate) {
@@ -550,14 +575,17 @@ export const addCertification = async (req: Request, res: Response) => {
 			issueDate: issueDate,
 			expirationDate: expirationDate || null,
 		};
+		if (expirationDate && new Date(expirationDate) < new Date(issueDate)) {
+			return res.status(400).json({ error: 'Expiration date must be after issue date' });
+		}
 
 		const newCertification = await profileService.addCertification(userId, certificationData);
 
 		if (!newCertification) {
-			return res.status(500).json({ error: 'Error adding certification' });
+			return res.status(404).json({ error: 'Error adding certification' });
 		}
 
-		res.status(201).json({
+		res.status(200).json({
 			message: 'Certification added successfully',
 		});
 	} catch (error) {
@@ -568,6 +596,10 @@ export const addCertification = async (req: Request, res: Response) => {
 export const updateCertification = async (req: Request, res: Response) => {
 	try {
 		const userId = (req as any).user?.id;
+		// Validate userId
+		if (!userId) {
+			return res.status(401).json({ error: 'User ID is required' });
+		}
 		const certificationId = req.params.certificationId;
 		const { name, issuedBy, issueDate, expirationDate } = req.body;
 		if (!name || !issuedBy || !issueDate) {
@@ -602,6 +634,10 @@ export const updateCertification = async (req: Request, res: Response) => {
 export const deleteCertification = async (req: Request, res: Response) => {
 	try {
 		const userId = (req as any).user?.id;
+		// Validate userId
+		if (!userId) {
+			return res.status(401).json({ error: 'User ID is required' });
+		}
 		const certificationId = req.params.certificationId;
 
 		const deletedCertification = await profileService.deleteCertification(
@@ -623,8 +659,9 @@ export const deleteCertification = async (req: Request, res: Response) => {
 export const getSkills = async (req: Request, res: Response) => {
 	try {
 		const userId = (req as any).user?.id;
+		// Validate userId
 		if (!userId) {
-			return res.status(400).json({ error: 'User ID is required' });
+			return res.status(401).json({ error: 'User ID is required' });
 		}
 
 		const skills = await profileService.getSkills(userId);
@@ -642,8 +679,9 @@ export const addSkill = async (req: Request, res: Response) => {
 		const userId = (req as any).user?.id;
 		const { name } = req.body;
 
+		// Validate userId
 		if (!userId) {
-			return res.status(400).json({ error: 'User ID is required' });
+			return res.status(401).json({ error: 'User ID is required' });
 		}
 		if (!name) {
 			return res.status(400).json({ error: 'Skill name is required' });
@@ -654,7 +692,7 @@ export const addSkill = async (req: Request, res: Response) => {
 			return res.status(404).json({ error: 'Error adding skill' });
 		}
 
-		res.status(201).json({
+		res.status(200).json({
 			message: 'Skill added successfully',
 		});
 	} catch (error) {
@@ -664,17 +702,22 @@ export const addSkill = async (req: Request, res: Response) => {
 
 export const deleteSkill = async (req: Request, res: Response) => {
 	try {
+		// Get userId from req.user
 		const userId = (req as any).user?.id;
+
+		// Validate userId
+		if (!userId) {
+			return res.status(401).json({ error: 'User ID is required' });
+		}
+
 		const skillId = req.params.skillId;
 
-		if (!userId) {
-			return res.status(400).json({ error: 'User ID is required' });
-		}
 		if (!skillId) {
 			return res.status(400).json({ error: 'Skill ID is required' });
 		}
 
 		const deletedSkill = await profileService.deleteSkill(userId, skillId);
+
 		if (!deletedSkill) {
 			return res.status(404).json({ error: 'Skill not found' });
 		}
@@ -689,8 +732,9 @@ export const deleteSkill = async (req: Request, res: Response) => {
 export const getProfileVisibility = async (req: Request, res: Response) => {
 	try {
 		const userId = (req as any).user?.id;
+		// Validate userId
 		if (!userId) {
-			return res.status(400).json({ error: 'User ID is required' });
+			return res.status(401).json({ error: 'User ID is required' });
 		}
 
 		const profileVisibility = await profileService.getProfileVisibility(userId);
@@ -707,6 +751,10 @@ export const getProfileVisibility = async (req: Request, res: Response) => {
 export const updateProfileVisibility = async (req: Request, res: Response) => {
 	try {
 		const userId = (req as any).user?.id;
+		// Validate userId
+		if (!userId) {
+			return res.status(401).json({ error: 'User ID is required' });
+		}
 		const { visibility } = req.body;
 
 		if (visibility != 'public' && visibility != 'private' && visibility != 'connections-only') {
@@ -733,8 +781,9 @@ export const updateProfileVisibility = async (req: Request, res: Response) => {
 export const createUserProfile = async (req: Request, res: Response) => {
 	try {
 		const userId = (req as any).user?.id;
+		// Validate userId
 		if (!userId) {
-			return res.status(400).json({ error: 'User ID is required' });
+			return res.status(401).json({ error: 'User ID is required' });
 		}
 
 		const { headline, bio, location, industry, skills, workExperience, education } = req.body;
@@ -752,7 +801,7 @@ export const createUserProfile = async (req: Request, res: Response) => {
 			return res.status(404).json({ error: 'Failed to create user profile' });
 		}
 
-		res.status(201).json({ message: 'User profile created successfully' });
+		res.status(200).json({ message: 'User profile created successfully' });
 	} catch (error) {
 		res.status(500).json({ error: 'Internal server error' });
 	}
@@ -761,8 +810,9 @@ export const createUserProfile = async (req: Request, res: Response) => {
 export const updateUserProfile = async (req: Request, res: Response) => {
 	try {
 		const userId = (req as any).user?.id;
+		// Validate userId
 		if (!userId) {
-			return res.status(400).json({ error: 'User ID is required' });
+			return res.status(401).json({ error: 'User ID is required' });
 		}
 
 		const { headline, bio, location, industry } = req.body;
