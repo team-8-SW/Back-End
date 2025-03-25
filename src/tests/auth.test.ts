@@ -129,32 +129,71 @@ describe('Authentication Services - Unit Tests', () => {
 
 	// REGISTER SERVICE TESTS (WITH MOCKED reCAPTCHA)
 	describe('registerService', () => {
-		it('should register a new user when reCAPTCHA is valid', async () => {
-			(findUserByEmail as jest.Mock).mockResolvedValue(null);
-			(createUser as jest.Mock).mockResolvedValue({
-				...mockUser,
-				email: 'new@example.com',
-				emailVerified: false,
-				verification_token: 'mockVerificationToken',
+		let req: Partial<Request>;
+		let res: Partial<Response>;
+		let statusMock: jest.Mock;
+		let jsonMock: jest.Mock;
+
+		beforeEach(() => {
+			jest.clearAllMocks();
+
+			req = { body: { email: 'test@example.com' } } as Partial<Request> & {
+				body: { email: string };
+			};
+
+			jsonMock = jest.fn();
+			statusMock = jest.fn().mockReturnThis();
+			res = { status: statusMock, json: jsonMock } as Partial<Response> & {
+				status: jest.Mock;
+				json: jest.Mock;
+			};
+			it('should register a new user when reCAPTCHA is valid', async () => {
+				(findUserByEmail as jest.Mock).mockResolvedValue(null);
+				(createUser as jest.Mock).mockResolvedValue({
+					...mockUser,
+					email: 'new@example.com',
+					emailVerified: false,
+					verification_token: 'mockVerificationToken',
+				});
+				(sendEmail as jest.Mock).mockResolvedValue(undefined);
+				jest.mock('../../src/utils/email');
+
+				// Simulate successful reCAPTCHA validation
+				const isRecaptchaValid = mockVerifyRecaptcha('validRecaptchaToken');
+				expect(isRecaptchaValid).toBe(true);
+
+				const user = await registerService(
+					'newuser',
+					'new@example.com',
+					'password123',
+					'New',
+					'User',
+					'validRecaptchaToken',
+					false,
+					'mockVerificationToken',
+				);
+				expect(user).toHaveProperty('email', 'new@example.com');
+				expect(user).toHaveProperty('emailVerified', false);
+				expect(user).toHaveProperty('verification_token', 'mockVerificationToken');
+				expect(user).toHaveProperty('email', 'new@example.com');
+
+				const expectedVerificationLink = `${process.env.FRONTEND_URL}/api/auth/verify-email?token=mockVerificationToken`;
+				const expectedEmailBody = `
+			<p>Hello New User,</p>
+			<p>Thank you for registering! Please click the link below to verify your account:</p>
+			<a href="${expectedVerificationLink}" target="_blank" style="color: blue; text-decoration: underline;">
+				Verify your account
+			</a>
+			<p>Best regards,</p>
+			<p>Career Hub</p>
+			`;
+				expect(sendEmail).toHaveBeenCalledWith(
+					user.email,
+					'Verify your account',
+					expect.stringContaining(expectedEmailBody.trim()),
+					true,
+				);
 			});
-
-			// Simulate successful reCAPTCHA validation
-			const isRecaptchaValid = mockVerifyRecaptcha('validRecaptchaToken');
-			expect(isRecaptchaValid).toBe(true);
-
-			const user = await registerService(
-				'newuser',
-				'new@example.com',
-				'password123',
-				'New',
-				'User',
-				'validRecaptchaToken',
-				false,
-				'mockVerificationToken',
-			);
-			expect(user).toHaveProperty('email', 'new@example.com');
-			expect(user).toHaveProperty('emailVerified', false);
-			expect(user).toHaveProperty('verification_token', 'mockVerificationToken');
 		});
 
 		it('should throw an error if reCAPTCHA is invalid', async () => {
