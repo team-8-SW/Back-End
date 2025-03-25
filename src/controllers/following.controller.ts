@@ -21,7 +21,7 @@ export const getFollowing = async (req: Request, res: Response) => {
 			})),
 		);
 	} catch (error) {
-		res.status(500).json({ error: 'Error fetching followering' });
+		res.status(500).json({ error: 'Internal server error' });
 	}
 };
 
@@ -47,7 +47,7 @@ export const getFollowers = async (req: Request, res: Response) => {
 			})),
 		);
 	} catch (error) {
-		res.status(500).json({ error: 'Error fetching followers' });
+		res.status(500).json({ error: 'Internal server error' });
 	}
 };
 
@@ -57,6 +57,9 @@ export const followAUser = async (req: Request, res: Response) => {
 
 	if (!userId) {
 		return res.status(400).json({ error: 'User ID is required' });
+	}
+	if (!followUserId) {
+		return res.status(400).json({ error: 'Follow User ID is required' });
 	}
 	if (userId === followUserId) {
 		return res.status(400).json({ error: 'You cannot follow yourself' });
@@ -70,7 +73,7 @@ export const followAUser = async (req: Request, res: Response) => {
 
 		res.status(201).json({ message: 'User followed successfully' });
 	} catch (error) {
-		res.status(500).json({ error: 'Error following a user' });
+		res.status(500).json({ error: 'Internal server error' });
 	}
 };
 
@@ -80,6 +83,9 @@ export const deleteFollow = async (req: Request, res: Response) => {
 
 	if (!userId) {
 		return res.status(400).json({ error: 'User ID is required' });
+	}
+	if (!removedUserId) {
+		return res.status(400).json({ error: 'Unfollow User ID is required' });
 	}
 	if (userId === removedUserId) {
 		return res.status(400).json({ error: 'You cannot unfollow yourself' });
@@ -92,6 +98,6 @@ export const deleteFollow = async (req: Request, res: Response) => {
 
 		res.status(201).json({ message: 'User unfollowed successfully' });
 	} catch (error) {
-		res.status(500).json({ error: 'Error unfollowing a user' });
+		res.status(500).json({ error: 'Internal server error' });
 	}
 };
