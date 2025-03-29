@@ -6,7 +6,8 @@ const router = express.Router();
 
 router.get('/', companyController.getAllCompanies);
 router.get('/:id', companyController.getCompanyById);
-router.post('/s', companyController.createCompany);
+router.post('/', companyController.createCompany);
 router.put('/:id', companyController.updateCompany);
+router.post('/jobs', companyController.postJob);
 
 export default router;

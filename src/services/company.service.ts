@@ -23,9 +23,22 @@ export const createCompany = async (
 	return newCompany;
 };
 
-export const updateCompany = async (
-	id: string,
-	data: Partial<companyModels.company>,
-): Promise<number> => {
-	return await knexInstance('companypages').where({ id }).update(data);
+export const updateCompany = async (id: string, data: Partial<companyModels.company>) => {
+	return await knexInstance('companypages').where({ id }).update(data).returning('*');
+};
+
+export const postJob = async (jobData: {
+	id: string;
+	user_id: string;
+	company_id: string;
+	company_name: string;
+	title: string;
+	description: string;
+	location?: string;
+	employment_type?: string;
+	workplace_type?: string;
+	experience_level?: string;
+	expires_at?: Date;
+}) => {
+	return await knexInstance('joblistings').insert(jobData).returning('*');
 };
