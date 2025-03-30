@@ -19,3 +19,19 @@ export const searchJob = async (keyword?: string, location?: string, industry?: 
 
 	return query;
 };
+
+export const filterJob = async (
+	experienceLevel?: string,
+	company?: string,
+	minSalary?: number,
+	maxSalary?: number,
+) => {
+	return knexInstance('joblistings')
+		.where((query) => {
+			if (experienceLevel) query.where('experience_level', experienceLevel);
+			if (company) query.where('company_name', company);
+			if (minSalary) query.where('salary', '>=', minSalary);
+			if (maxSalary) query.where('salary', '<=', maxSalary);
+		})
+		.select('*');
+};

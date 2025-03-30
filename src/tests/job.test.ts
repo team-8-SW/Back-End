@@ -74,3 +74,70 @@ describe('Search for jobs by keyword, location, and industry', () => {
 		expect(jsonMock).toHaveBeenCalledWith({ message: 'Internal Server Error' });
 	});
 });
+
+describe('Filter jobs by experience level, company, and salary range', () => {
+	let req: Partial<Request>;
+	let res: Partial<Response>;
+	let jsonMock: jest.Mock;
+	let statusMock: jest.Mock;
+
+	beforeEach(() => {
+		jsonMock = jest.fn();
+		statusMock = jest.fn(() => ({ json: jsonMock }));
+
+		req = {
+			query: {
+				experienceLevel: 'developer',
+				company: 'Orascom',
+				minSalary: '80000',
+				maxSalary: '100000',
+			},
+		};
+
+		res = {
+			status: statusMock,
+			json: jsonMock,
+		} as Partial<Response>;
+	});
+
+	it('should return filtered jobs successfully', async () => {
+		const mockJobs = [
+			{
+				id: '1',
+				title: 'Software Engineer',
+				experience_level: 'Mid Level',
+				company_id: '123',
+				salary: 80000,
+			},
+		];
+
+		(jobService.filterJob as jest.Mock).mockResolvedValue(mockJobs);
+
+		await jobController.filterJob(req as Request, res as Response);
+
+		expect(jobService.filterJob).toHaveBeenCalledWith('developer', 'Orascom', 80000, 100000);
+		expect(statusMock).toHaveBeenCalledWith(200);
+		expect(jsonMock).toHaveBeenCalledWith({
+			message: 'Job filtered  successfully',
+			filteredJob: mockJobs,
+		});
+	});
+
+	it('should return 404 if no matching jobs are found', async () => {
+		(jobService.filterJob as jest.Mock).mockResolvedValue([]);
+
+		await jobController.filterJob(req as Request, res as Response);
+
+		expect(statusMock).toHaveBeenCalledWith(404);
+		expect(jsonMock).toHaveBeenCalledWith({ message: 'No jobs found' });
+	});
+
+	it('should return 500 if an error occurs', async () => {
+		(jobService.filterJob as jest.Mock).mockRejectedValue(new Error('Database error'));
+
+		await jobController.filterJob(req as Request, res as Response);
+
+		expect(statusMock).toHaveBeenCalledWith(500);
+		expect(jsonMock).toHaveBeenCalledWith({ message: 'Internal Server Error' });
+	});
+});

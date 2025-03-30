@@ -315,5 +315,7 @@ CREATE INDEX IF NOT EXISTS idx_user_privacy_settings_user_id ON user_privacy_set
 ALTER TABLE joblistings
 ADD COLUMN industry VARCHAR(255);
 
+ALTER TABLE joblistings
+ADD COLUMN salary VARCHAR(255);
 
 END;

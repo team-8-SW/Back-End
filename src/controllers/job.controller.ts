@@ -33,3 +33,24 @@ export const searchJob = async (req: Request, res: Response) => {
 		res.status(500).json({ message: 'Internal Server Error' });
 	}
 };
+
+export const filterJob = async (req: Request, res: Response) => {
+	try {
+		const { experienceLevel, company, minSalary, maxSalary } = req.query;
+
+		const filteredJob = await jobService.filterJob(
+			experienceLevel as string,
+			company as string,
+			minSalary ? Number(minSalary) : undefined,
+			maxSalary ? Number(maxSalary) : undefined,
+		);
+
+		if (!filteredJob || filteredJob.length == 0)
+			return res.status(404).json({ message: 'No jobs found' });
+
+		res.status(200).json({ message: 'Job filtered  successfully', filteredJob });
+	} catch (error) {
+		console.error('Error filtering job', error);
+		res.status(500).json({ message: 'Internal Server Error' });
+	}
+};

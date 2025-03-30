@@ -45,6 +45,7 @@ export async function seed(knex: Knex): Promise<void> {
 			posted_at: new Date(),
 			expires_at: faker.date.future(),
 			industry: faker.helpers.arrayElement(industries),
+			salary: faker.finance.amount(30000, 150000, 0, '$'),
 		});
 	}
 
