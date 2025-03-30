@@ -4,6 +4,7 @@ import * as jobController from '../controllers/job.controller';
 
 const router = express.Router();
 
+router.get('/search', jobController.searchJob);
 router.get('/:id', jobController.getJobById);
 
 export default router;

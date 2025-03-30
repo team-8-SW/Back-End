@@ -14,3 +14,22 @@ export const getJobById = async (req: Request, res: Response) => {
 		res.status(500).json({ message: 'Internal Server Error' });
 	}
 };
+
+export const searchJob = async (req: Request, res: Response) => {
+	try {
+		const { keyword, location, industry } = req.query;
+
+		const job = await jobService.searchJob(
+			keyword as string,
+			location as string,
+			industry as string,
+		);
+		if (!job || job.length == 0)
+			return res.status(404).json({ message: 'No matched jobs found' });
+
+		res.status(200).json({ message: 'Job found successfully', job });
+	} catch (error) {
+		console.error('Error finding job', error);
+		res.status(500).json({ message: 'Internal Server Error' });
+	}
+};

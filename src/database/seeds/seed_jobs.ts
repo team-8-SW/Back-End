@@ -14,6 +14,18 @@ export async function seed(knex: Knex): Promise<void> {
 	for (let i = 0; i < 10; i++) {
 		const user = faker.helpers.arrayElement(users);
 		const company = faker.helpers.arrayElement(companies);
+		const industries = [
+			'Technology',
+			'Healthcare',
+			'Finance',
+			'Education',
+			'Retail',
+			'Manufacturing',
+			'Construction',
+			'Transportation',
+			'Hospitality',
+			'Energy',
+		];
 
 		jobs.push({
 			id: uuidv4(),
@@ -32,6 +44,7 @@ export async function seed(knex: Knex): Promise<void> {
 			]),
 			posted_at: new Date(),
 			expires_at: faker.date.future(),
+			industry: faker.helpers.arrayElement(industries),
 		});
 	}
 
