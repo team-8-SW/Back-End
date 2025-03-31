@@ -53,19 +53,20 @@ app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
 });
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function printRoutes(stack: any[], prefix = '') {
-	stack.forEach((layer) => {
-		if (layer.route) {
-			// This layer is a route
-			console.log(`${prefix}${layer.route.path}`);
-		} else if (layer.name === 'router' && layer.handle.stack) {
-			// This layer is a router, recursively print its routes
-			printRoutes(layer.handle.stack, prefix + (layer.regexp?.toString() || ''));
-		}
-	});
-}
+//di elfunctioin ely kanet bet print routes i commented it -noor
+//function printRoutes(stack: any[], prefix = '') {
+//	stack.forEach((layer) => {
+//		if (layer.route) {
+//			// This layer is a route
+//			//console.log(`${prefix}${layer.route.path}`);
+//		} else if (layer.name === 'router' && layer.handle.stack) {
+//			// This layer is a router, recursively print its routes
+//			//printRoutes(layer.handle.stack, prefix + (layer.regexp?.toString() || ''));
+//		}
+//	});
+//}
 
-printRoutes(app._router.stack);
+//printRoutes(app._router.stack);
 
 // Start server
 const port = process.env.port || 3000;
