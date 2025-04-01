@@ -164,7 +164,13 @@ export const updateExperience = async (userId: string, experienceId: string, exp
 
 	return rowsUpdated[0];
 };
-
+export const getSkillsForExperience = async (experienceId: string) => {
+	return await knexInstance('skill_contexts')
+		.join('user_skills', 'skill_contexts.user_skill_id', 'user_skills.id')
+		.join('skills', 'user_skills.skill_id', 'skills.id')
+		.where('skill_contexts.experience_id', experienceId)
+		.select('skills.id', 'skills.skill_name as name');
+};
 export const deleteExperience = async (userId: string, experienceId: string) => {
 	// Start a transaction to ensure atomicity
 	return await knexInstance.transaction(async (trx) => {
@@ -254,6 +260,13 @@ export const updateEducation = async (userId: string, educationId: string, educa
 	if (rowsUpdated.length === 0) return null;
 
 	return rowsUpdated[0];
+};
+export const getSkillsForEducation = async (educationId: string) => {
+	return await knexInstance('skill_contexts')
+		.join('user_skills', 'skill_contexts.user_skill_id', 'user_skills.id')
+		.join('skills', 'user_skills.skill_id', 'skills.id')
+		.where('skill_contexts.education_id', educationId)
+		.select('skills.id', 'skills.skill_name as name');
 };
 
 export const deleteEducation = async (userId: string, educationId: string) => {

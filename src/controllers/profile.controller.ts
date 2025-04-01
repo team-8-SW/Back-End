@@ -1,10 +1,7 @@
 import { Request, Response } from 'express';
 import * as profileService from '../services/profile.service';
-/**
- * Function to get profile by Id
- * @param req gets userId
- * @returns profile{id, first_name, last_name, headline, location, profile_picture_url}
- */
+import { profile } from 'console';
+
 export const getProfileById = async (req: Request, res: Response) => {
 	try {
 		const userId = req.params.userId;
@@ -25,11 +22,6 @@ export const getProfileById = async (req: Request, res: Response) => {
 	}
 };
 //--------------------Profile Picture--------------------//
-/**
- * Function to update profile picture
- * @param req gets userId
- * @returns message: 'Profile picture updated successfully', profilePictureUrl
- */
 export const updateProfilePicture = async (req: Request, res: Response) => {
 	// Get userId from req.user
 	const userId = (req as any).user?.id;
@@ -63,11 +55,7 @@ export const updateProfilePicture = async (req: Request, res: Response) => {
 		res.status(500).json({ error: 'Internal server error', details: errorMessage });
 	}
 };
-/**
- * Function to delete profile picture
- * @param req gets userId
- * @returns message: 'Profile picture deleted successfully'
- */
+
 export const deleteProfilePicture = async (req: Request, res: Response) => {
 	// Get userId from req.user
 	const userId = (req as any).user?.id;
@@ -85,6 +73,7 @@ export const deleteProfilePicture = async (req: Request, res: Response) => {
 
 		res.status(200).json({
 			message: 'Profile picture deleted successfully',
+			profilePictureUrl: null,
 		});
 	} catch (error) {
 		const errorMessage = error instanceof Error ? error.message : String(error);
@@ -92,11 +81,7 @@ export const deleteProfilePicture = async (req: Request, res: Response) => {
 	}
 };
 //--------------------Cover Photo--------------------//
-/**
- * Function to update cover photo
- * @param req gets userId
- * @returns message: 'Cover Photo updated successfully', coverPhotoUrl
- */
+
 export const updateCoverPhoto = async (req: Request, res: Response) => {
 	// Check if file exists
 	if (!req.file) {
@@ -129,11 +114,6 @@ export const updateCoverPhoto = async (req: Request, res: Response) => {
 	}
 };
 
-/**
- * Function to delete cover photo
- * @param req gets userId
- * @returns message: 'Cover Photo deleted successfully'
- */
 export const deleteCoverPhoto = async (req: Request, res: Response) => {
 	// Get userId from req.user
 	const userId = (req as any).user?.id;
@@ -151,6 +131,7 @@ export const deleteCoverPhoto = async (req: Request, res: Response) => {
 
 		res.status(200).json({
 			message: 'Cover Photo deleted successfully',
+			coverPhotoUrl: null,
 		});
 	} catch (error) {
 		const errorMessage = error instanceof Error ? error.message : String(error);
@@ -158,11 +139,7 @@ export const deleteCoverPhoto = async (req: Request, res: Response) => {
 	}
 };
 //--------------------Resume--------------------//
-/**
- * Function to update resume
- * @param req gets userId
- * @returns message: 'Resume updated successfully', resumeUrl
- */
+
 export const updateResume = async (req: Request, res: Response) => {
 	// Check if file exists
 	if (!req.file) {
@@ -194,11 +171,7 @@ export const updateResume = async (req: Request, res: Response) => {
 		res.status(500).json({ error: 'Internal server error', details: errorMessage });
 	}
 };
-/**
- * Function to delete resume
- * @param req gets userId
- * @returns message: 'Resume deleted successfully'
- */
+
 export const deleteResume = async (req: Request, res: Response) => {
 	// Get userId from req.user
 	const userId = (req as any).user?.id;
@@ -216,6 +189,7 @@ export const deleteResume = async (req: Request, res: Response) => {
 
 		res.json({
 			message: 'Resume deleted successfully',
+			resumeUrl: null,
 		});
 	} catch (error) {
 		const errorMessage = error instanceof Error ? error.message : String(error);
@@ -224,11 +198,7 @@ export const deleteResume = async (req: Request, res: Response) => {
 };
 
 //--------------------Experience--------------------//
-/**
- * Function to get experiences of a user
- * @param req gets userId
- * @returns an array of experiences
- */
+
 export const getExperience = async (req: Request, res: Response) => {
 	// Get userId from req.user
 	const userId = (req as any).user?.id;
@@ -304,13 +274,33 @@ export const addExperience = async (req: Request, res: Response) => {
 		}
 
 		// Add skills to the experience context
+		const addedSkills = [];
 		if (skills && skills.length > 0) {
 			for (const skillName of skills) {
-				await profileService.addSkill(userId, skillName, undefined, newExperience.id);
+				const skill = await profileService.addSkill(
+					userId,
+					skillName,
+					undefined,
+					newExperience.id,
+				);
+				addedSkills.push(skill);
 			}
 		}
 
-		res.status(200).json({ message: 'Experience added successfully' });
+		res.status(200).json({
+			message: 'Experience added successfully',
+			experience: {
+				id: newExperience.id,
+				companyName: newExperience.company_name,
+				position: newExperience.position,
+				startDate: newExperience.start_date,
+				endDate: newExperience.end_date,
+				currentJob: newExperience.current_job,
+				description: newExperience.description,
+				location: newExperience.location,
+				skills: addedSkills,
+			},
+		});
 	} catch (error) {
 		const errorMessage = error instanceof Error ? error.message : String(error);
 		res.status(500).json({ error: 'Internal server error', details: errorMessage });
@@ -364,13 +354,34 @@ export const updateExperience = async (req: Request, res: Response) => {
 			return res.status(404).json({ error: 'Experience not found or not owned by user' });
 		}
 		// Update skills for the experience context
+		const updatedSkills = [];
 		if (skills && skills.length > 0) {
 			for (const skillName of skills) {
-				await profileService.addSkill(userId, skillName, undefined, experienceId);
+				const skill = await profileService.addSkill(
+					userId,
+					skillName,
+					undefined,
+					experienceId,
+				);
+				updatedSkills.push(skill);
 			}
 		}
+		const experienceSkills = await profileService.getSkillsForExperience(experienceId);
 
-		res.json({ message: 'Experience updated successfully' });
+		res.json({
+			message: 'Experience updated successfully',
+			experience: {
+				id: updatedExperience.id,
+				companyName: updatedExperience.company_name,
+				position: updatedExperience.position,
+				startDate: updatedExperience.start_date,
+				endDate: updatedExperience.end_date,
+				currentJob: updatedExperience.current_job,
+				description: updatedExperience.description,
+				location: updatedExperience.location,
+				skills: experienceSkills,
+			},
+		});
 	} catch (error) {
 		const errorMessage = error instanceof Error ? error.message : String(error);
 		res.status(500).json({ error: 'Internal server error', details: errorMessage });
@@ -464,13 +475,25 @@ export const addEducation = async (req: Request, res: Response) => {
 		}
 
 		// Add skills to the education context
+		const addedSkills = [];
 		if (skills && skills.length > 0) {
 			for (const skillName of skills) {
 				await profileService.addSkill(userId, skillName, newEducation.id, undefined);
+				addedSkills.push(skillName);
 			}
 		}
 
-		res.status(200).json({ message: 'Education added successfully' });
+		res.status(200).json({
+			message: 'Education added successfully',
+			education: {
+				id: newEducation.id,
+				school: university.name,
+				degree: newEducation.degree,
+				startDate: newEducation.start_date,
+				endDate: newEducation.end_date,
+				skills: addedSkills,
+			},
+		});
 	} catch (error) {
 		const errorMessage = error instanceof Error ? error.message : String(error);
 		res.status(500).json({ error: 'Internal server error', details: errorMessage });
@@ -507,13 +530,27 @@ export const updateEducation = async (req: Request, res: Response) => {
 		}
 
 		// Update skills for the education context
+		const updatedSkills = [];
 		if (skills && skills.length > 0) {
 			for (const skillName of skills) {
 				await profileService.addSkill(userId, skillName, educationId, undefined);
+				updatedSkills.push(skillName);
 			}
 		}
 
-		res.json({ message: 'Education updated successfully' });
+		const educationSkills = await profileService.getSkillsForEducation(educationId);
+
+		res.json({
+			message: 'Education updated successfully',
+			education: {
+				id: updatedEducation.id,
+				school: updatedEducation.school,
+				degree: updatedEducation.degree,
+				startDate: updatedEducation.startDate,
+				endDate: updatedEducation.endDate,
+				skills: educationSkills,
+			},
+		});
 	} catch (error) {
 		const errorMessage = error instanceof Error ? error.message : String(error);
 		res.status(500).json({ error: 'Internal server error', details: errorMessage });
@@ -598,6 +635,7 @@ export const addCertification = async (req: Request, res: Response) => {
 
 		res.status(200).json({
 			message: 'Certification added successfully',
+			newCertification,
 		});
 	} catch (error) {
 		const errorMessage = error instanceof Error ? error.message : String(error);
@@ -634,7 +672,16 @@ export const updateCertification = async (req: Request, res: Response) => {
 			return res.status(404).json({ error: 'Certification not found' });
 		}
 
-		res.json({ message: 'Certification updated successfully' });
+		res.json({
+			message: 'Certification updated successfully',
+			certification: {
+				id: updatedCertification.id,
+				name: updatedCertification.name,
+				issuedBy: updatedCertification.issuingOrganization,
+				issueDate: updatedCertification.issueDate,
+				expirationDate: updatedCertification.expirationDate,
+			},
+		});
 	} catch (error) {
 		const errorMessage = error instanceof Error ? error.message : String(error);
 		res.status(500).json({ error: 'Internal server error', details: errorMessage });
@@ -695,6 +742,7 @@ export const addSkill = async (req: Request, res: Response) => {
 
 		res.status(200).json({
 			message: 'Skill added successfully',
+			newSkill,
 		});
 	} catch (error) {
 		const errorMessage = error instanceof Error ? error.message : String(error);
@@ -762,64 +810,13 @@ export const updateProfileVisibility = async (req: Request, res: Response) => {
 			return res.status(404).json({ error: 'Privacy Setting not found' });
 		}
 
-		res.json({ message: 'Profile Visibility updated successfully' });
+		res.json({ message: 'Profile Visibility updated successfully', updatedProfileVisibility });
 	} catch (error) {
 		const errorMessage = error instanceof Error ? error.message : String(error);
 		res.status(500).json({ error: 'Internal server error', details: errorMessage });
 	}
 };
 //--------------------Create/Update new User--------------------//
-
-export const createUserProfile = async (req: Request, res: Response) => {
-	try {
-		const userId = (req as any).user?.id;
-
-		const { headline, bio, location, industry, skills, workExperience, education } = req.body;
-
-		const newProfile = await profileService.createUserProfile(userId, {
-			headline,
-			bio,
-			location,
-			industry,
-			skills,
-			workExperience,
-			education,
-		});
-		if (!newProfile) {
-			return res.status(404).json({ error: 'Failed to create user profile' });
-		}
-
-		res.status(200).json({ message: 'User profile created successfully' });
-	} catch (error) {
-		const errorMessage = error instanceof Error ? error.message : String(error);
-		res.status(500).json({ error: 'Internal server error', details: errorMessage });
-	}
-};
-
-export const updateUserProfile = async (req: Request, res: Response) => {
-	try {
-		const userId = (req as any).user?.id;
-
-		const { headline, bio, location, industry } = req.body;
-
-		const updatedProfile = await profileService.updateUserProfile(userId, {
-			headline,
-			bio,
-			location,
-			industry,
-		});
-
-		if (!updatedProfile) {
-			return res.status(404).json({ error: 'Profile not found' });
-		}
-
-		res.json({ message: 'User profile updated successfully' });
-	} catch (error) {
-		const errorMessage = error instanceof Error ? error.message : String(error);
-		res.status(500).json({ error: 'Internal server error', details: errorMessage });
-	}
-};
-
 export const getMyProfile = async (req: Request, res: Response) => {
 	try {
 		const userId = (req as any).user?.id; // Get userId from the middleware
@@ -845,6 +842,70 @@ export const getMyProfile = async (req: Request, res: Response) => {
 			skills,
 			followersCount,
 		});
+	} catch (error) {
+		const errorMessage = error instanceof Error ? error.message : String(error);
+		res.status(500).json({ error: 'Internal server error', details: errorMessage });
+	}
+};
+export const createUserProfile = async (req: Request, res: Response) => {
+	try {
+		const userId = (req as any).user?.id;
+
+		const { headline, bio, location, industry, skills, workExperience, education } = req.body;
+
+		const newProfile = await profileService.createUserProfile(userId, {
+			headline,
+			bio,
+			location,
+			industry,
+			skills,
+			workExperience,
+			education,
+		});
+		if (!newProfile) {
+			return res.status(404).json({ error: 'Failed to create user profile' });
+		}
+		const user = await profileService.getUserProfile(userId);
+		const exp = await profileService.getExperience(userId);
+		const edu = await profileService.getEducation(userId);
+		const cert = await profileService.getCertifications(userId);
+		const ski = await profileService.getSkills(userId);
+		const followersCount = await profileService.getFollowersCount(userId);
+
+		res.status(200).json({
+			message: 'User profile created successfully',
+			profile: user,
+			experiences: exp,
+			education: edu,
+			certifications: cert,
+			skills: ski,
+			followersCount,
+		});
+	} catch (error) {
+		const errorMessage = error instanceof Error ? error.message : String(error);
+		res.status(500).json({ error: 'Internal server error', details: errorMessage });
+	}
+};
+
+export const updateUserProfile = async (req: Request, res: Response) => {
+	try {
+		const userId = (req as any).user?.id;
+
+		const { headline, bio, location, industry } = req.body;
+
+		const updatedProfile = await profileService.updateUserProfile(userId, {
+			headline,
+			bio,
+			location,
+			industry,
+		});
+
+		if (!updatedProfile) {
+			return res.status(404).json({ error: 'Profile not found' });
+		}
+		const user = await profileService.getUserProfile(userId);
+
+		res.json({ message: 'User profile updated successfully', profile: user });
 	} catch (error) {
 		const errorMessage = error instanceof Error ? error.message : String(error);
 		res.status(500).json({ error: 'Internal server error', details: errorMessage });
