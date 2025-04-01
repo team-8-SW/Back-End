@@ -3919,10 +3919,10 @@
 							"schema": {
 								"type": "object",
 								"properties": {
-									"recipientId": {
+									"receiverId": {
 										"type": "string"
 									},
-									"file": {
+									"media": {
 										"type": "string",
 										"format": "binary"
 									}
