@@ -35,5 +35,3 @@ export const createMessage = async (message: Message) => {
 
 	return inserted;
 };
-
-// Add more functions later for fetching conversation, etc.
