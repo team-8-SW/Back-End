@@ -3877,7 +3877,7 @@
 							"schema": {
 								"type": "object",
 								"properties": {
-									"recipientId": {
+									"receiverId": {
 										"type": "string"
 									},
 									"content": {

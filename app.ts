@@ -1,17 +1,16 @@
 import express, { Express, Request, Response, NextFunction } from 'express';
 import dotenv from 'dotenv';
 import { setupSwagger } from './src/docs/swagger';
-//
+
 // Import routes
-import userRoutes from './src/routes/users.routes'; // Adjust the path as needed
+import userRoutes from './src/routes/users.routes';
 import authRoutes from './src/routes/auth.route';
-//import router from './src/routes/users.routes';
 import companyRoutes from './src/routes/company.route';
 import profileRoutes from './src/routes/profile.route';
 import followingRoutes from './src/routes/following.route';
 import messagingRoutes from './src/routes/messaging.route';
-
 import notificationsRouter from './src/routes/notifications.route';
+
 // Initialize environment variables
 dotenv.config();
 

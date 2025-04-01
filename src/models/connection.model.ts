@@ -19,4 +19,3 @@ export const areUsersConnected = async (userId1: string, userId2: string): Promi
 
 	return !!result;
 };
-// fff

@@ -1,4 +1,4 @@
-import { Request, Response } from 'express';
+import { Response } from 'express';
 import { createMessage } from '../models/message.model';
 import { AuthenticatedRequest } from '../middleware/auth.middleware';
 import { areUsersConnected } from '../models/connection.model';
@@ -23,7 +23,10 @@ export const sendTextMessage = async (req: AuthenticatedRequest, res: Response) 
 			content,
 		});
 
-		return res.status(201).json({ message });
+		return res.status(201).json({
+			message: 'Message sent successfully',
+			content: message.content,
+		});
 	} catch (err) {
 		console.error(err);
 		return res.status(500).json({ message: 'Internal server error' });
