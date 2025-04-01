@@ -8,6 +8,10 @@ import * as profileService from '../services/profile.service';
 export const getProfileById = async (req: Request, res: Response) => {
 	try {
 		const userId = req.params.userId;
+		// Validate userId
+		if (!userId) {
+			return res.status(401).json({ error: 'User ID is required' });
+		}
 		const profile = await profileService.getProfileById(userId);
 
 		if (!profile) {
@@ -16,7 +20,8 @@ export const getProfileById = async (req: Request, res: Response) => {
 
 		res.status(200).json(profile);
 	} catch (error) {
-		res.status(500).json({ error: 'Internal server error' });
+		const errorMessage = error instanceof Error ? error.message : String(error);
+		res.status(500).json({ error: 'Internal server error', details: errorMessage });
 	}
 };
 //--------------------Profile Picture--------------------//
@@ -28,11 +33,6 @@ export const getProfileById = async (req: Request, res: Response) => {
 export const updateProfilePicture = async (req: Request, res: Response) => {
 	// Get userId from req.user
 	const userId = (req as any).user?.id;
-
-	// Validate userId
-	if (!userId) {
-		return res.status(401).json({ error: 'User ID is required' });
-	}
 
 	// Check if file exists
 	if (!req.file) {
@@ -59,7 +59,8 @@ export const updateProfilePicture = async (req: Request, res: Response) => {
 			profilePictureUrl: profilePictureUrl,
 		});
 	} catch (error) {
-		res.status(500).json({ error: 'Error updating profile picture' });
+		const errorMessage = error instanceof Error ? error.message : String(error);
+		res.status(500).json({ error: 'Internal server error', details: errorMessage });
 	}
 };
 /**
@@ -70,11 +71,6 @@ export const updateProfilePicture = async (req: Request, res: Response) => {
 export const deleteProfilePicture = async (req: Request, res: Response) => {
 	// Get userId from req.user
 	const userId = (req as any).user?.id;
-
-	// Validate userId
-	if (!userId) {
-		return res.status(401).json({ error: 'User ID is required' });
-	}
 
 	try {
 		// Call service to delete profile picture
@@ -91,7 +87,8 @@ export const deleteProfilePicture = async (req: Request, res: Response) => {
 			message: 'Profile picture deleted successfully',
 		});
 	} catch (error) {
-		res.status(500).json({ error: 'Error deleting profile picture' });
+		const errorMessage = error instanceof Error ? error.message : String(error);
+		res.status(500).json({ error: 'Internal server error', details: errorMessage });
 	}
 };
 //--------------------Cover Photo--------------------//
@@ -108,11 +105,6 @@ export const updateCoverPhoto = async (req: Request, res: Response) => {
 
 	// Get userId from req.user
 	const userId = (req as any).user?.id;
-
-	// Validate userId
-	if (!userId) {
-		return res.status(401).json({ error: 'User ID is required' });
-	}
 
 	try {
 		const coverPhotoUrl = `/uploads/${req.file.filename}`;
@@ -132,7 +124,8 @@ export const updateCoverPhoto = async (req: Request, res: Response) => {
 			coverPhotoUrl: coverPhotoUrl,
 		});
 	} catch (error) {
-		res.status(500).json({ error: 'Error updating cover photo' });
+		const errorMessage = error instanceof Error ? error.message : String(error);
+		res.status(500).json({ error: 'Internal server error', details: errorMessage });
 	}
 };
 
@@ -144,11 +137,6 @@ export const updateCoverPhoto = async (req: Request, res: Response) => {
 export const deleteCoverPhoto = async (req: Request, res: Response) => {
 	// Get userId from req.user
 	const userId = (req as any).user?.id;
-
-	// Validate userId
-	if (!userId) {
-		return res.status(401).json({ error: 'User ID is required' });
-	}
 
 	try {
 		// Call service to delete cover photo
@@ -165,7 +153,8 @@ export const deleteCoverPhoto = async (req: Request, res: Response) => {
 			message: 'Cover Photo deleted successfully',
 		});
 	} catch (error) {
-		res.status(500).json({ error: 'Error deleting cover photo' });
+		const errorMessage = error instanceof Error ? error.message : String(error);
+		res.status(500).json({ error: 'Internal server error', details: errorMessage });
 	}
 };
 //--------------------Resume--------------------//
@@ -182,11 +171,6 @@ export const updateResume = async (req: Request, res: Response) => {
 
 	// Get userId from req.user
 	const userId = (req as any).user?.id;
-
-	// Validate userId
-	if (!userId) {
-		return res.status(401).json({ error: 'User ID is required' });
-	}
 
 	try {
 		const resumeUrl = `/uploads/${req.file.filename}`;
@@ -206,7 +190,8 @@ export const updateResume = async (req: Request, res: Response) => {
 			resumeUrl: resumeUrl,
 		});
 	} catch (error) {
-		res.status(500).json({ error: 'Error updating resume' });
+		const errorMessage = error instanceof Error ? error.message : String(error);
+		res.status(500).json({ error: 'Internal server error', details: errorMessage });
 	}
 };
 /**
@@ -217,11 +202,6 @@ export const updateResume = async (req: Request, res: Response) => {
 export const deleteResume = async (req: Request, res: Response) => {
 	// Get userId from req.user
 	const userId = (req as any).user?.id;
-
-	// Validate userId
-	if (!userId) {
-		return res.status(401).json({ error: 'User ID is required' });
-	}
 
 	try {
 		// Call service to delete resume
@@ -238,7 +218,8 @@ export const deleteResume = async (req: Request, res: Response) => {
 			message: 'Resume deleted successfully',
 		});
 	} catch (error) {
-		res.status(500).json({ error: 'Error deleting resume' });
+		const errorMessage = error instanceof Error ? error.message : String(error);
+		res.status(500).json({ error: 'Internal server error', details: errorMessage });
 	}
 };
 
@@ -251,11 +232,6 @@ export const deleteResume = async (req: Request, res: Response) => {
 export const getExperience = async (req: Request, res: Response) => {
 	// Get userId from req.user
 	const userId = (req as any).user?.id;
-
-	// Validate userId
-	if (!userId) {
-		return res.status(401).json({ error: 'User ID is required' });
-	}
 
 	try {
 		const experience = await profileService.getExperience(userId);
@@ -274,23 +250,33 @@ export const getExperience = async (req: Request, res: Response) => {
 				endDate: exp.endDate,
 				location: exp.location,
 				description: exp.description,
+				skills: exp.skills || [],
 			})),
 		);
 	} catch (error) {
-		res.status(500).json({ error: 'Error fetching experience' });
+		const errorMessage = error instanceof Error ? error.message : String(error);
+		res.status(500).json({ error: 'Internal server error', details: errorMessage });
 	}
 };
 
 export const addExperience = async (req: Request, res: Response) => {
 	try {
 		const userId = (req as any).user?.id;
-		const { companyName, position, startDate, endDate, currentJob, description, location } =
-			req.body;
+		const {
+			companyName,
+			position,
+			startDate,
+			endDate,
+			currentJob,
+			description,
+			location,
+			skills,
+		} = req.body;
 
 		if (!companyName || !position || !startDate || currentJob === undefined) {
-			return res
-				.status(400)
-				.json({ error: 'Company name, position, start date and current job are required' });
+			return res.status(400).json({
+				error: 'Company name, position, start date, and current job are required',
+			});
 		}
 
 		if (typeof currentJob !== 'boolean') {
@@ -306,17 +292,28 @@ export const addExperience = async (req: Request, res: Response) => {
 			description: description || null, // Default to null
 			location: location || null,
 		};
+
 		if (endDate && new Date(endDate) < new Date(startDate)) {
 			return res.status(400).json({ error: 'End date must be after start date' });
 		}
 
 		const newExperience = await profileService.addExperience(userId, experienceData);
+
 		if (!newExperience) {
 			return res.status(500).json({ error: 'Error adding experience' });
 		}
+
+		// Add skills to the experience context
+		if (skills && skills.length > 0) {
+			for (const skillName of skills) {
+				await profileService.addSkill(userId, skillName, undefined, newExperience.id);
+			}
+		}
+
 		res.status(200).json({ message: 'Experience added successfully' });
 	} catch (error) {
-		res.status(500).json({ error: 'Internal server error' });
+		const errorMessage = error instanceof Error ? error.message : String(error);
+		res.status(500).json({ error: 'Internal server error', details: errorMessage });
 	}
 };
 
@@ -324,29 +321,39 @@ export const updateExperience = async (req: Request, res: Response) => {
 	try {
 		const userId = (req as any).user?.id;
 		const experienceId = req.params.experienceId;
-		const { companyName, position, startDate, endDate, currentJob, description, location } =
-			req.body;
+		const {
+			companyName,
+			position,
+			startDate,
+			endDate,
+			currentJob,
+			description,
+			location,
+			skills,
+		} = req.body;
 
 		if (!companyName || !position || !startDate || currentJob === undefined) {
-			return res
-				.status(400)
-				.json({ error: 'Company name, position, start date and current job are required' });
+			return res.status(400).json({
+				error: 'Company name, position, start date, and current job are required',
+			});
 		}
 
 		if (typeof currentJob !== 'boolean') {
 			return res.status(400).json({ error: 'Current job must be true or false' });
 		}
 
+		// Prepare data for database update
 		const experienceData = {
 			company_name: companyName,
 			position,
 			start_date: startDate,
-			end_date: currentJob ? null : endDate, // Set null if current job
+			end_date: currentJob ? null : endDate,
 			current_job: currentJob,
-			description: description || null, // Default to null
+			description: description || null,
 			location: location || null,
 		};
 
+		// Update the experience
 		const updatedExperience = await profileService.updateExperience(
 			userId,
 			experienceId,
@@ -354,12 +361,19 @@ export const updateExperience = async (req: Request, res: Response) => {
 		);
 
 		if (!updatedExperience) {
-			return res.status(404).json({ error: 'Experience not found' });
+			return res.status(404).json({ error: 'Experience not found or not owned by user' });
+		}
+		// Update skills for the experience context
+		if (skills && skills.length > 0) {
+			for (const skillName of skills) {
+				await profileService.addSkill(userId, skillName, undefined, experienceId);
+			}
 		}
 
 		res.json({ message: 'Experience updated successfully' });
 	} catch (error) {
-		res.status(500).json({ error: 'Internal server error' });
+		const errorMessage = error instanceof Error ? error.message : String(error);
+		res.status(500).json({ error: 'Internal server error', details: errorMessage });
 	}
 };
 
@@ -376,7 +390,8 @@ export const deleteExperience = async (req: Request, res: Response) => {
 
 		res.json({ message: 'Experience deleted successfully' });
 	} catch (error) {
-		res.status(500).json({ error: 'Internal server error' });
+		const errorMessage = error instanceof Error ? error.message : String(error);
+		res.status(500).json({ error: 'Internal server error', details: errorMessage });
 	}
 };
 
@@ -385,11 +400,6 @@ export const deleteExperience = async (req: Request, res: Response) => {
 export const getEducation = async (req: Request, res: Response) => {
 	// Get userId from req.user
 	const userId = (req as any).user?.id;
-
-	// Validate userId
-	if (!userId) {
-		return res.status(401).json({ error: 'User ID is required' });
-	}
 
 	try {
 		const education = await profileService.getEducation(userId);
@@ -406,23 +416,19 @@ export const getEducation = async (req: Request, res: Response) => {
 				degree: edu.degree,
 				startDate: edu.startDate,
 				endDate: edu.endDate,
+				skills: edu.skills || [],
 			})),
 		);
 	} catch (error) {
-		res.status(500).json({ error: 'Error fetching education' });
+		const errorMessage = error instanceof Error ? error.message : String(error);
+		res.status(500).json({ error: 'Internal server error', details: errorMessage });
 	}
 };
 
 export const addEducation = async (req: Request, res: Response) => {
 	try {
 		const userId = (req as any).user?.id;
-
-		// Validate userId
-		if (!userId) {
-			return res.status(401).json({ error: 'User ID is required' });
-		}
-
-		const { school, degree, startDate, endDate } = req.body;
+		const { school, degree, startDate, endDate, skills } = req.body;
 
 		if (!school || !degree || !startDate) {
 			return res
@@ -446,30 +452,36 @@ export const addEducation = async (req: Request, res: Response) => {
 			description: null,
 			current_education: !endDate, // Assume current education if no endDate
 		};
+
 		if (endDate && new Date(endDate) < new Date(startDate)) {
 			return res.status(400).json({ error: 'End date must be after start date' });
 		}
+
 		const newEducation = await profileService.addEducation(userId, educationData);
 
 		if (!newEducation) {
 			return res.status(404).json({ error: 'Error adding education' });
 		}
 
+		// Add skills to the education context
+		if (skills && skills.length > 0) {
+			for (const skillName of skills) {
+				await profileService.addSkill(userId, skillName, newEducation.id, undefined);
+			}
+		}
+
 		res.status(200).json({ message: 'Education added successfully' });
 	} catch (error) {
-		res.status(500).json({ error: 'Internal server error' });
+		const errorMessage = error instanceof Error ? error.message : String(error);
+		res.status(500).json({ error: 'Internal server error', details: errorMessage });
 	}
 };
 
 export const updateEducation = async (req: Request, res: Response) => {
 	try {
 		const userId = (req as any).user?.id;
-		// Validate userId
-		if (!userId) {
-			return res.status(401).json({ error: 'User ID is required' });
-		}
 		const educationId = req.params.educationId;
-		const { school, degree, startDate, endDate } = req.body;
+		const { school, degree, startDate, endDate, skills } = req.body;
 
 		if (!school || !degree || !startDate) {
 			return res.status(400).json({
@@ -494,19 +506,24 @@ export const updateEducation = async (req: Request, res: Response) => {
 			return res.status(404).json({ error: 'Education record not found' });
 		}
 
+		// Update skills for the education context
+		if (skills && skills.length > 0) {
+			for (const skillName of skills) {
+				await profileService.addSkill(userId, skillName, educationId, undefined);
+			}
+		}
+
 		res.json({ message: 'Education updated successfully' });
 	} catch (error) {
-		res.status(500).json({ error: 'Internal server error' });
+		const errorMessage = error instanceof Error ? error.message : String(error);
+		res.status(500).json({ error: 'Internal server error', details: errorMessage });
 	}
 };
 
 export const deleteEducation = async (req: Request, res: Response) => {
 	try {
 		const userId = (req as any).user?.id;
-		// Validate userId
-		if (!userId) {
-			return res.status(401).json({ error: 'User ID is required' });
-		}
+
 		const educationId = req.params.educationId;
 
 		const deletedEducation = await profileService.deleteEducation(userId, educationId);
@@ -517,7 +534,8 @@ export const deleteEducation = async (req: Request, res: Response) => {
 
 		res.json({ message: 'Education deleted successfully' });
 	} catch (error) {
-		res.status(500).json({ error: 'Internal server error' });
+		const errorMessage = error instanceof Error ? error.message : String(error);
+		res.status(500).json({ error: 'Internal server error', details: errorMessage });
 	}
 };
 
@@ -526,11 +544,6 @@ export const deleteEducation = async (req: Request, res: Response) => {
 export const getCertifications = async (req: Request, res: Response) => {
 	// Get userId from req.user
 	const userId = (req as any).user?.id;
-
-	// Validate userId
-	if (!userId) {
-		return res.status(401).json({ error: 'User ID is required' });
-	}
 
 	try {
 		const certifications = await profileService.getCertifications(userId);
@@ -550,17 +563,15 @@ export const getCertifications = async (req: Request, res: Response) => {
 			})),
 		);
 	} catch (error) {
-		res.status(500).json({ error: 'Error fetching certifications' });
+		const errorMessage = error instanceof Error ? error.message : String(error);
+		res.status(500).json({ error: 'Internal server error', details: errorMessage });
 	}
 };
 
 export const addCertification = async (req: Request, res: Response) => {
 	try {
 		const userId = (req as any).user?.id;
-		// Validate userId
-		if (!userId) {
-			return res.status(401).json({ error: 'User ID is required' });
-		}
+
 		const { name, issuedBy, issueDate, expirationDate } = req.body;
 
 		if (!name || !issuedBy || !issueDate) {
@@ -589,17 +600,15 @@ export const addCertification = async (req: Request, res: Response) => {
 			message: 'Certification added successfully',
 		});
 	} catch (error) {
-		res.status(500).json({ error: 'Internal server error' });
+		const errorMessage = error instanceof Error ? error.message : String(error);
+		res.status(500).json({ error: 'Internal server error', details: errorMessage });
 	}
 };
 
 export const updateCertification = async (req: Request, res: Response) => {
 	try {
 		const userId = (req as any).user?.id;
-		// Validate userId
-		if (!userId) {
-			return res.status(401).json({ error: 'User ID is required' });
-		}
+
 		const certificationId = req.params.certificationId;
 		const { name, issuedBy, issueDate, expirationDate } = req.body;
 		if (!name || !issuedBy || !issueDate) {
@@ -627,17 +636,15 @@ export const updateCertification = async (req: Request, res: Response) => {
 
 		res.json({ message: 'Certification updated successfully' });
 	} catch (error) {
-		res.status(500).json({ error: 'Internal server error' });
+		const errorMessage = error instanceof Error ? error.message : String(error);
+		res.status(500).json({ error: 'Internal server error', details: errorMessage });
 	}
 };
 
 export const deleteCertification = async (req: Request, res: Response) => {
 	try {
 		const userId = (req as any).user?.id;
-		// Validate userId
-		if (!userId) {
-			return res.status(401).json({ error: 'User ID is required' });
-		}
+
 		const certificationId = req.params.certificationId;
 
 		const deletedCertification = await profileService.deleteCertification(
@@ -651,7 +658,8 @@ export const deleteCertification = async (req: Request, res: Response) => {
 
 		res.json({ message: 'Certification deleted successfully' });
 	} catch (error) {
-		res.status(500).json({ error: 'Internal server error' });
+		const errorMessage = error instanceof Error ? error.message : String(error);
+		res.status(500).json({ error: 'Internal server error', details: errorMessage });
 	}
 };
 //--------------------Skills--------------------//
@@ -659,10 +667,6 @@ export const deleteCertification = async (req: Request, res: Response) => {
 export const getSkills = async (req: Request, res: Response) => {
 	try {
 		const userId = (req as any).user?.id;
-		// Validate userId
-		if (!userId) {
-			return res.status(401).json({ error: 'User ID is required' });
-		}
 
 		const skills = await profileService.getSkills(userId);
 		if (!skills || skills.length === 0) {
@@ -670,7 +674,8 @@ export const getSkills = async (req: Request, res: Response) => {
 		}
 		res.json(skills);
 	} catch (error) {
-		res.status(500).json({ error: 'Internal server error' });
+		const errorMessage = error instanceof Error ? error.message : String(error);
+		res.status(500).json({ error: 'Internal server error', details: errorMessage });
 	}
 };
 
@@ -679,10 +684,6 @@ export const addSkill = async (req: Request, res: Response) => {
 		const userId = (req as any).user?.id;
 		const { name } = req.body;
 
-		// Validate userId
-		if (!userId) {
-			return res.status(401).json({ error: 'User ID is required' });
-		}
 		if (!name) {
 			return res.status(400).json({ error: 'Skill name is required' });
 		}
@@ -696,19 +697,14 @@ export const addSkill = async (req: Request, res: Response) => {
 			message: 'Skill added successfully',
 		});
 	} catch (error) {
-		res.status(500).json({ error: 'Internal server error' });
+		const errorMessage = error instanceof Error ? error.message : String(error);
+		res.status(500).json({ error: 'Internal server error', details: errorMessage });
 	}
 };
 
 export const deleteSkill = async (req: Request, res: Response) => {
 	try {
-		// Get userId from req.user
 		const userId = (req as any).user?.id;
-
-		// Validate userId
-		if (!userId) {
-			return res.status(401).json({ error: 'User ID is required' });
-		}
 
 		const skillId = req.params.skillId;
 
@@ -724,7 +720,8 @@ export const deleteSkill = async (req: Request, res: Response) => {
 
 		res.json({ message: 'Skill deleted successfully' });
 	} catch (error) {
-		res.status(500).json({ error: 'Internal server error' });
+		const errorMessage = error instanceof Error ? error.message : String(error);
+		res.status(500).json({ error: 'Internal server error', details: errorMessage });
 	}
 };
 
@@ -732,10 +729,6 @@ export const deleteSkill = async (req: Request, res: Response) => {
 export const getProfileVisibility = async (req: Request, res: Response) => {
 	try {
 		const userId = (req as any).user?.id;
-		// Validate userId
-		if (!userId) {
-			return res.status(401).json({ error: 'User ID is required' });
-		}
 
 		const profileVisibility = await profileService.getProfileVisibility(userId);
 		if (!profileVisibility) {
@@ -745,16 +738,14 @@ export const getProfileVisibility = async (req: Request, res: Response) => {
 			visibility: profileVisibility.visibility,
 		});
 	} catch (error) {
-		res.status(500).json({ error: 'Internal server error' });
+		const errorMessage = error instanceof Error ? error.message : String(error);
+		res.status(500).json({ error: 'Internal server error', details: errorMessage });
 	}
 };
 export const updateProfileVisibility = async (req: Request, res: Response) => {
 	try {
 		const userId = (req as any).user?.id;
-		// Validate userId
-		if (!userId) {
-			return res.status(401).json({ error: 'User ID is required' });
-		}
+
 		const { visibility } = req.body;
 
 		if (visibility != 'public' && visibility != 'private' && visibility != 'connections-only') {
@@ -773,7 +764,8 @@ export const updateProfileVisibility = async (req: Request, res: Response) => {
 
 		res.json({ message: 'Profile Visibility updated successfully' });
 	} catch (error) {
-		res.status(500).json({ error: 'Internal server error' });
+		const errorMessage = error instanceof Error ? error.message : String(error);
+		res.status(500).json({ error: 'Internal server error', details: errorMessage });
 	}
 };
 //--------------------Create/Update new User--------------------//
@@ -781,10 +773,6 @@ export const updateProfileVisibility = async (req: Request, res: Response) => {
 export const createUserProfile = async (req: Request, res: Response) => {
 	try {
 		const userId = (req as any).user?.id;
-		// Validate userId
-		if (!userId) {
-			return res.status(401).json({ error: 'User ID is required' });
-		}
 
 		const { headline, bio, location, industry, skills, workExperience, education } = req.body;
 
@@ -803,17 +791,14 @@ export const createUserProfile = async (req: Request, res: Response) => {
 
 		res.status(200).json({ message: 'User profile created successfully' });
 	} catch (error) {
-		res.status(500).json({ error: 'Internal server error' });
+		const errorMessage = error instanceof Error ? error.message : String(error);
+		res.status(500).json({ error: 'Internal server error', details: errorMessage });
 	}
 };
 
 export const updateUserProfile = async (req: Request, res: Response) => {
 	try {
 		const userId = (req as any).user?.id;
-		// Validate userId
-		if (!userId) {
-			return res.status(401).json({ error: 'User ID is required' });
-		}
 
 		const { headline, bio, location, industry } = req.body;
 
@@ -830,6 +815,38 @@ export const updateUserProfile = async (req: Request, res: Response) => {
 
 		res.json({ message: 'User profile updated successfully' });
 	} catch (error) {
-		res.status(500).json({ error: 'Internal server error' });
+		const errorMessage = error instanceof Error ? error.message : String(error);
+		res.status(500).json({ error: 'Internal server error', details: errorMessage });
+	}
+};
+
+export const getMyProfile = async (req: Request, res: Response) => {
+	try {
+		const userId = (req as any).user?.id; // Get userId from the middleware
+
+		// Fetch user profile
+		const user = await profileService.getUserProfile(userId);
+		if (!user) {
+			return res.status(404).json({ error: 'User profile not found' });
+		}
+
+		const experiences = await profileService.getExperience(userId);
+		const education = await profileService.getEducation(userId);
+		const certifications = await profileService.getCertifications(userId);
+		const skills = await profileService.getSkills(userId);
+		const followersCount = await profileService.getFollowersCount(userId);
+
+		// Combine all data into a single response
+		res.json({
+			profile: user,
+			experiences,
+			education,
+			certifications,
+			skills,
+			followersCount,
+		});
+	} catch (error) {
+		const errorMessage = error instanceof Error ? error.message : String(error);
+		res.status(500).json({ error: 'Internal server error', details: errorMessage });
 	}
 };

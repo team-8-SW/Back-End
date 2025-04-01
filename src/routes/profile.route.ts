@@ -121,5 +121,7 @@ router.post('/me', authMiddleware2, profileController.createUserProfile);
 
 //PUT /api/profiles/me
 router.put('/me', authMiddleware2, profileController.updateUserProfile);
+//GET /api/profiles/me
+router.get('/', authMiddleware2, profileController.getMyProfile);
 
 export default router;
