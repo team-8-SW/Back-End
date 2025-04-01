@@ -14,7 +14,7 @@ import {
 } from '../models/user.model';
 import { sendResetEmail, sendEmail } from '../utils/email';
 import { knexInstance } from '../config/db';
-// import { verifyRecaptcha } from '../utils/recaptcha';
+import { verifyRecaptcha } from '../utils/recaptcha';
 
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
@@ -46,10 +46,10 @@ export const registerService = async (
 	// eslint-disable-next-line @typescript-eslint/no-unused-vars, @typescript-eslint/naming-convention
 	verificationToken: string,
 ) => {
-	// const isRecaptchaValid = await verifyRecaptcha(recaptchaToken);
-	// if (!isRecaptchaValid) {
-	// 	throw new Error('Invalid reCAPTCHA token');
-	// }
+	const isRecaptchaValid = await verifyRecaptcha(recaptchaToken);
+	if (!isRecaptchaValid) {
+		throw new Error('Invalid reCAPTCHA token');
+	}
 	const existingUser = await findUserByEmail(email.toLowerCase());
 	if (existingUser) {
 		throw new Error('Email is already registered');
