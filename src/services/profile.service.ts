@@ -587,6 +587,7 @@ export const createUserProfile = async (userId: string, profileData: any) => {
 };
 
 export const updateUserProfile = async (userId: string, profileData: any) => {
+	// Update the `user_profiles` table
 	const updatedProfile = {
 		headline: profileData.headline || null,
 		bio: profileData.bio || null,
@@ -595,13 +596,41 @@ export const updateUserProfile = async (userId: string, profileData: any) => {
 		last_updated: knexInstance.fn.now(),
 	};
 
-	const rowsUpdated = await knexInstance('user_profiles')
+	const profileRowsUpdated = await knexInstance('user_profiles')
 		.where({ user_id: userId })
-		.update(updatedProfile)
-		.returning('*');
+		.update(updatedProfile);
 
-	if (rowsUpdated.length === 0) return null;
-	return rowsUpdated[0];
+	// Update the `users` table for firstName and lastName
+	const updatedUser = {
+		first_name: profileData.firstName || null,
+		last_name: profileData.lastName || null,
+	};
+
+	const userRowsUpdated = await knexInstance('users').where({ id: userId }).update(updatedUser);
+
+	if (profileRowsUpdated === 0 && userRowsUpdated === 0) return null;
+
+	// Return the updated profile
+	return await knexInstance('user_profiles')
+		.join('users', 'user_profiles.user_id', 'users.id')
+		.select(
+			'user_profiles.id as profileId',
+			'user_profiles.headline',
+			'user_profiles.location',
+			'user_profiles.profile_picture_url as profilePictureUrl',
+			'user_profiles.cover_photo_url as coverPhotoUrl',
+			'user_profiles.resume_url as resumeUrl',
+			'user_profiles.industry',
+			'user_profiles.bio',
+			'users.user_name as userName',
+			'users.first_name as firstName',
+			'users.last_name as lastName',
+			'users.is_premium',
+			'users.email_verified',
+			'users.is_active',
+		)
+		.where('user_profiles.user_id', userId)
+		.first();
 };
 
 export const getUserProfile = async (userId: string) => {

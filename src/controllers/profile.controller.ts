@@ -891,18 +891,28 @@ export const updateUserProfile = async (req: Request, res: Response) => {
 	try {
 		const userId = (req as any).user?.id;
 
-		const { headline, bio, location, industry } = req.body;
+		const { headline, bio, location, industry, firstName, lastName } = req.body;
 
-		const updatedProfile = await profileService.updateUserProfile(userId, {
-			headline,
-			bio,
-			location,
-			industry,
-		});
+		const currentProfile = await profileService.getUserProfile(userId);
+		if (!currentProfile) {
+			return res.status(404).json({ error: 'Profile not found' });
+		}
+
+		const updatedProfileData = {
+			headline: headline || currentProfile.headline,
+			bio: bio || currentProfile.bio,
+			location: location || currentProfile.location,
+			industry: industry || currentProfile.industry,
+			firstName: firstName || currentProfile.firstName,
+			lastName: lastName || currentProfile.lastName,
+		};
+
+		const updatedProfile = await profileService.updateUserProfile(userId, updatedProfileData);
 
 		if (!updatedProfile) {
 			return res.status(404).json({ error: 'Profile not found' });
 		}
+
 		const user = await profileService.getUserProfile(userId);
 
 		res.json({ message: 'User profile updated successfully', profile: user });
