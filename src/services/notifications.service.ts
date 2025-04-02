@@ -4,21 +4,21 @@ import { notifications } from '../models/notifications.model';
 
 // eslint-disable-next-line @typescript-eslint/naming-convention
 export const getAllNotifications = async (user_id: string): Promise<Notification[]> => {
-    try {
-        if (!user_id) {
-            throw new Error('User ID is required');
-        }
+	try {
+		if (!user_id) {
+			throw new Error('User ID is required');
+		}
 
-        const notifications = await knexInstance('notifications')
-            .where({ user_id })
-            .select('*')
-            .orderBy('created_at', 'desc'); // Typically you want newest notifications first
+		const notifications = await knexInstance('notifications')
+			.where({ user_id })
+			.select('*')
+			.orderBy('created_at', 'desc'); // Typically you want newest notifications first
 
-        return notifications;
-    } catch (error) {
-        console.error(`Error fetching notifications for user ${user_id}:`, error);
-        throw new Error('Failed to fetch notifications');
-    }
+		return notifications;
+	} catch (error) {
+		console.error(`Error fetching notifications for user ${user_id}:`, error);
+		throw new Error('Failed to fetch notifications');
+	}
 };
 export const markNotificationAsRead = async (id: string): Promise<notifications> => {
 	try {
