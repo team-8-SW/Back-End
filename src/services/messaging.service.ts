@@ -28,18 +28,17 @@ export const createMediaMessage = async (
 	receiverId: string,
 	file: Express.Multer.File,
 ) => {
-	let resourceType: 'image' | 'video' | 'raw' = 'image';
+	let resourceType: 'image' | 'video' | 'auto' = 'image';
 
 	if (file.mimetype.startsWith('video')) {
 		resourceType = 'video';
 	} else if (
+		file.mimetype.startsWith('audio') ||
 		file.mimetype === 'application/pdf' ||
 		file.mimetype === 'application/msword' ||
-		file.mimetype ===
-			'application/vnd.openxmlformats-officedocument.wordprocessingml.document' ||
-		file.mimetype.startsWith('audio')
+		file.mimetype === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
 	) {
-		resourceType = 'raw';
+		resourceType = 'auto';
 	}
 
 	let mediaType: 'image' | 'video' | 'document' | 'audio' = 'document';
@@ -181,4 +180,26 @@ export const markConversationAsUnread = async (loggedInUserId: string, otherUser
 			is_read: true,
 		})
 		.update({ is_read: false });
+};
+
+/* ======================= Get last message read status =============================*/
+export const getLastMessageReadStatus = async (userId1: string, userId2: string) => {
+	const message = await db('messages')
+		.where(function () {
+			this.where({ sender_id: userId1, receiver_id: userId2 }).orWhere({
+				sender_id: userId2,
+				receiver_id: userId1,
+			});
+		})
+		.orderBy('sent_at', 'desc')
+		.first();
+
+	if (!message) return null;
+
+	return {
+		id: message.id,
+		senderId: message.sender_id,
+		isRead: message.is_read,
+		timestamp: message.sent_at,
+	};
 };

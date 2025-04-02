@@ -11,6 +11,7 @@ import {
 	getUnreadMessageCount,
 	markConversationAsRead,
 	markConversationAsUnread,
+	getLastMessageReadStatus,
 } from '../services/messaging.service';
 
 /* ======================= Send private messages to connections =============================*/
@@ -184,6 +185,37 @@ export const markConversationUnread = async (req: AuthenticatedRequest, res: Res
 		return res.status(200).json({ message: 'Conversation marked as unread' });
 	} catch (err: any) {
 		console.error('Error marking conversation as unread:', err.message);
+		return res.status(500).json({ message: 'Internal server error' });
+	}
+};
+
+/* ======================= Get last message read status =============================*/
+export const getLastMessageReadStatusController = async (
+	req: AuthenticatedRequest,
+	res: Response,
+) => {
+	try {
+		const userId = req.user?.id;
+		const otherUserId = req.params.userId;
+
+		if (!userId || !otherUserId) {
+			return res.status(400).json({ message: 'Missing user ID' });
+		}
+
+		const status = await getLastMessageReadStatus(userId, otherUserId);
+
+		if (!status) {
+			return res.status(404).json({ message: 'No messages found' });
+		}
+
+		return res.status(200).json({
+			lastMessageId: status.id,
+			senderId: status.senderId,
+			isRead: status.isRead,
+			timestamp: status.timestamp,
+		});
+	} catch (err: any) {
+		console.error('Get read status error:', err.message);
 		return res.status(500).json({ message: 'Internal server error' });
 	}
 };
