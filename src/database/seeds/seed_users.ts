@@ -48,7 +48,7 @@ export async function seed(knex: Knex): Promise<void> {
 				is_active: faker.datatype.boolean(),
 				reset_token: reset_token,
 				reset_token_expiry: reset_token_expiry,
-				isadmin: faker.datatype.boolean(),
+				is_admin: faker.datatype.boolean(),
 				verification_token: null,
 				google_id: google_id,
 			});

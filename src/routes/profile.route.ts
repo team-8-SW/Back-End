@@ -1,18 +1,7 @@
 import express from 'express';
 import * as profileController from '../controllers/profile.controller';
 import { authMiddleware2 } from '../middleware/auth.middleware';
-import multer from 'multer';
-
-const storage = multer.diskStorage({
-	destination: function (req, file, cb) {
-		cb(null, 'uploads/'); // Save files in 'uploads/' directory
-	},
-	filename: function (req, file, cb) {
-		cb(null, Date.now() + '-' + file.originalname); // to avoid having duplicate file names
-	},
-});
-
-const upload = multer({ storage });
+import { upload } from '../middleware/multer';
 
 const router = express.Router();
 //--------------------View Other user Profiles--------------------//
@@ -106,7 +95,7 @@ router.post('/me/skills', authMiddleware2, profileController.addSkill);
 router.delete('/me/skills/:skillId', authMiddleware2, profileController.deleteSkill);
 
 ///POST /api/profiles/users/:userId/skills/:skillId/endorse
-//router.post('/users/:userId/skills/:skillId/endorse', authMiddleware, profileController.endorseSkill);
+//router.post('/users/:userId/skills/:skillId/endorse', authMiddleware2, profileController.endorseSkill);
 
 //--------------------Profile Visibility--------------------//
 //GET /api/profiles/me/visibility
@@ -121,5 +110,7 @@ router.post('/me', authMiddleware2, profileController.createUserProfile);
 
 //PUT /api/profiles/me
 router.put('/me', authMiddleware2, profileController.updateUserProfile);
+//GET /api/profiles/me
+router.get('/', authMiddleware2, profileController.getMyProfile);
 
 export default router;
