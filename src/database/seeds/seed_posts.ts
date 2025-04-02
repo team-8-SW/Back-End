@@ -5,28 +5,44 @@ import { faker } from '@faker-js/faker';
 
 export async function seed(knex: Knex): Promise<void> {
 	console.log('Seeding posts..');
-	await knex('posts').del();
-
+	try {
+		await knex('company_pages').del();
+		console.log('Existing company_pages deleted');
+		const companies = await knex('company_pages').select('id');
+		if (companies.length === 0) {
+			console.error('No companies found. Please seed companies first.');
+			return;
+		}
+		const users = await knex('users').select('id');
+		if (users.length === 0) {
+			console.error('No users found. Please seed users first.');
+			return;
+		}
 	const posts = [];
-	const companies = await knex('companypages').select('id');
-	for (let i = 0; i < 10; i++) {
-		posts.push({
-			id: uuidv4(),
-			user_id: uuidv4(),
-			company_id: companies[i % companies.length].id,
-			content: faker.lorem.paragraphs(3),
-			media_url: faker.internet.url(),
-			media_type: faker.system.mimeType().substring(0, 50),
-			like_count: faker.datatype.number({ min: 0, max: 1000 }),
-			comment_count: faker.datatype.number({ min: 0, max: 1000 }),
-			repost_count: faker.datatype.number({ min: 0, max: 1000 }),
-			created_at: faker.date.recent(),
-			edited_at: faker.date.recent(),
-			visibility: faker.helpers.arrayElement(['public', 'private', 'friends-only']),
+		for (let i = 0; i < 10; i++) {
+			const user = faker.helpers.arrayElement(users); // Randomly pick a user
+			const company = faker.helpers.arrayElement(companies); // Randomly pick a user
+			posts.push({
+				id: uuidv4(),
+				user_id: user.id,
+				company_id: company.id,
+				content: faker.lorem.paragraphs(3),
+				media_url: faker.internet.url(),
+				media_type: faker.system.mimeType().substring(0, 50),
+				like_count: faker.datatype.number({ min: 0, max: 1000 }),
+				comment_count: faker.datatype.number({ min: 0, max: 1000 }),
+				repost_count: faker.datatype.number({ min: 0, max: 1000 }),
+				created_at: faker.date.recent(),
+				edited_at: faker.date.recent(),
+				visibility: faker.helpers.arrayElement(['public', 'private', 'friends-only']),
 		});
 	}
 
-	await knex('posts').insert(posts);
+		await knex('posts').insert(posts);
+		console.log('Inserted posts into the posts table');
 
-	console.log('Posts seeding successfully');
+		console.log('Posts seeded successfully!');
+	} catch (error) {
+		console.error('Error seeding notifications:', error);
+	}
 }

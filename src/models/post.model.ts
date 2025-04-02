@@ -13,6 +13,5 @@ export interface posts {
     repost_count: number;
     created_at: Date;
     edited_at: Date;
-    visibility: string;
-    
+    visibility: string;   
 }
