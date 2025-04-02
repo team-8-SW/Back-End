@@ -1,6 +1,7 @@
 import { Response } from 'express';
 import { AuthenticatedRequest } from '../middleware/auth.middleware';
 import { areUsersConnected } from '../models/connection.model';
+import { isUserBlocked } from '../models/block.model';
 import {
 	createTextMessage,
 	createMediaMessage,
@@ -20,6 +21,11 @@ export const sendTextMessage = async (req: AuthenticatedRequest, res: Response) 
 
 		if (!senderId || !receiverId || !content) {
 			return res.status(400).json({ message: 'Missing required fields' });
+		}
+
+		const blocked = await isUserBlocked(senderId, receiverId);
+		if (blocked) {
+			return res.status(403).json({ message: 'You are blocked by this user.' });
 		}
 
 		const connected = await areUsersConnected(senderId, receiverId);
@@ -48,6 +54,11 @@ export const sendMediaMessage = async (req: AuthenticatedRequest, res: Response)
 
 		if (!senderId || !receiverId || !file) {
 			return res.status(400).json({ message: 'Missing required fields' });
+		}
+
+		const blocked = await isUserBlocked(senderId, receiverId);
+		if (blocked) {
+			return res.status(403).json({ message: 'You are blocked by this user.' });
 		}
 
 		const connected = await areUsersConnected(senderId, receiverId);
