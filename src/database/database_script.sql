@@ -42,7 +42,7 @@ CREATE TABLE IF NOT EXISTS user_profiles (
     profile_picture_url VARCHAR(255),
     cover_photo_url VARCHAR(255),
     resume_url VARCHAR(255),
-    last_updated TIMESTAMP NOT NULL DEFAULT NOW(),
+    last_updated TIMESTAMP NOT NULL DEFAULT NOW()
 );
 
 CREATE TABLE IF NOT EXISTS work_experience (
