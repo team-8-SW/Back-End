@@ -220,3 +220,83 @@ describe('Save jobs to apply for later', () => {
 		expect(jsonMock).toHaveBeenCalledWith({ message: 'Internal Server Error' });
 	});
 });
+
+describe('Apply for a job', () => {
+	let req: Partial<Request>;
+	let res: Partial<Response>;
+	let jsonMock: jest.Mock;
+	let statusMock: jest.Mock;
+
+	beforeEach(() => {
+		jsonMock = jest.fn();
+		statusMock = jest.fn(() => ({ json: jsonMock }));
+
+		req = {
+			params: { id: 'job123' },
+			user: { user_id: 'user456' },
+			body: {
+				resume_url: 'https://example.com/resume.pdf',
+				cover_letter: 'Excited to apply!',
+			},
+		} as Partial<CustomRequest>;
+
+		res = {
+			status: statusMock,
+			json: jsonMock,
+		};
+	});
+
+	it('should return 200 if Job applied successfully', async () => {
+		(jobService.getAppliedJob as jest.Mock).mockResolvedValue(false);
+		(jobService.applyForJob as jest.Mock).mockResolvedValue({ id: 'application123' });
+
+		await jobController.applyForJob(req as Request, res as Response);
+
+		expect(statusMock).toHaveBeenCalledWith(200);
+		expect(jsonMock).toHaveBeenCalledWith({
+			message: 'Job applied successfully',
+			job: { id: 'application123' },
+		});
+	});
+
+	it('should return 409 if Job already applied', async () => {
+		(jobService.getAppliedJob as jest.Mock).mockResolvedValue(true);
+
+		await jobController.applyForJob(req as Request, res as Response);
+
+		expect(statusMock).toHaveBeenCalledWith(409);
+		expect(jsonMock).toHaveBeenCalledWith({
+			message: 'Job already applied',
+		});
+	});
+
+	it('should return 401 if user not authorizaed', async () => {
+		(req as Partial<CustomRequest>).user = undefined;
+
+		await jobController.applyForJob(req as Request, res as Response);
+
+		expect(statusMock).toHaveBeenCalledWith(401);
+		expect(jsonMock).toHaveBeenCalledWith({
+			message: 'Unauthorized: No user found',
+		});
+	});
+
+	it('should return 404 if job id not provided or invalid', async () => {
+		(jobService.getAppliedJob as jest.Mock).mockResolvedValue(false);
+		(jobService.applyForJob as jest.Mock).mockResolvedValue(null);
+
+		await jobController.applyForJob(req as Request, res as Response);
+
+		expect(statusMock).toHaveBeenCalledWith(404);
+		expect(jsonMock).toHaveBeenCalledWith({ message: 'Job id is required' });
+	});
+
+	it('should return 500 if an error occurs', async () => {
+		(jobService.getAppliedJob as jest.Mock).mockRejectedValue(new Error('Database error'));
+
+		await jobController.applyForJob(req as Request, res as Response);
+
+		expect(statusMock).toHaveBeenCalledWith(500);
+		expect(jsonMock).toHaveBeenCalledWith({ message: 'Internal Server Error' });
+	});
+});
