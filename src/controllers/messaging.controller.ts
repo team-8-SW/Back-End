@@ -8,8 +8,11 @@ import {
 	getConversationParticipants,
 	getAllConversationsForUser,
 	getUnreadMessageCount,
+	markConversationAsRead,
+	markConversationAsUnread,
 } from '../services/messaging.service';
 
+/* ======================= Send private messages to connections =============================*/
 export const sendTextMessage = async (req: AuthenticatedRequest, res: Response) => {
 	try {
 		const senderId = req.user?.id;
@@ -36,6 +39,7 @@ export const sendTextMessage = async (req: AuthenticatedRequest, res: Response) 
 	}
 };
 
+/* ======================= Send media messages to connections =============================*/
 export const sendMediaMessage = async (req: AuthenticatedRequest, res: Response) => {
 	try {
 		const senderId = req.user?.id;
@@ -66,6 +70,7 @@ export const sendMediaMessage = async (req: AuthenticatedRequest, res: Response)
 	}
 };
 
+/* ======================= Get Conversation History =============================*/
 export const getConversationWithUser = async (req: AuthenticatedRequest, res: Response) => {
 	try {
 		const userId = req.user?.id;
@@ -118,6 +123,7 @@ export const getConversations = async (req: AuthenticatedRequest, res: Response)
 	}
 };
 
+/* ======================= Get unseen messages count =============================*/
 export const getUnreadCount = async (req: AuthenticatedRequest, res: Response) => {
 	try {
 		const userId = req.user?.id;
@@ -131,6 +137,42 @@ export const getUnreadCount = async (req: AuthenticatedRequest, res: Response) =
 		return res.status(200).json({ unreadCount });
 	} catch (err: any) {
 		console.error('Unread count error:', err.message);
+		return res.status(500).json({ message: 'Internal server error' });
+	}
+};
+
+/* ======================= Mark conversation as read/unread =============================*/
+export const markConversationRead = async (req: AuthenticatedRequest, res: Response) => {
+	try {
+		const receiverId = req.user?.id;
+		const senderId = req.params.userId;
+
+		if (!receiverId || !senderId) {
+			return res.status(400).json({ message: 'Missing user ID' });
+		}
+
+		await markConversationAsRead(receiverId, senderId);
+
+		return res.status(200).json({ message: 'Conversation marked as read' });
+	} catch (err: any) {
+		console.error('Error marking conversation as read:', err.message);
+		return res.status(500).json({ message: 'Internal server error' });
+	}
+};
+export const markConversationUnread = async (req: AuthenticatedRequest, res: Response) => {
+	try {
+		const receiverId = req.user?.id;
+		const senderId = req.params.userId;
+
+		if (!receiverId || !senderId) {
+			return res.status(400).json({ message: 'Missing user ID' });
+		}
+
+		await markConversationAsUnread(receiverId, senderId);
+
+		return res.status(200).json({ message: 'Conversation marked as unread' });
+	} catch (err: any) {
+		console.error('Error marking conversation as unread:', err.message);
 		return res.status(500).json({ message: 'Internal server error' });
 	}
 };

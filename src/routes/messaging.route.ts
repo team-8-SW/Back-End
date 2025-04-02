@@ -6,6 +6,8 @@ import {
 	getConversationWithUser,
 	getConversations,
 	getUnreadCount,
+	markConversationRead,
+	markConversationUnread,
 } from '../controllers/messaging.controller';
 import { authMiddleware } from '../middleware/auth.middleware';
 
@@ -25,5 +27,11 @@ router.get('/conversations/users/:userId', authMiddleware, getConversationWithUs
 
 // GET /api/conversations/unread-count
 router.get('/conversations/unread-count', authMiddleware, getUnreadCount);
+
+// PUT /api/conversations/{userId}/read
+router.put('/conversations/:userId/read', authMiddleware, markConversationRead);
+
+// PUT /api/conversations/{userId}/unread
+router.put('/conversations/:userId/unread', authMiddleware, markConversationUnread);
 
 export default router;

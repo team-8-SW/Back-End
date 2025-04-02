@@ -3984,18 +3984,20 @@
 				}
 			}
 		},
-		"/api/conversations/{conversationId}/read": {
+		"/api/conversations/{userId}/read": {
 			"put": {
-				"tags": ["Messages"],
-				"summary": "Mark an Entire Conversation as Read",
-				"description": "Marks all messages in a conversation as read.",
+				"tags": ["Conversations"],
+				"summary": "Mark a Conversation as Read",
+				"description": "Marks all messages from the given user as read for the logged-in user.",
 				"parameters": [
 					{
+						"name": "userId",
 						"in": "path",
-						"name": "conversationId",
 						"required": true,
+						"description": "The ID of the other user in the conversation",
 						"schema": {
-							"type": "string"
+						  "type": "string",
+						  "format": "uuid"
 						}
 					}
 				],
@@ -4010,6 +4012,9 @@
 										"message": {
 											"type": "string"
 										}
+									},
+									"example": {
+										"message": "Conversation marked as read"
 									}
 								}
 							}
@@ -4018,6 +4023,45 @@
 				}
 			}
 		},
+		"/api/conversations/{userId}/unread": {
+			"put": {
+				"tags": ["Conversations"],
+				"summary": "Mark a Conversation as Unread",
+				"description": "Marks all messages from the given user as unread for the logged-in user.",
+				"parameters": [
+				{
+					"name": "userId",
+					"in": "path",
+					"required": true,
+					"description": "The ID of the other user in the conversation",
+					"schema": {
+					"type": "string",
+					"format": "uuid"
+					}
+				}
+				],
+				"responses": {
+				"200": {
+					"description": "Conversation marked as unread successfully",
+					"content": {
+					"application/json": {
+						"schema": {
+						"type": "object",
+						"properties": {
+							"message": {
+							"type": "string"
+							}
+						},
+						"example": {
+							"message": "Conversation marked as unread"
+						}
+						}
+					}
+					}
+				}
+				}
+			}
+			},
 		"/api/messages/{messageId}": {
 			"delete": {
 				"tags": ["Messages"],

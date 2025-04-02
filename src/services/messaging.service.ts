@@ -8,6 +8,7 @@ const db = knex({
 	connection: pool.options,
 });
 
+/* ======================= Send private messages to connections =============================*/
 export const createTextMessage = async (senderId: string, receiverId: string, content: string) => {
 	const [message] = await db('messages')
 		.insert({
@@ -21,6 +22,7 @@ export const createTextMessage = async (senderId: string, receiverId: string, co
 	return message;
 };
 
+/* ======================= Send media messages to connections =============================*/
 export const createMediaMessage = async (
 	senderId: string,
 	receiverId: string,
@@ -84,6 +86,7 @@ export const createMediaMessage = async (
 	return message;
 };
 
+/* ======================= Get Conversation History =============================*/
 export const getConversationBetweenUsers = async (userId: string, otherUserId: string) => {
 	return db('messages')
 		.where(function () {
@@ -149,6 +152,7 @@ export const getAllConversationsForUser = async (userId: string) => {
 	return conversations;
 };
 
+/* ======================= Get unseen messages count =============================*/
 export const getUnreadMessageCount = async (userId: string) => {
 	const result = await db('messages')
 		.where({ receiver_id: userId, is_read: false, is_deleted_by_receiver: false })
@@ -156,4 +160,25 @@ export const getUnreadMessageCount = async (userId: string) => {
 		.first();
 
 	return Number(result?.count || 0);
+};
+
+/* ======================= Mark conversation as read/unread =============================*/
+export const markConversationAsRead = async (loggedInUserId: string, otherUserId: string) => {
+	return db('messages')
+		.where({
+			sender_id: otherUserId,
+			receiver_id: loggedInUserId,
+			is_read: false,
+		})
+		.update({ is_read: true });
+};
+
+export const markConversationAsUnread = async (loggedInUserId: string, otherUserId: string) => {
+	return db('messages')
+		.where({
+			sender_id: otherUserId,
+			receiver_id: loggedInUserId,
+			is_read: true,
+		})
+		.update({ is_read: false });
 };
