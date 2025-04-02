@@ -44,7 +44,7 @@ export const saveJob = async (userId: string, jobId: string) => {
 };
 
 export const getSavedJob = async (userId: string, jobId: string) => {
-	return knexInstance('saved_jobs').where({ user_id: userId, job_id: jobId }).select('*');
+	return knexInstance('saved_jobs').where({ user_id: userId, job_id: jobId }).first();
 };
 
 export const applyForJob = async (
@@ -67,7 +67,5 @@ export const applyForJob = async (
 };
 
 export const getAppliedJob = async (userId: string, jobId: string) => {
-	return knexInstance('jobapplications')
-		.where({ job_id: jobId, applicant_id: userId })
-		.select('*');
+	return knexInstance('jobapplications').where({ job_id: jobId, applicant_id: userId }).first();
 };
