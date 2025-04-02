@@ -23,7 +23,6 @@ export async function up(knex: Knex): Promise<void> {
 		table.string('cover_photo_url', 255);
 		table.string('resume_url', 255);
 		table.timestamp('last_updated').notNullable().defaultTo(knex.fn.now());
-		table.integer('num_connections').defaultTo(0);
 	});
 
 	await knex.schema.createTable('work_experience', (table) => {

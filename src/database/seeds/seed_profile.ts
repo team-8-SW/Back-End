@@ -82,11 +82,10 @@ export async function seed(knex: Knex): Promise<void> {
 			'Marketing & Advertising',
 			'Healthcare',
 		]),
-		profile_picture_url: faker.image.avatar(),
-		cover_photo_url: faker.image.imageUrl(1200, 400, 'business', true),
-		resume_url: `https://${faker.internet.domainName()}/resume_${uuidv4()}.pdf`,
+		profile_picture_url: null,
+		cover_photo_url: null,
+		resume_url: null,
 		last_updated: faker.date.recent(30),
-		num_connections: faker.datatype.number({ min: 0, max: 2000 }),
 	}));
 	await knex('user_profiles').insert(userProfiles);
 	console.log('Inserted user profiles');

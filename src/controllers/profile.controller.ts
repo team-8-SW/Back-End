@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import * as profileService from '../services/profile.service';
-import { profile } from 'console';
+import cloudinary from '../utils/cloudinary';
 
 export const getProfileById = async (req: Request, res: Response) => {
 	try {
@@ -17,58 +17,85 @@ export const getProfileById = async (req: Request, res: Response) => {
 
 		res.status(200).json(profile);
 	} catch (error) {
-		const errorMessage = error instanceof Error ? error.message : String(error);
+		const errorMessage = error instanceof Error ? error.message : JSON.stringify(error);
 		res.status(500).json({ error: 'Internal server error', details: errorMessage });
 	}
 };
 //--------------------Profile Picture--------------------//
 export const updateProfilePicture = async (req: Request, res: Response) => {
-	// Get userId from req.user
 	const userId = (req as any).user?.id;
+	const file = req.file;
 
-	// Check if file exists
-	if (!req.file) {
+	if (!file) {
 		return res.status(400).json({ error: 'No file uploaded' });
 	}
 
-	try {
-		const profilePictureUrl = `/uploads/${req.file.filename}`;
+	const allowedMimeTypes = ['image/jpeg', 'image/png'];
+	if (!allowedMimeTypes.includes(file.mimetype)) {
+		return res.status(400).json({ error: 'Invalid file type. Only JPEG and PNG are allowed.' });
+	}
 
-		// Call service to update database
-		const updatedProfile = await profileService.updateProfilePicture(userId, profilePictureUrl);
+	try {
+		const uploadToCloudinary = (): Promise<any> => {
+			return new Promise((resolve, reject) => {
+				const stream = cloudinary.uploader.upload_stream(
+					{
+						folder: 'linkedin-clone/profile-pictures',
+						resource_type: 'image',
+						type: 'upload',
+					},
+					(error, result) => {
+						if (error) return reject(error);
+						resolve(result);
+					},
+				);
+				stream.end(file.buffer);
+			});
+		};
+
+		const result = await uploadToCloudinary();
+		const updatedProfile = await profileService.updateProfilePicture(userId, result.secure_url);
 
 		if (!updatedProfile) {
 			return res.status(404).json({ error: 'User not found' });
 		}
-		if (updatedProfile.profilePictureUrl === null) {
-			return res
-				.status(500)
-				.json({ error: 'Profile Picture update failed, please try again' });
-		}
 
 		res.status(200).json({
 			message: 'Profile picture updated successfully',
-			profilePictureUrl: profilePictureUrl,
+			profilePictureUrl: result.secure_url,
 		});
 	} catch (error) {
-		const errorMessage = error instanceof Error ? error.message : String(error);
+		const errorMessage = error instanceof Error ? error.message : JSON.stringify(error);
 		res.status(500).json({ error: 'Internal server error', details: errorMessage });
 	}
 };
 
 export const deleteProfilePicture = async (req: Request, res: Response) => {
-	// Get userId from req.user
 	const userId = (req as any).user?.id;
 
 	try {
-		// Call service to delete profile picture
+		const currentProfile = await profileService.getUserProfile(userId);
+
+		if (!currentProfile) {
+			return res.status(404).json({ error: 'User not found' });
+		}
+
+		if (!currentProfile.profilePictureUrl) {
+			return res.status(404).json({ error: 'Profile picture not found' });
+		}
+
+		// Extract the public ID from the Cloudinary URL
+		const publicId = currentProfile.profilePictureUrl.split('/').pop()?.split('.')[0];
+
+		// Delete the profile picture from Cloudinary
+		if (publicId) {
+			await cloudinary.uploader.destroy(`linkedin-clone/profile-pictures/${publicId}`);
+		}
+
 		const deletedProfile = await profileService.deleteProfilePicture(userId);
 
 		if (!deletedProfile) {
-			return res.status(404).json({ error: 'User not found' });
-		}
-		if (deletedProfile.profilePictureUrl != null) {
-			return res.status(404).json({ error: 'Profile Picture not found' });
+			return res.status(404).json({ error: 'Failed to delete profile picture' });
 		}
 
 		res.status(200).json({
@@ -76,122 +103,202 @@ export const deleteProfilePicture = async (req: Request, res: Response) => {
 			profilePictureUrl: null,
 		});
 	} catch (error) {
-		const errorMessage = error instanceof Error ? error.message : String(error);
+		const errorMessage = error instanceof Error ? error.message : JSON.stringify(error);
 		res.status(500).json({ error: 'Internal server error', details: errorMessage });
 	}
 };
 //--------------------Cover Photo--------------------//
 
 export const updateCoverPhoto = async (req: Request, res: Response) => {
-	// Check if file exists
-	if (!req.file) {
+	const userId = (req as any).user?.id;
+	const file = req.file;
+
+	if (!file) {
 		return res.status(400).json({ error: 'No file uploaded' });
 	}
 
-	// Get userId from req.user
-	const userId = (req as any).user?.id;
+	const allowedMimeTypes = ['image/jpeg', 'image/png'];
+	if (!allowedMimeTypes.includes(file.mimetype)) {
+		return res.status(400).json({ error: 'Invalid file type. Only JPEG and PNG are allowed.' });
+	}
 
 	try {
-		const coverPhotoUrl = `/uploads/${req.file.filename}`;
+		const uploadToCloudinary = (): Promise<any> => {
+			return new Promise((resolve, reject) => {
+				const stream = cloudinary.uploader.upload_stream(
+					{
+						folder: 'linkedin-clone/cover-photos',
+						resource_type: 'image',
+						type: 'upload',
+					},
+					(error, result) => {
+						if (error) return reject(error);
+						resolve(result);
+					},
+				);
+				stream.end(file.buffer);
+			});
+		};
 
-		// Call service to update database
-		const updatedProfile = await profileService.updateCoverPicture(userId, coverPhotoUrl);
+		const result = await uploadToCloudinary();
+		const updatedProfile = await profileService.updateCoverPicture(userId, result.secure_url);
 
 		if (!updatedProfile) {
 			return res.status(404).json({ error: 'User not found' });
 		}
-		if (updatedProfile.coverPhotoUrl === null) {
-			return res.status(404).json({ error: 'Cover Photo update failed, please try again' });
-		}
 
 		res.status(200).json({
 			message: 'Cover Photo updated successfully',
-			coverPhotoUrl: coverPhotoUrl,
+			coverPhotoUrl: result.secure_url,
 		});
 	} catch (error) {
-		const errorMessage = error instanceof Error ? error.message : String(error);
+		const errorMessage = error instanceof Error ? error.message : JSON.stringify(error);
 		res.status(500).json({ error: 'Internal server error', details: errorMessage });
 	}
 };
 
 export const deleteCoverPhoto = async (req: Request, res: Response) => {
-	// Get userId from req.user
 	const userId = (req as any).user?.id;
 
 	try {
-		// Call service to delete cover photo
+		const currentProfile = await profileService.getUserProfile(userId);
+
+		if (!currentProfile) {
+			return res.status(404).json({ error: 'User not found' });
+		}
+
+		if (!currentProfile.coverPhotoUrl) {
+			return res.status(404).json({ error: 'Cover photo not found' });
+		}
+
+		const publicId = currentProfile.coverPhotoUrl.split('/').pop()?.split('.')[0];
+
+		if (publicId) {
+			await cloudinary.uploader.destroy(`linkedin-clone/cover-photos/${publicId}`);
+		}
+
 		const deletedProfile = await profileService.deleteCoverPicture(userId);
 
 		if (!deletedProfile) {
-			return res.status(404).json({ error: 'User not found' });
-		}
-		if (deletedProfile.coverPhotoUrl != null) {
-			return res.status(404).json({ error: 'Cover Photo not found' });
+			return res.status(404).json({ error: 'Failed to delete cover photo' });
 		}
 
 		res.status(200).json({
-			message: 'Cover Photo deleted successfully',
+			message: 'Cover photo deleted successfully',
 			coverPhotoUrl: null,
 		});
 	} catch (error) {
-		const errorMessage = error instanceof Error ? error.message : String(error);
+		const errorMessage = error instanceof Error ? error.message : JSON.stringify(error);
 		res.status(500).json({ error: 'Internal server error', details: errorMessage });
 	}
 };
 //--------------------Resume--------------------//
 
 export const updateResume = async (req: Request, res: Response) => {
-	// Check if file exists
-	if (!req.file) {
+	const userId = (req as any).user?.id;
+	const file = req.file;
+
+	if (!file) {
 		return res.status(400).json({ error: 'No file uploaded' });
 	}
 
-	// Get userId from req.user
-	const userId = (req as any).user?.id;
+	const allowedMimeTypes = ['application/pdf'];
+	if (!allowedMimeTypes.includes(file.mimetype)) {
+		return res.status(400).json({ error: 'Invalid file type. Only PDF files are allowed.' });
+	}
 
 	try {
-		const resumeUrl = `/uploads/${req.file.filename}`;
+		// Fetch the current profile to get the existing resume URL
+		const currentProfile = await profileService.getUserProfile(userId);
 
-		// Call service to update database
-		const updatedProfile = await profileService.updateResume(userId, resumeUrl);
+		// If a resume already exists, delete it from Cloudinary
+		if (currentProfile?.resumeUrl) {
+			const publicId = currentProfile.resumeUrl.split('/').pop()?.split('.')[0];
+			if (publicId) {
+				await cloudinary.uploader.destroy(`linkedin-clone/resumes/${publicId}`, {
+					resource_type: 'raw', // Use 'raw' for non-image files like PDFs
+				});
+			}
+		}
+
+		// Upload the new resume to Cloudinary
+		const uploadToCloudinary = (): Promise<any> => {
+			return new Promise((resolve, reject) => {
+				const stream = cloudinary.uploader.upload_stream(
+					{
+						folder: 'linkedin-clone/resumes',
+						resource_type: 'auto',
+						use_filename: true,
+						unique_filename: true,
+					},
+					(error, result) => {
+						if (error) return reject(error);
+						resolve(result);
+					},
+				);
+				stream.end(file.buffer);
+			});
+		};
+
+		const result = await uploadToCloudinary();
+
+		// Update the resume URL in the database
+		const updatedProfile = await profileService.updateResume(userId, result.secure_url);
 
 		if (!updatedProfile) {
 			return res.status(404).json({ error: 'User not found' });
 		}
-		if (updatedProfile.resumeUrl === null) {
-			return res.status(500).json({ error: 'Resume update failed, please try again' });
-		}
 
 		res.status(200).json({
 			message: 'Resume updated successfully',
-			resumeUrl: resumeUrl,
+			resumeUrl: result.secure_url,
 		});
 	} catch (error) {
+		console.error('Error updating resume:', error); // Log the error for debugging
 		const errorMessage = error instanceof Error ? error.message : String(error);
 		res.status(500).json({ error: 'Internal server error', details: errorMessage });
 	}
 };
 
 export const deleteResume = async (req: Request, res: Response) => {
-	// Get userId from req.user
 	const userId = (req as any).user?.id;
 
 	try {
-		// Call service to delete resume
-		const deletedProfile = await profileService.deleteResume(userId);
+		// Fetch the current profile to get the resume URL
+		const currentProfile = await profileService.getUserProfile(userId);
 
-		if (!deletedProfile) {
+		if (!currentProfile) {
 			return res.status(404).json({ error: 'User not found' });
 		}
-		if (deletedProfile.resumeUrl != null) {
+
+		// Check if a resume exists
+		if (!currentProfile.resumeUrl) {
 			return res.status(404).json({ error: 'Resume not found' });
 		}
 
-		res.json({
+		// Extract the public ID from the Cloudinary URL
+		const publicId = currentProfile.resumeUrl.split('/').pop()?.split('.')[0];
+
+		// Delete the resume from Cloudinary
+		if (publicId) {
+			await cloudinary.uploader.destroy(`linkedin-clone/resumes/${publicId}`, {
+				resource_type: 'raw', // Use 'raw' for non-image files like PDFs
+			});
+		}
+
+		// Remove the resume URL from the database
+		const deletedProfile = await profileService.deleteResume(userId);
+
+		if (!deletedProfile) {
+			return res.status(404).json({ error: 'Failed to delete resume' });
+		}
+
+		res.status(200).json({
 			message: 'Resume deleted successfully',
 			resumeUrl: null,
 		});
 	} catch (error) {
+		console.error('Error deleting resume:', error); // Log the error for debugging
 		const errorMessage = error instanceof Error ? error.message : String(error);
 		res.status(500).json({ error: 'Internal server error', details: errorMessage });
 	}
@@ -224,7 +331,7 @@ export const getExperience = async (req: Request, res: Response) => {
 			})),
 		);
 	} catch (error) {
-		const errorMessage = error instanceof Error ? error.message : String(error);
+		const errorMessage = error instanceof Error ? error.message : JSON.stringify(error);
 		res.status(500).json({ error: 'Internal server error', details: errorMessage });
 	}
 };
@@ -302,7 +409,7 @@ export const addExperience = async (req: Request, res: Response) => {
 			},
 		});
 	} catch (error) {
-		const errorMessage = error instanceof Error ? error.message : String(error);
+		const errorMessage = error instanceof Error ? error.message : JSON.stringify(error);
 		res.status(500).json({ error: 'Internal server error', details: errorMessage });
 	}
 };
@@ -383,7 +490,7 @@ export const updateExperience = async (req: Request, res: Response) => {
 			},
 		});
 	} catch (error) {
-		const errorMessage = error instanceof Error ? error.message : String(error);
+		const errorMessage = error instanceof Error ? error.message : JSON.stringify(error);
 		res.status(500).json({ error: 'Internal server error', details: errorMessage });
 	}
 };
@@ -401,7 +508,7 @@ export const deleteExperience = async (req: Request, res: Response) => {
 
 		res.json({ message: 'Experience deleted successfully' });
 	} catch (error) {
-		const errorMessage = error instanceof Error ? error.message : String(error);
+		const errorMessage = error instanceof Error ? error.message : JSON.stringify(error);
 		res.status(500).json({ error: 'Internal server error', details: errorMessage });
 	}
 };
@@ -431,7 +538,7 @@ export const getEducation = async (req: Request, res: Response) => {
 			})),
 		);
 	} catch (error) {
-		const errorMessage = error instanceof Error ? error.message : String(error);
+		const errorMessage = error instanceof Error ? error.message : JSON.stringify(error);
 		res.status(500).json({ error: 'Internal server error', details: errorMessage });
 	}
 };
@@ -495,7 +602,7 @@ export const addEducation = async (req: Request, res: Response) => {
 			},
 		});
 	} catch (error) {
-		const errorMessage = error instanceof Error ? error.message : String(error);
+		const errorMessage = error instanceof Error ? error.message : JSON.stringify(error);
 		res.status(500).json({ error: 'Internal server error', details: errorMessage });
 	}
 };
@@ -552,7 +659,7 @@ export const updateEducation = async (req: Request, res: Response) => {
 			},
 		});
 	} catch (error) {
-		const errorMessage = error instanceof Error ? error.message : String(error);
+		const errorMessage = error instanceof Error ? error.message : JSON.stringify(error);
 		res.status(500).json({ error: 'Internal server error', details: errorMessage });
 	}
 };
@@ -571,7 +678,7 @@ export const deleteEducation = async (req: Request, res: Response) => {
 
 		res.json({ message: 'Education deleted successfully' });
 	} catch (error) {
-		const errorMessage = error instanceof Error ? error.message : String(error);
+		const errorMessage = error instanceof Error ? error.message : JSON.stringify(error);
 		res.status(500).json({ error: 'Internal server error', details: errorMessage });
 	}
 };
@@ -600,7 +707,7 @@ export const getCertifications = async (req: Request, res: Response) => {
 			})),
 		);
 	} catch (error) {
-		const errorMessage = error instanceof Error ? error.message : String(error);
+		const errorMessage = error instanceof Error ? error.message : JSON.stringify(error);
 		res.status(500).json({ error: 'Internal server error', details: errorMessage });
 	}
 };
@@ -638,7 +745,7 @@ export const addCertification = async (req: Request, res: Response) => {
 			newCertification,
 		});
 	} catch (error) {
-		const errorMessage = error instanceof Error ? error.message : String(error);
+		const errorMessage = error instanceof Error ? error.message : JSON.stringify(error);
 		res.status(500).json({ error: 'Internal server error', details: errorMessage });
 	}
 };
@@ -683,7 +790,7 @@ export const updateCertification = async (req: Request, res: Response) => {
 			},
 		});
 	} catch (error) {
-		const errorMessage = error instanceof Error ? error.message : String(error);
+		const errorMessage = error instanceof Error ? error.message : JSON.stringify(error);
 		res.status(500).json({ error: 'Internal server error', details: errorMessage });
 	}
 };
@@ -705,7 +812,7 @@ export const deleteCertification = async (req: Request, res: Response) => {
 
 		res.json({ message: 'Certification deleted successfully' });
 	} catch (error) {
-		const errorMessage = error instanceof Error ? error.message : String(error);
+		const errorMessage = error instanceof Error ? error.message : JSON.stringify(error);
 		res.status(500).json({ error: 'Internal server error', details: errorMessage });
 	}
 };
@@ -721,7 +828,7 @@ export const getSkills = async (req: Request, res: Response) => {
 		}
 		res.json(skills);
 	} catch (error) {
-		const errorMessage = error instanceof Error ? error.message : String(error);
+		const errorMessage = error instanceof Error ? error.message : JSON.stringify(error);
 		res.status(500).json({ error: 'Internal server error', details: errorMessage });
 	}
 };
@@ -745,7 +852,7 @@ export const addSkill = async (req: Request, res: Response) => {
 			newSkill,
 		});
 	} catch (error) {
-		const errorMessage = error instanceof Error ? error.message : String(error);
+		const errorMessage = error instanceof Error ? error.message : JSON.stringify(error);
 		res.status(500).json({ error: 'Internal server error', details: errorMessage });
 	}
 };
@@ -768,7 +875,7 @@ export const deleteSkill = async (req: Request, res: Response) => {
 
 		res.json({ message: 'Skill deleted successfully' });
 	} catch (error) {
-		const errorMessage = error instanceof Error ? error.message : String(error);
+		const errorMessage = error instanceof Error ? error.message : JSON.stringify(error);
 		res.status(500).json({ error: 'Internal server error', details: errorMessage });
 	}
 };
@@ -786,7 +893,7 @@ export const getProfileVisibility = async (req: Request, res: Response) => {
 			visibility: profileVisibility.visibility,
 		});
 	} catch (error) {
-		const errorMessage = error instanceof Error ? error.message : String(error);
+		const errorMessage = error instanceof Error ? error.message : JSON.stringify(error);
 		res.status(500).json({ error: 'Internal server error', details: errorMessage });
 	}
 };
@@ -812,7 +919,7 @@ export const updateProfileVisibility = async (req: Request, res: Response) => {
 
 		res.json({ message: 'Profile Visibility updated successfully', updatedProfileVisibility });
 	} catch (error) {
-		const errorMessage = error instanceof Error ? error.message : String(error);
+		const errorMessage = error instanceof Error ? error.message : JSON.stringify(error);
 		res.status(500).json({ error: 'Internal server error', details: errorMessage });
 	}
 };
@@ -843,7 +950,7 @@ export const getMyProfile = async (req: Request, res: Response) => {
 			followersCount,
 		});
 	} catch (error) {
-		const errorMessage = error instanceof Error ? error.message : String(error);
+		const errorMessage = error instanceof Error ? error.message : JSON.stringify(error);
 		res.status(500).json({ error: 'Internal server error', details: errorMessage });
 	}
 };
@@ -882,7 +989,7 @@ export const createUserProfile = async (req: Request, res: Response) => {
 			followersCount,
 		});
 	} catch (error) {
-		const errorMessage = error instanceof Error ? error.message : String(error);
+		const errorMessage = error instanceof Error ? error.message : JSON.stringify(error);
 		res.status(500).json({ error: 'Internal server error', details: errorMessage });
 	}
 };
@@ -917,7 +1024,7 @@ export const updateUserProfile = async (req: Request, res: Response) => {
 
 		res.json({ message: 'User profile updated successfully', profile: user });
 	} catch (error) {
-		const errorMessage = error instanceof Error ? error.message : String(error);
+		const errorMessage = error instanceof Error ? error.message : JSON.stringify(error);
 		res.status(500).json({ error: 'Internal server error', details: errorMessage });
 	}
 };

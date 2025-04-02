@@ -1,18 +1,7 @@
 import express from 'express';
 import * as profileController from '../controllers/profile.controller';
 import { authMiddleware2 } from '../middleware/auth.middleware';
-import multer from 'multer';
-
-const storage = multer.diskStorage({
-	destination: function (req, file, cb) {
-		cb(null, 'uploads/'); // Save files in 'uploads/' directory
-	},
-	filename: function (req, file, cb) {
-		cb(null, Date.now() + '-' + file.originalname); // to avoid having duplicate file names
-	},
-});
-
-const upload = multer({ storage });
+import { upload } from '../middleware/multer';
 
 const router = express.Router();
 //--------------------View Other user Profiles--------------------//
