@@ -1,30 +1,32 @@
-import { v4 as uuidv4 } from 'uuid'; // Import UUID generator
+import { v4 as uuidv4 } from 'uuid';
 import { knexInstance } from '../config/db';
 
 export const getFollowing = async (userId: string) => {
 	return await knexInstance('following')
-		.join('users', 'following.followed_id', 'users.id') // Get followed users' details
+		.join('users', 'following.followed_id', 'users.id')
 		.leftJoin('user_profiles', 'users.id', 'user_profiles.user_id')
 		.select(
-			'users.id',
+			'users.id as userId',
 			'users.first_name as firstName',
 			'users.last_name as lastName',
 			'user_profiles.headline',
+			'user_profiles.profile_picture as profilePicture',
 		)
-		.where('following.follower_id', userId); // Get users the current user is following
+		.where('following.follower_id', userId);
 };
 
 export const getFollowers = async (userId: string) => {
 	const followers = await knexInstance('following')
-		.join('users', 'following.follower_id', 'users.id') // Get follower details
-		.leftJoin('user_profiles', 'users.id', 'user_profiles.user_id') // Join to get headline
+		.join('users', 'following.follower_id', 'users.id')
+		.leftJoin('user_profiles', 'users.id', 'user_profiles.user_id')
 		.select(
-			'users.id',
+			'users.id as userId',
 			'users.first_name as firstName',
 			'users.last_name as lastName',
 			'user_profiles.headline',
+			'user_profiles.profile_picture as profilePicture',
 		)
-		.where('following.followed_id', userId); // Get followers of this user
+		.where('following.followed_id', userId);
 
 	return followers;
 };

@@ -11,6 +11,7 @@ import profileRoutes from './src/routes/profile.route';
 import followingRoutes from './src/routes/following.route';
 
 import notificationsRouter from './src/routes/notifications.route';
+import connectionRoutes from './src/routes/connection.route';
 // Initialize environment variables
 dotenv.config();
 
@@ -36,7 +37,7 @@ app.use('/api/notifications', notificationsRouter);
 app.use('/api/company', companyRoutes);
 app.use('/api/profiles', profileRoutes);
 app.use('/api/following', followingRoutes);
-
+app.use('/api/connections', connectionRoutes);
 // 404 handler
 app.use((req: Request, res: Response) => {
 	res.status(404).json({ message: 'Resource not found' });

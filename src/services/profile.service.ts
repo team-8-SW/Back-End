@@ -662,5 +662,17 @@ export const getFollowersCount = async (userId: string) => {
 		.count('id as count')
 		.first();
 
-	return result?.count || 0; // Return 0 if no followers are found
+	return result?.count || 0;
+};
+
+export const getConnectionsCount = async (userId: string) => {
+	const result = await knexInstance('connections')
+		.where(function () {
+			this.where({ requester_id: userId }).orWhere({ receiver_id: userId });
+		})
+		.andWhere({ status: 'accepted' }) // Only count accepted connections
+		.count('id as count')
+		.first();
+
+	return result?.count || 0;
 };

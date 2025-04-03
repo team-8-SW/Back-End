@@ -939,6 +939,7 @@ export const getMyProfile = async (req: Request, res: Response) => {
 		const certifications = await profileService.getCertifications(userId);
 		const skills = await profileService.getSkills(userId);
 		const followersCount = await profileService.getFollowersCount(userId);
+		const connectionsCount = await profileService.getConnectionsCount(userId);
 
 		// Combine all data into a single response
 		res.json({
@@ -948,6 +949,7 @@ export const getMyProfile = async (req: Request, res: Response) => {
 			certifications,
 			skills,
 			followersCount,
+			connectionsCount,
 		});
 	} catch (error) {
 		const errorMessage = error instanceof Error ? error.message : JSON.stringify(error);
@@ -978,6 +980,7 @@ export const createUserProfile = async (req: Request, res: Response) => {
 		const cert = await profileService.getCertifications(userId);
 		const ski = await profileService.getSkills(userId);
 		const followersCount = await profileService.getFollowersCount(userId);
+		const connectionsCount = await profileService.getConnectionsCount(userId);
 
 		res.status(200).json({
 			message: 'User profile created successfully',
@@ -987,6 +990,7 @@ export const createUserProfile = async (req: Request, res: Response) => {
 			certifications: cert,
 			skills: ski,
 			followersCount,
+			connectionsCount,
 		});
 	} catch (error) {
 		const errorMessage = error instanceof Error ? error.message : JSON.stringify(error);
