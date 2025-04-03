@@ -614,7 +614,6 @@ export const updateUserProfile = async (userId: string, profileData: any) => {
 	return await knexInstance('user_profiles')
 		.join('users', 'user_profiles.user_id', 'users.id')
 		.select(
-			'user_profiles.id as profileId',
 			'user_profiles.headline',
 			'user_profiles.location',
 			'user_profiles.profile_picture_url as profilePictureUrl',
@@ -626,7 +625,6 @@ export const updateUserProfile = async (userId: string, profileData: any) => {
 			'users.first_name as firstName',
 			'users.last_name as lastName',
 			'users.is_premium',
-			'users.email_verified',
 			'users.is_active',
 		)
 		.where('user_profiles.user_id', userId)
@@ -637,7 +635,6 @@ export const getUserProfile = async (userId: string) => {
 	return await knexInstance('user_profiles')
 		.join('users', 'user_profiles.user_id', 'users.id')
 		.select(
-			'user_profiles.id as profileId',
 			'user_profiles.headline',
 			'user_profiles.location',
 			'user_profiles.profile_picture_url as profilePictureUrl',
@@ -649,7 +646,6 @@ export const getUserProfile = async (userId: string) => {
 			'users.first_name as firstName',
 			'users.last_name as lastName',
 			'users.is_premium',
-			'users.email_verified',
 			'users.is_active',
 		)
 		.where('user_profiles.user_id', userId)
@@ -670,9 +666,23 @@ export const getConnectionsCount = async (userId: string) => {
 		.where(function () {
 			this.where({ requester_id: userId }).orWhere({ receiver_id: userId });
 		})
-		.andWhere({ status: 'accepted' }) // Only count accepted connections
+		.andWhere({ status: 'accepted' })
 		.count('id as count')
 		.first();
 
 	return result?.count || 0;
+};
+
+export const areUsersConnected = async (userId1: string, userId2: string): Promise<boolean> => {
+	const connection = await knexInstance('connections')
+		.where(function () {
+			this.where({ requester_id: userId1, receiver_id: userId2 }).orWhere({
+				requester_id: userId2,
+				receiver_id: userId1,
+			});
+		})
+		.andWhere({ status: 'accepted' })
+		.first();
+
+	return !!connection;
 };

@@ -156,6 +156,6 @@ router.get('/me/blocked', authMiddleware2, usersController.getBlockedUsers);
 
 //------------Search for users by name, company, or industry---------//
 //GET /api/users/search
-router.get('/users/search', usersController.searchUsers);
+router.get('/me/search', authMiddleware2, usersController.searchUsers);
 
 export default router;

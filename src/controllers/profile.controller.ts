@@ -2,25 +2,6 @@ import { Request, Response } from 'express';
 import * as profileService from '../services/profile.service';
 import cloudinary from '../utils/cloudinary';
 
-export const getProfileById = async (req: Request, res: Response) => {
-	try {
-		const userId = req.params.userId;
-		// Validate userId
-		if (!userId) {
-			return res.status(401).json({ error: 'User ID is required' });
-		}
-		const profile = await profileService.getProfileById(userId);
-
-		if (!profile) {
-			return res.status(404).json({ error: 'Profile not found' });
-		}
-
-		res.status(200).json(profile);
-	} catch (error) {
-		const errorMessage = error instanceof Error ? error.message : JSON.stringify(error);
-		res.status(500).json({ error: 'Internal server error', details: errorMessage });
-	}
-};
 //--------------------Profile Picture--------------------//
 export const updateProfilePicture = async (req: Request, res: Response) => {
 	const userId = (req as any).user?.id;
@@ -933,7 +914,7 @@ export const getMyProfile = async (req: Request, res: Response) => {
 		if (!user) {
 			return res.status(404).json({ error: 'User profile not found' });
 		}
-
+		const profileVisibility = await profileService.getProfileVisibility(userId);
 		const experiences = await profileService.getExperience(userId);
 		const education = await profileService.getEducation(userId);
 		const certifications = await profileService.getCertifications(userId);
@@ -943,6 +924,7 @@ export const getMyProfile = async (req: Request, res: Response) => {
 
 		// Combine all data into a single response
 		res.json({
+			visibility: profileVisibility.visibility,
 			profile: user,
 			experiences,
 			education,
@@ -1027,6 +1009,58 @@ export const updateUserProfile = async (req: Request, res: Response) => {
 		const user = await profileService.getUserProfile(userId);
 
 		res.json({ message: 'User profile updated successfully', profile: user });
+	} catch (error) {
+		const errorMessage = error instanceof Error ? error.message : JSON.stringify(error);
+		res.status(500).json({ error: 'Internal server error', details: errorMessage });
+	}
+};
+
+//---------------------View other user profile------------//
+export const getProfileById = async (req: Request, res: Response) => {
+	try {
+		const userId = req.params.userId;
+		const currentUserId = (req as any).user?.id;
+
+		if (!userId) {
+			return res.status(400).json({ error: 'User ID is required' });
+		}
+
+		const user = await profileService.getUserProfile(userId);
+		if (!user) {
+			return res.status(404).json({ error: 'Profile not found' });
+		}
+
+		const profileVisibility = await profileService.getProfileVisibility(userId);
+
+		const isConnected = await profileService.areUsersConnected(currentUserId, userId);
+
+		// Determine if the profile is public
+		let isPublic = false;
+		if (profileVisibility.visibility === 'public') {
+			isPublic = true;
+		} else if (profileVisibility.visibility === 'connections-only' && isConnected) {
+			isPublic = true;
+		}
+
+		// Fetch additional profile data
+		const experiences = await profileService.getExperience(userId);
+		const education = await profileService.getEducation(userId);
+		const certifications = await profileService.getCertifications(userId);
+		const skills = await profileService.getSkills(userId);
+		const followersCount = await profileService.getFollowersCount(userId);
+		const connectionsCount = await profileService.getConnectionsCount(userId);
+
+		// Combine all data into a single response
+		res.json({
+			public: isPublic,
+			profile: user,
+			experiences,
+			education,
+			certifications,
+			skills,
+			followersCount,
+			connectionsCount,
+		});
 	} catch (error) {
 		const errorMessage = error instanceof Error ? error.message : JSON.stringify(error);
 		res.status(500).json({ error: 'Internal server error', details: errorMessage });

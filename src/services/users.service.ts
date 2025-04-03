@@ -81,7 +81,12 @@ export const getBlockedUsers = async (userId: string) => {
 };
 
 //------------Search for users by name, company, or industry---------//
-export const searchUsers = async (query?: string, company?: string, industry?: string) => {
+export const searchUsers = async (
+	query?: string,
+	company?: string,
+	industry?: string,
+	userId?: string,
+) => {
 	const usersQuery = knexInstance('users')
 		.select(
 			'users.id as userId',
@@ -92,6 +97,26 @@ export const searchUsers = async (query?: string, company?: string, industry?: s
 			'user_profiles.profile_picture_url as profilePictureUrl',
 		)
 		.leftJoin('user_profiles', 'users.id', 'user_profiles.user_id');
+
+	// Exclude blocked users
+	if (userId) {
+		usersQuery.whereNotExists(function () {
+			this.select('*')
+				.from('blocked_users')
+				.where(function () {
+					this.where('blocked_users.user_id', userId).andWhere(
+						'blocked_users.blocked_user_id',
+						knexInstance.ref('users.id'),
+					);
+				})
+				.orWhere(function () {
+					this.where('blocked_users.blocked_user_id', userId).andWhere(
+						'blocked_users.user_id',
+						knexInstance.ref('users.id'),
+					);
+				});
+		});
+	}
 
 	// Apply search filter for name
 	if (query) {

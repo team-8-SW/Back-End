@@ -84,6 +84,7 @@ export const getBlockedUsers = async (req: Request, res: Response) => {
 //------------Search for users by name, company, or industry---------//
 export const searchUsers = async (req: Request, res: Response) => {
 	try {
+		const userId = (req as any).user?.id;
 		const { q: query, company, industry } = req.query;
 		if (!query && !company && !industry) {
 			return res.status(400).json({ message: 'At least one search parameter is required.' });
@@ -93,6 +94,7 @@ export const searchUsers = async (req: Request, res: Response) => {
 			query as string,
 			company as string,
 			industry as string,
+			userId,
 		);
 
 		if (users.length === 0) {
