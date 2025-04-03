@@ -300,3 +300,65 @@ describe('Apply for a job', () => {
 		expect(jsonMock).toHaveBeenCalledWith({ message: 'Internal Server Error' });
 	});
 });
+
+describe('get status of a job', () => {
+	let req: Partial<Request>;
+	let res: Partial<Response>;
+	let jsonMock: jest.Mock;
+	let statusMock: jest.Mock;
+
+	beforeEach(() => {
+		jsonMock = jest.fn();
+		statusMock = jest.fn(() => ({ json: jsonMock }));
+
+		req = {
+			params: { id: 'job123' },
+			user: { user_id: 'user456' },
+		} as Partial<CustomRequest>;
+
+		res = {
+			status: statusMock,
+			json: jsonMock,
+		};
+	});
+
+	it('should return 200 if Job applied successfully', async () => {
+		(jobService.getApplicationStatus as jest.Mock).mockResolvedValue({ status: 'pending' });
+
+		await jobController.getStatus(req as Request, res as Response);
+
+		expect(statusMock).toHaveBeenCalledWith(200);
+		expect(jsonMock).toHaveBeenCalledWith({ status: 'pending' });
+	});
+
+	it('should return 401 if user not authorizaed', async () => {
+		(req as Partial<CustomRequest>).user = undefined;
+
+		await jobController.getStatus(req as Request, res as Response);
+
+		expect(statusMock).toHaveBeenCalledWith(401);
+		expect(jsonMock).toHaveBeenCalledWith({
+			message: 'Unauthorized: No user found',
+		});
+	});
+
+	it('should return 404 if no application is found with this job id', async () => {
+		(jobService.getApplicationStatus as jest.Mock).mockResolvedValue(null);
+
+		await jobController.getStatus(req as Request, res as Response);
+
+		expect(statusMock).toHaveBeenCalledWith(404);
+		expect(jsonMock).toHaveBeenCalledWith({ message: 'No application found for this job' });
+	});
+
+	it('should return 500 if an error occurs', async () => {
+		(jobService.getApplicationStatus as jest.Mock).mockRejectedValue(
+			new Error('Database error'),
+		);
+
+		await jobController.getStatus(req as Request, res as Response);
+
+		expect(statusMock).toHaveBeenCalledWith(500);
+		expect(jsonMock).toHaveBeenCalledWith({ message: 'Internal Server Error' });
+	});
+});
