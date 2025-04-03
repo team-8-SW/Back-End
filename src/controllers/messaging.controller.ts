@@ -2,6 +2,7 @@ import { Response } from 'express';
 import { AuthenticatedRequest } from '../middleware/auth.middleware';
 import { areUsersConnected } from '../models/connection.model';
 import { isUserBlocked } from '../models/block.model';
+import { setUserTyping, isUserTypingTo } from '../utils/typingStatus';
 import {
 	createTextMessage,
 	createMediaMessage,
@@ -218,4 +219,32 @@ export const getLastMessageReadStatusController = async (
 		console.error('Get read status error:', err.message);
 		return res.status(500).json({ message: 'Internal server error' });
 	}
+};
+
+/* ======================= Typing Indicators =============================*/
+
+// POST /api/messages/typing-indicators
+export const postTypingIndicator = (req: AuthenticatedRequest, res: Response) => {
+	const senderId = req.user?.id;
+	const receiverId = req.body.receiverId;
+
+	if (!senderId || !receiverId) {
+		return res.status(400).json({ message: 'Missing user IDs' });
+	}
+
+	setUserTyping(senderId, receiverId); // 5s default
+	return res.status(200).json({ message: 'Typing status recorded' });
+};
+
+// GET /api/messages/typing-indicators?userId=...
+export const getTypingIndicator = (req: AuthenticatedRequest, res: Response) => {
+	const me = req.user?.id;
+	const otherUserId = req.query.userId as string;
+
+	if (!me || !otherUserId) {
+		return res.status(400).json({ message: 'Missing user ID' });
+	}
+
+	const typing = isUserTypingTo(otherUserId, me); // Are they typing *to me*
+	return res.status(200).json({ isTyping: typing });
 };

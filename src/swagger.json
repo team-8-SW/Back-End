@@ -6250,30 +6250,88 @@
 			}
 		},
 		"/api/messages/typing-indicators": {
-			"get": {
-				"summary": "Retrieve typing indicators",
-				"description": "Returns whether a user is currently typing in a conversation.",
+			"post": {
 				"tags": ["Messaging"],
-				"responses": {
-					"200": {
-						"description": "Typing indicator status retrieved successfully",
-						"content": {
-							"application/json": {
-								"schema": {
-									"type": "object",
-									"properties": {
-										"isTyping": {
-											"type": "boolean",
-											"example": true
-										}
-									}
-								}
-							}
+				"summary": "Send Typing Indicator",
+				"description": "Marks the user as currently typing a message to another user.",
+				"requestBody": {
+				"required": true,
+				"content": {
+					"application/json": {
+					"schema": {
+						"type": "object",
+						"properties": {
+						"receiverId": {
+							"type": "string",
+							"format": "uuid"
+						}
+						},
+						"required": ["receiverId"],
+						"example": {
+						"receiverId": "af833eb2-d9bb-4696-a221-b6fb1f0ef1f7"
 						}
 					}
+					}
+				}
+				},
+				"responses": {
+				"200": {
+					"description": "Typing status recorded",
+					"content": {
+					"application/json": {
+						"schema": {
+						"type": "object",
+						"properties": {
+							"message": {
+							"type": "string"
+							}
+						},
+						"example": {
+							"message": "Typing status recorded"
+						}
+						}
+					}
+					}
+				}
+				}
+			},
+			"get": {
+				"tags": ["Messaging"],
+				"summary": "Check Typing Indicator",
+				"description": "Checks if the specified user is currently typing a message to the logged-in user.",
+				"parameters": [
+				{
+					"name": "userId",
+					"in": "query",
+					"required": true,
+					"schema": {
+					"type": "string",
+					"format": "uuid"
+					},
+					"description": "ID of the user to check typing status for"
+				}
+				],
+				"responses": {
+				"200": {
+					"description": "Typing indicator status retrieved successfully",
+					"content": {
+					"application/json": {
+						"schema": {
+						"type": "object",
+						"properties": {
+							"isTyping": {
+							"type": "boolean",
+							"example": true
+							}
+						}
+						}
+					}
+					}
+				}
 				}
 			}
-		},
+			},
+
 		"/api/jobs/filter": {
 			"get": {
 				"tags": ["Jobs"],
