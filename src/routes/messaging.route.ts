@@ -9,6 +9,8 @@ import {
 	markConversationRead,
 	markConversationUnread,
 	getLastMessageReadStatusController,
+	postTypingIndicator,
+	getTypingIndicator,
 } from '../controllers/messaging.controller';
 import { authMiddleware } from '../middleware/auth.middleware';
 
@@ -41,5 +43,11 @@ router.get(
 	authMiddleware,
 	getLastMessageReadStatusController,
 );
+
+// POST /api/messages/typing-indicators
+router.post('/messages/typing-indicators', authMiddleware, postTypingIndicator);
+
+// GET /api/messages/typing-indicators
+router.get('/messages/typing-indicators', authMiddleware, getTypingIndicator);
 
 export default router;
