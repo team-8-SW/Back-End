@@ -109,3 +109,26 @@ export const applyForJob = async (req: Request, res: Response) => {
 		res.status(500).json({ message: 'Internal Server Error' });
 	}
 };
+
+export const getStatus = async (req: Request, res: Response) => {
+	try {
+		// eslint-disable-next-line @typescript-eslint/naming-convention
+		const applicant_id = (req as any).user?.user_id;
+		// eslint-disable-next-line @typescript-eslint/naming-convention
+		const job_id = req.params.id;
+
+		if (!applicant_id) {
+			return res.status(401).json({ message: 'Unauthorized: No user found' });
+		}
+
+		const application = await jobService.getApplicationStatus(applicant_id, job_id);
+
+		if (!application)
+			return res.status(404).json({ message: 'No application found for this job' });
+
+		return res.status(200).json({ status: application.status });
+	} catch (error) {
+		console.error('Error filtering job', error);
+		res.status(500).json({ message: 'Internal Server Error' });
+	}
+};

@@ -9,6 +9,7 @@ router.get('/search', jobController.searchJob);
 router.get('/filter', jobController.filterJob);
 router.post('/:id/save', newAuthMiddleware, jobController.saveJob);
 router.post('/:id/apply', newAuthMiddleware, jobController.applyForJob);
+router.get('/:id/status', newAuthMiddleware, jobController.getStatus);
 
 router.get('/:id', jobController.getJobById);
 
