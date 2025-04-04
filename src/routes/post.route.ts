@@ -4,7 +4,10 @@ import { newAuthMiddleware } from '../middleware/auth.middleware';
 
 const router = express.Router();
 
-router.get('/me', newAuthMiddleware, postsController.getmyposts); //neshouf law mehtaga me
-router.post('/me/newpost', newAuthMiddleware, postsController.createPost); //neshouf law mehtaga me
-
+router.get('/me', newAuthMiddleware, postsController.getmyposts); 
+router.get('/me/feed', newAuthMiddleware, postsController.getfeedposts) 
+router.post('/me/newpost', newAuthMiddleware, postsController.createPost);
+router.post('/me/like', newAuthMiddleware, postsController.like);
+router.post('/me/comment', newAuthMiddleware, postsController.comment);
+router.post('/me/save', newAuthMiddleware, postsController.savepost);
 export default router;

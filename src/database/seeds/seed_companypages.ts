@@ -56,6 +56,6 @@ export async function seed(knex: Knex): Promise<void> {
 
 		console.log('Company pages seeded successfully!');
 	} catch (error) {
-		console.error('Error seeding notifications:', error);
+		console.error('Error seeding company_pages:', error);
 	}
 }
