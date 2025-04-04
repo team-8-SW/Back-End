@@ -10,5 +10,6 @@ router.get('/:id', companyController.getCompanyById);
 router.post('/', newAuthMiddleware, companyController.createCompany);
 router.put('/:id', newAuthMiddleware, companyController.updateCompany); //update company
 router.post('/job', newAuthMiddleware, companyController.postJob); //post a job
+router.post('/:id/update', newAuthMiddleware, companyController.postUpdate); //post an update
 
 export default router;

@@ -83,3 +83,28 @@ export const postJob = async (req: Request, res: Response) => {
 		res.status(500).json({ error: 'Internal server error' });
 	}
 };
+
+export const postUpdate = async (req: Request, res: Response) => {
+	try {
+		// eslint-disable-next-line @typescript-eslint/naming-convention
+		const company_id = req.params.id;
+		// eslint-disable-next-line @typescript-eslint/naming-convention
+		const admin_user_id = (req as any).user?.user_id;
+		if (!admin_user_id) return res.status(401).json({ message: 'Unauthorized' });
+
+		const { title, content } = req.body;
+		if (!title || !content) return res.status(400).json({ message: 'All fields are required' });
+
+		const newUpdate = await companyService.postUpdate(
+			company_id,
+			admin_user_id,
+			title,
+			content,
+		);
+
+		res.status(200).json({ message: 'Update posted successfully', update: newUpdate });
+	} catch (error) {
+		console.error('Error posting update', error);
+		res.status(500).json({ error: 'Internal server error' });
+	}
+};

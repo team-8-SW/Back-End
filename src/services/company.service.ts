@@ -61,3 +61,23 @@ export const postJob = async (
 
 	return job;
 };
+
+export const postUpdate = async (
+	companyId: string,
+	adminUserId: string,
+	title: string,
+	content: string,
+) => {
+	const newUpdate = {
+		id: uuidv4(),
+		company_id: companyId,
+		admin_user_id: adminUserId,
+		title: title,
+		content: content,
+		created_at: new Date(),
+	};
+
+	await knexInstance('company_updates').insert(newUpdate);
+
+	return newUpdate;
+};
