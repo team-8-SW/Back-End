@@ -37,9 +37,13 @@ export const createCompany = async (req: Request, res: Response) => {
 
 export const updateCompany = async (req: Request, res: Response) => {
 	try {
-		const { id } = req.params;
+		const id = req.params.id;
+		// eslint-disable-next-line @typescript-eslint/naming-convention
+		const admin_user_id = (req as any).user?.user_id;
+		if (!admin_user_id) return res.status(401).json({ message: 'Unauthorized' });
+
 		const updatedData = req.body;
-		const updatedCompany = await companyService.updateCompany(id, updatedData);
+		const updatedCompany = await companyService.updateCompany(id, admin_user_id, updatedData);
 		if (!updatedCompany) {
 			res.status(404).json({ message: 'Company not found' });
 		}

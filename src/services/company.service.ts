@@ -25,7 +25,11 @@ export const createCompany = async (
 
 export const updateCompany = async (
 	id: string,
+	// eslint-disable-next-line @typescript-eslint/naming-convention
+	admin_user_id: string,
 	data: Partial<companyModels.company>,
 ): Promise<number> => {
-	return await knexInstance('companypages').where({ id }).update(data);
+	return await knexInstance('companypages')
+		.where({ id: id, admin_user_id: admin_user_id })
+		.update(data);
 };
