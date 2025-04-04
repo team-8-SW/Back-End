@@ -21,17 +21,24 @@ export const displayPosts = async (user_id: string): Promise<posts[]> => {
     }
 };
 
-export const createPost = async (post: Omit<posts, 'id' | 'created_at'>): Promise<posts> => {
+export const createPost = async (post: {
+    user_id: string;
+    content: string;
+    media_url?: string;
+    media_type?: string;
+    visibility: string;
+    company_id?: string;
+}) => {
     try {
-        const [newPost] = await knexInstance('posts')
-            .insert({ post })
-            .returning('*');
+        const [createdPost] = await knexInstance('posts')
+            .insert(post)
+            .returning('*'); // Return the created post
 
-        if (!newPost) {
+        if (!createdPost) {
             throw new Error('Failed to create post');
         }
 
-        return newPost;
+        return createdPost;
     } catch (error) {
         console.error('Error creating post:', error);
         throw new Error('Failed to create post');

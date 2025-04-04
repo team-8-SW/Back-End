@@ -5,7 +5,6 @@ import { newAuthMiddleware } from '../middleware/auth.middleware';
 const router = express.Router();
 
 router.get('/me', newAuthMiddleware, postsController.getmyposts); //neshouf law mehtaga me
-//router.get('/me/unread-count', notificationAuthMiddleware, notificationsController.getUnreadCount);
-//router.put('/:id/markasread', notificationsController.markNotificationAsRead);
-//fadel push notifications
+router.post('/me/newpost', newAuthMiddleware, postsController.createPost); //neshouf law mehtaga me
+
 export default router;

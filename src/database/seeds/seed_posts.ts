@@ -6,8 +6,8 @@ import { faker } from '@faker-js/faker';
 export async function seed(knex: Knex): Promise<void> {
 	console.log('Seeding posts..');
 	try {
-		await knex('company_pages').del();
-		console.log('Existing company_pages deleted');
+		await knex('posts').del();
+		console.log('Existing posts deleted');
 		const companies = await knex('company_pages').select('id');
 		if (companies.length === 0) {
 			console.error('No companies found. Please seed companies first.');
@@ -34,7 +34,7 @@ export async function seed(knex: Knex): Promise<void> {
 				repost_count: faker.datatype.number({ min: 0, max: 1000 }),
 				created_at: faker.date.recent(),
 				edited_at: faker.date.recent(),
-				visibility: faker.helpers.arrayElement(['public', 'private', 'friends-only']),
+				visibility: faker.helpers.arrayElement(['public', 'connections', 'private']),
 		});
 	}
 
@@ -43,6 +43,6 @@ export async function seed(knex: Knex): Promise<void> {
 
 		console.log('Posts seeded successfully!');
 	} catch (error) {
-		console.error('Error seeding notifications:', error);
+		console.error('Error seeding posts:', error);
 	}
 }

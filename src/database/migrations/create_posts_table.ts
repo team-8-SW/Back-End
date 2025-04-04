@@ -17,7 +17,7 @@ export async function up(knex: Knex): Promise<void> {
 				.uuid('company_id')
 				.nullable()
 				.references('id')
-				.inTable('companypages')
+				.inTable('company_pages')
 				.onDelete('CASCADE');
 			// Content fields
 			table.text('content').collate('pg_catalog.default');
