@@ -1,6 +1,7 @@
 import { knexInstance } from '../config/db';
 import * as companyModels from '../models/company.model';
 import { v4 as uuidv4 } from 'uuid';
+import * as jobModel from '../models/job.model';
 
 export const getAllCompanies = async () => {
 	return await knexInstance('companypages').select('*');
@@ -32,4 +33,31 @@ export const updateCompany = async (
 	return await knexInstance('companypages')
 		.where({ id: id, admin_user_id: admin_user_id })
 		.update(data);
+};
+
+export const postJob = async (
+	companyId: string,
+	cretedBy: string,
+	companyName: string,
+	jobData: Partial<jobModel.job>,
+) => {
+	const company = await knexInstance('companypages')
+		.where({ id: companyId, admin_user_id: cretedBy })
+		.first();
+
+	if (!company) {
+		throw new Error('Company not found or unauthorized');
+	}
+
+	const job = {
+		id: uuidv4(),
+		company_id: companyId,
+		user_id: cretedBy,
+		company_name: companyName,
+		...jobData,
+	};
+
+	await knexInstance('joblistings').insert(job);
+
+	return job;
 };

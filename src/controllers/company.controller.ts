@@ -60,23 +60,22 @@ export const postJob = async (req: Request, res: Response) => {
 	try {
 		const job = req.body;
 
-		const company = companyService.getCompanyById(job.company_id);
+		if (!job.company_id) {
+			return res.status(400).json({ message: 'Company ID is required to post a job' });
+		}
+		// eslint-disable-next-line @typescript-eslint/naming-convention
+		const admin_user_id = (req as any).user?.user_id;
+		if (!admin_user_id) return res.status(401).json({ message: 'Unauthorized' });
 
+		const company = await companyService.getCompanyById(job.company_id);
 		if (!company) return res.status(404).json({ message: 'Company not found' });
 
-		const newJob = await companyService.postJob({
-			id: uuidv4(),
-			user_id: job.user_id,
-			company_id: job.company_id,
-			company_name: job.company_name,
-			title: job.title,
-			description: job.description,
-			location: job.location,
-			employment_type: job.employment_type,
-			workplace_type: job.workplace_type,
-			experience_level: job.experience_level,
-			expires_at: job.expires_at,
-		});
+		const newJob = await companyService.postJob(
+			job.company_id,
+			admin_user_id,
+			company.name,
+			job,
+		);
 
 		res.status(200).json({ message: 'Job listed succesfully', job: newJob });
 	} catch (error) {
