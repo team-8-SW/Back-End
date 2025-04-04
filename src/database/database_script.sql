@@ -246,7 +246,7 @@ CREATE TABLE IF NOT EXISTS public.users
 );
 
 -- JobApplications table
-CREATE TABLE IF NOT EXISTS job_applications (
+CREATE TABLE IF NOT EXISTS jobapplications (
     id UUID PRIMARY KEY,
     job_id UUID NOT NULL REFERENCES job_listings(id) ON DELETE CASCADE,
     applicant_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -311,5 +311,19 @@ CREATE INDEX IF NOT EXISTS idx_job_applications_job_id ON job_applications(job_i
 CREATE INDEX IF NOT EXISTS idx_job_applications_applicant_id ON job_applications(applicant_id);
 CREATE INDEX IF NOT EXISTS idx_notifications_user_id ON notifications(user_id);
 CREATE INDEX IF NOT EXISTS idx_user_privacy_settings_user_id ON user_privacy_settings(user_id);
+
+ALTER TABLE joblistings
+ADD COLUMN industry VARCHAR(255);
+
+ALTER TABLE joblistings
+ADD COLUMN salary VARCHAR(255);
+
+CREATE TABLE IF NOT EXISTS public.saved_jobs (
+    id UUID PRIMARY KEY
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    job_id UUID NOT NULL REFERENCES joblistings(id) ON DELETE CASCADE,
+    saved_at TIMESTAMP DEFAULT now(),
+    UNIQUE(user_id, job_id) 
+);
 
 END;

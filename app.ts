@@ -9,6 +9,7 @@ import authRoutes from './src/routes/auth.route';
 import companyRoutes from './src/routes/company.route';
 import profileRoutes from './src/routes/profile.route';
 import followingRoutes from './src/routes/following.route';
+import jobRoutes from './src/routes/job.route';
 
 import notificationsRouter from './src/routes/notifications.route';
 // Initialize environment variables
@@ -36,6 +37,7 @@ app.use('/api/notifications', notificationsRouter);
 app.use('/api/company', companyRoutes);
 app.use('/api/profiles', profileRoutes);
 app.use('/api/following', followingRoutes);
+app.use('/api/jobs', jobRoutes);
 
 // 404 handler
 app.use((req: Request, res: Response) => {
