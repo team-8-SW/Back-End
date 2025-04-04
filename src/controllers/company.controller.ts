@@ -23,9 +23,14 @@ export const getCompanyById = async (req: Request, res: Response) => {
 export const createCompany = async (req: Request, res: Response) => {
 	try {
 		const companyData = req.body;
-		const newCompany = await companyService.createCompany(companyData);
-		res.status(201).json(newCompany);
+		// eslint-disable-next-line @typescript-eslint/naming-convention
+		const admin_user_id = (req as any).user?.user_id;
+		if (!admin_user_id) return res.status(401).json({ message: 'Unauthorized' });
+
+		const newCompany = await companyService.createCompany({ ...companyData, admin_user_id });
+		res.status(201).json({ message: 'Company created successfully', company: newCompany });
 	} catch (error) {
+		console.error('Error creating company:', error);
 		res.status(500).json({ error: 'Internal server Error' });
 	}
 };
