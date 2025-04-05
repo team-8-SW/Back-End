@@ -13,8 +13,8 @@ export async function seed(knex: Knex): Promise<void> {
 		const user = faker.helpers.arrayElement(users);
 		const company = faker.helpers.arrayElement(companies);
 		followers.push({
-            id: uuidv4(),
-            company_id: company.id,
+			id: uuidv4(),
+			company_id: company.id,
 			user_id: user.id,
 			followed_at: faker.date.recent(30),
 		});

@@ -7,7 +7,11 @@ export async function seed(knex: Knex): Promise<void> {
 	await knex('companypages').del();
 
 	const companies = [];
+	const users = await knex('users').select('id');
+
 	for (let i = 0; i < 10; i++) {
+		const user = faker.helpers.arrayElement(users);
+
 		companies.push({
 			id: uuidv4(),
 			name: faker.company.companyName(),
@@ -22,7 +26,7 @@ export async function seed(knex: Knex): Promise<void> {
 				'51-200 employees',
 			]),
 			location: faker.address.city(),
-			admin_user_id: uuidv4(),
+			admin_user_id: user.id,
 			created_at: faker.date.recent(30),
 			about: faker.lorem.sentences(3),
 			cover_photo_url: faker.internet.url(),
