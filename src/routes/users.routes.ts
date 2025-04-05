@@ -151,11 +151,11 @@ router.post('/:userId/block', authMiddleware2, usersController.blockUser);
 //POST /api/users/{userId}/unblock
 router.post('/:userId/unblock', authMiddleware2, usersController.unblockUser);
 //------------Get a list of blocked users---------//
-//GET /api/users/blocked
+//GET /api/users/me/blocked
 router.get('/me/blocked', authMiddleware2, usersController.getBlockedUsers);
 
 //------------Search for users by name, company, or industry---------//
-//GET /api/users/search
+//GET /api/users/me/search
 router.get('/me/search', authMiddleware2, usersController.searchUsers);
 
 export default router;

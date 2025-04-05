@@ -399,6 +399,10 @@ export const updateExperience = async (req: Request, res: Response) => {
 	try {
 		const userId = (req as any).user?.id;
 		const experienceId = req.params.experienceId;
+
+		if (!experienceId || experienceId.trim() === '') {
+			return res.status(400).json({ error: 'Experience ID is required' });
+		}
 		const {
 			companyName,
 			position,
@@ -480,6 +484,10 @@ export const deleteExperience = async (req: Request, res: Response) => {
 	try {
 		const userId = (req as any).user?.id;
 		const experienceId = req.params.experienceId;
+
+		if (!experienceId || experienceId.trim() === '') {
+			return res.status(400).json({ error: 'Experience ID is required' });
+		}
 
 		const deletedExperience = await profileService.deleteExperience(userId, experienceId);
 
@@ -599,6 +607,9 @@ export const updateEducation = async (req: Request, res: Response) => {
 				error: 'School name, degree, and start date are required',
 			});
 		}
+		if (!educationId || educationId.trim() === '') {
+			return res.status(400).json({ error: 'Education ID is required' });
+		}
 
 		const educationData = {
 			school,
@@ -650,6 +661,9 @@ export const deleteEducation = async (req: Request, res: Response) => {
 		const userId = (req as any).user?.id;
 
 		const educationId = req.params.educationId;
+		if (!educationId || educationId.trim() === '') {
+			return res.status(400).json({ error: 'Education ID is required' });
+		}
 
 		const deletedEducation = await profileService.deleteEducation(userId, educationId);
 
@@ -736,11 +750,22 @@ export const updateCertification = async (req: Request, res: Response) => {
 		const userId = (req as any).user?.id;
 
 		const certificationId = req.params.certificationId;
+
+		if (!certificationId || certificationId.trim() === '') {
+			return res.status(400).json({ error: 'Certification ID is required' });
+		}
 		const { name, issuedBy, issueDate, expirationDate } = req.body;
 		if (!name || !issuedBy || !issueDate) {
 			return res
 				.status(400)
 				.json({ error: 'Name, issuing organization, and issue date are required' });
+		}
+
+		if (issueDate && new Date(issueDate) > new Date()) {
+			return res.status(400).json({ error: 'Issue date must be in the past' });
+		}
+		if (expirationDate && new Date(expirationDate) < new Date(issueDate)) {
+			return res.status(400).json({ error: 'Expiration date must be after issue date' });
 		}
 
 		const certificationData = {
@@ -781,6 +806,10 @@ export const deleteCertification = async (req: Request, res: Response) => {
 		const userId = (req as any).user?.id;
 
 		const certificationId = req.params.certificationId;
+
+		if (!certificationId || certificationId.trim() === '') {
+			return res.status(400).json({ error: 'Certification ID is required' });
+		}
 
 		const deletedCertification = await profileService.deleteCertification(
 			userId,
@@ -844,7 +873,7 @@ export const deleteSkill = async (req: Request, res: Response) => {
 
 		const skillId = req.params.skillId;
 
-		if (!skillId) {
+		if (!skillId || skillId.trim() === '') {
 			return res.status(400).json({ error: 'Skill ID is required' });
 		}
 
@@ -1021,7 +1050,7 @@ export const getProfileById = async (req: Request, res: Response) => {
 		const userId = req.params.userId;
 		const currentUserId = (req as any).user?.id;
 
-		if (!userId) {
+		if (!userId || userId.trim() === '') {
 			return res.status(400).json({ error: 'User ID is required' });
 		}
 

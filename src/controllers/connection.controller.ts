@@ -19,6 +19,10 @@ export const sendConnectionRequest = async (req: Request, res: Response) => {
 			targetUserId,
 		);
 
+		if (connectionRequest === 'not found') {
+			return res.status(404).json({ message: 'User not found.' });
+		}
+
 		// Handle cases where the request cannot be sent
 		if (connectionRequest === 'already connected') {
 			return res.status(400).json({ message: 'Already connected.' });
@@ -54,6 +58,10 @@ export const acceptConnectionRequest = async (req: Request, res: Response) => {
 		const userId = (req as any).user?.id;
 		const { connectionId } = req.params;
 
+		// Check if connectionId is missing or invalid
+		if (!connectionId || connectionId.trim() === '') {
+			return res.status(400).json({ message: 'Connection ID is required.' });
+		}
 		const result = await connectionService.acceptConnectionRequest(userId, connectionId);
 
 		// Handle cases where the request cannot be accepted
@@ -82,6 +90,11 @@ export const declineConnectionRequest = async (req: Request, res: Response) => {
 	try {
 		const userId = (req as any).user?.id;
 		const { connectionId } = req.params;
+
+		// Check if connectionId is missing or invalid
+		if (!connectionId || connectionId.trim() === '') {
+			return res.status(400).json({ message: 'Connection ID is required.' });
+		}
 
 		const result = await connectionService.declineConnectionRequest(userId, connectionId);
 
@@ -112,6 +125,11 @@ export const removeConnection = async (req: Request, res: Response) => {
 	try {
 		const userId = (req as any).user?.id;
 		const { connectionId } = req.params;
+
+		// Check if connectionId is missing or invalid
+		if (!connectionId || connectionId.trim() === '') {
+			return res.status(400).json({ message: 'Connection ID is required.' });
+		}
 
 		const result = await connectionService.removeConnection(userId, connectionId);
 

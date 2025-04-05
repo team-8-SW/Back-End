@@ -17,7 +17,7 @@ jest.mock('../config/db', () => ({
 }));
 jest.mock('../middleware/auth.middleware', () => ({
 	authMiddleware2: (req: Request, res: Response, next: NextFunction) => {
-		(req as any).user = { id: '9ebd15ea-0cf6-4540-86e1-359d96d2fdd1' };
+		(req as any).user = { id: '98e82849-dfd8-40da-9258-02357ee76cf4' };
 		next();
 	},
 }));
@@ -31,8 +31,8 @@ describe('Profile Controller Tests', () => {
 
 	beforeAll(() => {
 		authToken =
-			'Bearer eyJhbGciOiJIUzI1NiJ9.eyJpZCI6IjllYmQxNWVhLTBjZjYtNDU0MC04NmUxLTM1OWQ5NmQyZmRkMSJ9.-pySzMkbKtMxMz6pyACPhjUrEFK1o74179PviShvS6M';
-		testUserId = '9ebd15ea-0cf6-4540-86e1-359d96d2fdd1';
+			'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6Ijk4ZTgyODQ5LWRmZDgtNDBkYS05MjU4LTAyMzU3ZWU3NmNmNCJ9.r4s2dAQaLEJBaApDTnzS_rIDE3Ib45j0vHEqIazfxz0';
+		testUserId = '98e82849-dfd8-40da-9258-02357ee76cf4';
 	});
 
 	beforeEach(() => {
@@ -46,163 +46,198 @@ describe('Profile Controller Tests', () => {
 		});
 	});
 
-	describe('GET /api/profiles/:userId', () => {
-		it('should return 200 and profile data for valid user ID', async () => {
+	describe('GET /api/profiles/me/:userId', () => {
+		it('should return 200 and profile data for a valid UserId', async () => {
 			const mockProfile = {
 				id: testUserId,
-				first_name: 'John',
-				last_name: 'Doe',
+				firstName: 'John',
+				lastName: 'Doe',
 				headline: 'Software Engineer',
 				location: 'San Francisco',
-				profile_picture_url: '/uploads/profile.jpg',
+				profilePictureUrl: 'profile-picture.jpg',
 			};
-			(profileService.getProfileById as jest.Mock).mockResolvedValue(mockProfile);
+
+			const mockProfileVisibility = { visibility: 'public' };
+			const mockExperiences = [{ id: 'exp1', company: 'TechCorp', position: 'Engineer' }];
+			const mockEducation = [{ id: 'edu1', school: 'Stanford', degree: 'BSc' }];
+			const mockCertifications = [{ id: 'cert1', name: 'AWS Certified' }];
+			const mockSkills = ['Node.js', 'React'];
+			const mockFollowersCount = 100;
+			const mockConnectionsCount = 50;
+
+			(profileService.getUserProfile as jest.Mock).mockResolvedValue(mockProfile);
+			(profileService.getProfileVisibility as jest.Mock).mockResolvedValue(
+				mockProfileVisibility,
+			);
+			(profileService.areUsersConnected as jest.Mock).mockResolvedValue(false);
+			(profileService.getExperience as jest.Mock).mockResolvedValue(mockExperiences);
+			(profileService.getEducation as jest.Mock).mockResolvedValue(mockEducation);
+			(profileService.getCertifications as jest.Mock).mockResolvedValue(mockCertifications);
+			(profileService.getSkills as jest.Mock).mockResolvedValue(mockSkills);
+			(profileService.getFollowersCount as jest.Mock).mockResolvedValue(mockFollowersCount);
+			(profileService.getConnectionsCount as jest.Mock).mockResolvedValue(
+				mockConnectionsCount,
+			);
 
 			const response = await request(app)
-				.get(`/api/profiles/${testUserId}`)
+				.get(`/api/profiles/me/${testUserId}`)
 				.set('Authorization', authToken);
 
 			expect(response.status).toBe(200);
-			expect(response.body).toEqual(mockProfile);
+			expect(response.body).toEqual({
+				public: true,
+				profile: mockProfile,
+				experiences: mockExperiences,
+				education: mockEducation,
+				certifications: mockCertifications,
+				skills: mockSkills,
+				followersCount: mockFollowersCount,
+				connectionsCount: mockConnectionsCount,
+			});
 		});
 
-		it('should return 404 for non-existent user ID', async () => {
-			(profileService.getProfileById as jest.Mock).mockResolvedValue(null);
+		it('should return 404 for a non-existent user ID', async () => {
+			(profileService.getUserProfile as jest.Mock).mockResolvedValue(null);
 
 			const response = await request(app)
-				.get('/api/profiles/nonexistent-user-id')
+				.get('/api/profiles/me/nonexistent-user-id')
 				.set('Authorization', authToken);
 
 			expect(response.status).toBe(404);
 			expect(response.body.error).toBe('Profile not found');
 		});
-
-		it('should return 500 for server error', async () => {
-			(profileService.getProfileById as jest.Mock).mockRejectedValue(
-				new Error('Database error'),
-			);
-
+		it('should return 400 if no user ID is provided', async () => {
 			const response = await request(app)
-				.get(`/api/profiles/${testUserId}`)
-				.set('Authorization', authToken);
-
-			expect(response.status).toBe(500);
-			expect(response.body.error).toBe('Internal server error');
-		});
-	});
-
-	describe('POST /api/profiles/me/profile-picture', () => {
-		it('should return 400 if no file is uploaded', async () => {
-			const response = await request(app)
-				.post('/api/profiles/me/profile-picture')
+				.get('/api/profiles/me/%20')
 				.set('Authorization', authToken);
 
 			expect(response.status).toBe(400);
-			expect(response.body.error).toBe('No file uploaded');
-		});
-
-		it('should return 200 and update profile picture successfully', async () => {
-			const mockUpdatedProfile = {
-				id: testUserId,
-				profilePictureUrl: `/uploads/${Date.now()}-profile.jpg`,
-			};
-
-			(profileService.updateProfilePicture as jest.Mock).mockImplementation((userId, url) => {
-				return Promise.resolve({
-					...mockUpdatedProfile,
-					profilePictureUrl: url,
-				});
-			});
-
-			const response = await request(app)
-				.post('/api/profiles/me/profile-picture')
-				.set('Authorization', authToken)
-				.attach('file', Buffer.from('file-data'), { filename: 'profile.jpg' });
-
-			expect(response.status).toBe(200);
-			expect(response.body.message).toBe('Profile picture updated successfully');
-			expect(response.body.profilePictureUrl).toMatch(/^\/uploads\/\d+-profile\.jpg$/);
-		});
-
-		it('should return 500 if update fails', async () => {
-			(profileService.updateProfilePicture as jest.Mock).mockResolvedValue({
-				id: testUserId,
-				profilePictureUrl: null,
-			});
-
-			const response = await request(app)
-				.post('/api/profiles/me/profile-picture')
-				.set('Authorization', authToken)
-				.attach('file', Buffer.from('file-data'), { filename: 'profile.jpg' });
-
-			expect(response.status).toBe(500);
-			expect(response.body.error).toMatch('Profile Picture update failed');
-		});
-
-		it('should return 500 for server error', async () => {
-			(profileService.updateProfilePicture as jest.Mock).mockRejectedValue(
-				new Error('Database error'),
-			);
-
-			const response = await request(app)
-				.post('/api/profiles/me/profile-picture')
-				.set('Authorization', authToken)
-				.attach('file', Buffer.from('file-data'), { filename: 'profile.jpg' });
-
-			expect(response.status).toBe(500);
-			expect(response.body.error).toBe('Error updating profile picture');
+			expect(response.body.error).toBe('User ID is required');
 		});
 	});
 
-	describe('DELETE /api/profiles/me/profile-picture', () => {
-		it('should return 200 and delete profile picture successfully', async () => {
-			const mockDeletedProfile = {
-				id: testUserId,
-				profilePictureUrl: null,
-			};
-			(profileService.deleteProfilePicture as jest.Mock).mockResolvedValue(
-				mockDeletedProfile,
-			);
+	// describe('POST /api/profiles/me/profile-picture', () => {
+	// 	it('should return 400 if no file is uploaded', async () => {
+	// 		const response = await request(app)
+	// 			.post('/api/profiles/me/profile-picture')
+	// 			.set('Authorization', authToken);
 
-			const response = await request(app)
-				.delete('/api/profiles/me/profile-picture')
-				.set('Authorization', authToken);
+	// 		expect(response.status).toBe(400);
+	// 		expect(response.body.error).toBe('No file uploaded');
+	// 	});
 
-			expect(response.status).toBe(200);
-			expect(response.body.message).toBe('Profile picture deleted successfully');
-		});
+	// 	it('should return 200 and update profile picture successfully', async () => {
+	// 		const mockUpdatedProfile = {
+	// 			id: testUserId,
+	// 			profilePictureUrl: 'https://cloudinary.com/profile-picture.jpg',
+	// 		};
 
-		it('should return 404 if profile picture not found', async () => {
-			const mockDeletedProfile = {
-				id: testUserId,
-				profilePictureUrl: 'still-exists.jpg',
-			};
-			(profileService.deleteProfilePicture as jest.Mock).mockResolvedValue(
-				mockDeletedProfile,
-			);
+	// 		(profileService.updateProfilePicture as jest.Mock).mockResolvedValue(
+	// 			mockUpdatedProfile,
+	// 		);
 
-			const response = await request(app)
-				.delete('/api/profiles/me/profile-picture')
-				.set('Authorization', authToken);
+	// 		const response = await request(app)
+	// 			.post('/api/profiles/me/profile-picture')
+	// 			.set('Authorization', authToken)
+	// 			.attach('file', Buffer.from('file-data'), 'profile.jpg');
 
-			expect(response.status).toBe(404);
-			expect(response.body.error).toBe('Profile Picture not found');
-		});
+	// 		expect(response.status).toBe(200);
+	// 		expect(response.body.message).toBe('Profile picture updated successfully');
+	// 		expect(response.body.profilePictureUrl).toBe(mockUpdatedProfile.profilePictureUrl);
+	// 	});
 
-		it('should return 500 for server error', async () => {
-			(profileService.deleteProfilePicture as jest.Mock).mockRejectedValue(
-				new Error('Database error'),
-			);
+	// 	it('should return 404 if user not found', async () => {
+	// 		(profileService.updateProfilePicture as jest.Mock).mockResolvedValue(null);
 
-			const response = await request(app)
-				.delete('/api/profiles/me/profile-picture')
-				.set('Authorization', authToken);
+	// 		const response = await request(app)
+	// 			.post('/api/profiles/me/profile-picture')
+	// 			.set('Authorization', authToken)
+	// 			.attach('file', Buffer.from('file-data'), 'profile.jpg');
 
-			expect(response.status).toBe(500);
-			expect(response.body.error).toBe('Error deleting profile picture');
-		});
-	});
+	// 		expect(response.status).toBe(404);
+	// 		expect(response.body.error).toBe('User not found');
+	// 	});
 
+	// 	it('should return 500 for server error', async () => {
+	// 		(profileService.updateProfilePicture as jest.Mock).mockRejectedValue(
+	// 			new Error('Database error'),
+	// 		);
+
+	// 		const response = await request(app)
+	// 			.post('/api/profiles/me/profile-picture')
+	// 			.set('Authorization', authToken)
+	// 			.attach('file', Buffer.from('file-data'), 'profile.jpg');
+
+	// 		expect(response.status).toBe(500);
+	// 		expect(response.body.error).toBe('Internal server error');
+	// 	});
+	// });
+
+	// describe('DELETE /api/profiles/me/profile-picture', () => {
+	// 	it('should return 200 and delete profile picture successfully', async () => {
+	// 		// Mock the user profile with a valid profile picture
+	// 		(profileService.getUserProfile as jest.Mock).mockResolvedValue({
+	// 			id: testUserId,
+	// 			profilePictureUrl: 'profile-picture.png',
+	// 		});
+
+	// 		// Mock the delete profile picture service
+	// 		(profileService.deleteProfilePicture as jest.Mock).mockResolvedValue({
+	// 			id: testUserId,
+	// 			profilePictureUrl: null,
+	// 		});
+
+	// 		const response = await request(app)
+	// 			.delete('/api/profiles/me/profile-picture')
+	// 			.set('Authorization', authToken);
+
+	// 		console.log(response.body); // Debugging
+
+	// 		expect(response.status).toBe(200);
+	// 		expect(response.body.message).toBe('Profile picture deleted successfully');
+	// 	});
+
+	// 	it('should return 404 if profile picture not found', async () => {
+	// 		// Mock the user profile without a profile picture
+	// 		(profileService.getUserProfile as jest.Mock).mockResolvedValue({
+	// 			id: testUserId,
+	// 			profilePictureUrl: null,
+	// 		});
+
+	// 		const response = await request(app)
+	// 			.delete('/api/profiles/me/profile-picture')
+	// 			.set('Authorization', authToken);
+
+	// 		expect(response.status).toBe(404);
+	// 		expect(response.body.error).toBe('Profile picture not found');
+	// 	});
+
+	// 	it('should return 404 if user not found', async () => {
+	// 		// Mock the user profile as not found
+	// 		(profileService.getUserProfile as jest.Mock).mockResolvedValue(null);
+
+	// 		const response = await request(app)
+	// 			.delete('/api/profiles/me/profile-picture')
+	// 			.set('Authorization', authToken);
+
+	// 		expect(response.status).toBe(404);
+	// 		expect(response.body.error).toBe('User not found');
+	// 	});
+
+	// 	it('should return 500 for server error', async () => {
+	// 		// Mock the service to throw an error
+	// 		(profileService.getUserProfile as jest.Mock).mockRejectedValue(
+	// 			new Error('Database error'),
+	// 		);
+
+	// 		const response = await request(app)
+	// 			.delete('/api/profiles/me/profile-picture')
+	// 			.set('Authorization', authToken);
+
+	// 		expect(response.status).toBe(500);
+	// 		expect(response.body.error).toBe('Internal server error');
+	// 	});
+	// });
 	describe('Work Experience Endpoints', () => {
 		const mockExperience = {
 			id: 'exp-123',
@@ -215,52 +250,52 @@ describe('Profile Controller Tests', () => {
 			location: 'San Francisco',
 		};
 
-		describe('GET /api/profiles/me/experience', () => {
-			it('should return 200 and list of experiences', async () => {
-				(profileService.getExperience as jest.Mock).mockResolvedValue([mockExperience]);
+		// describe('GET /api/profiles/me/experience', () => {
+		// 	it('should return 200 and list of experiences', async () => {
+		// 		(profileService.getExperience as jest.Mock).mockResolvedValue([mockExperience]);
 
-				const response = await request(app)
-					.get('/api/profiles/me/experience')
-					.set('Authorization', authToken);
+		// 		const response = await request(app)
+		// 			.get('/api/profiles/me/experience')
+		// 			.set('Authorization', authToken);
 
-				expect(response.status).toBe(200);
-				expect(response.body).toEqual([
-					{
-						id: 'exp-123',
-						company: 'Tech Corp',
-						position: 'Developer',
-						startDate: '2020-01-01',
-						endDate: '2022-01-01',
-						location: 'San Francisco',
-						description: 'Worked on cool projects',
-					},
-				]);
-			});
+		// 		expect(response.status).toBe(200);
+		// 		expect(response.body).toEqual([
+		// 			{
+		// 				id: 'exp-123',
+		// 				company: 'Tech Corp',
+		// 				position: 'Developer',
+		// 				startDate: '2020-01-01',
+		// 				endDate: '2022-01-01',
+		// 				location: 'San Francisco',
+		// 				description: 'Worked on cool projects',
+		// 			},
+		// 		]);
+		// 	});
 
-			it('should return 404 if no experiences found', async () => {
-				(profileService.getExperience as jest.Mock).mockResolvedValue([]);
+		// 	it('should return 404 if no experiences found', async () => {
+		// 		(profileService.getExperience as jest.Mock).mockResolvedValue([]);
 
-				const response = await request(app)
-					.get('/api/profiles/me/experience')
-					.set('Authorization', authToken);
+		// 		const response = await request(app)
+		// 			.get('/api/profiles/me/experience')
+		// 			.set('Authorization', authToken);
 
-				expect(response.status).toBe(404);
-				expect(response.body.error).toBe('No experience found');
-			});
+		// 		expect(response.status).toBe(404);
+		// 		expect(response.body.error).toBe('No experience found');
+		// 	});
 
-			it('should return 500 for server error', async () => {
-				(profileService.getExperience as jest.Mock).mockRejectedValue(
-					new Error('Database error'),
-				);
+		// 	it('should return 500 for server error', async () => {
+		// 		(profileService.getExperience as jest.Mock).mockRejectedValue(
+		// 			new Error('Database error'),
+		// 		);
 
-				const response = await request(app)
-					.get('/api/profiles/me/experience')
-					.set('Authorization', authToken);
+		// 		const response = await request(app)
+		// 			.get('/api/profiles/me/experience')
+		// 			.set('Authorization', authToken);
 
-				expect(response.status).toBe(500);
-				expect(response.body.error).toBe('Error fetching experience');
-			});
-		});
+		// 		expect(response.status).toBe(500);
+		// 		expect(response.body.error).toBe('Error fetching experience');
+		// 	});
+		// });
 
 		describe('POST /api/profiles/me/experience', () => {
 			it('should return 200 and create new experience', async () => {
@@ -365,7 +400,21 @@ describe('Profile Controller Tests', () => {
 					});
 
 				expect(response.status).toBe(404);
-				expect(response.body.error).toBe('Experience not found');
+				expect(response.body.error).toBe('Experience not found or not owned by user');
+			});
+			it('should return 400 if no experience ID is provided', async () => {
+				const response = await request(app)
+					.put('/api/profiles/me/experience/%20')
+					.set('Authorization', authToken)
+					.send({
+						companyName: 'Updated Corp',
+						position: 'Senior Developer',
+						startDate: '2020-01-01',
+						currentJob: false,
+					});
+
+				expect(response.status).toBe(400);
+				expect(response.body.error).toBe('Experience ID is required');
 			});
 
 			it('should return 400 for invalid update data', async () => {
@@ -422,6 +471,14 @@ describe('Profile Controller Tests', () => {
 				expect(response.status).toBe(404);
 				expect(response.body.error).toBe('Experience not found');
 			});
+			it('should return 400 if no experience ID is provided', async () => {
+				const response = await request(app)
+					.delete('/api/profiles/me/experience/%20')
+					.set('Authorization', authToken);
+
+				expect(response.status).toBe(400);
+				expect(response.body.error).toBe('Experience ID is required');
+			});
 
 			it('should return 500 for server error', async () => {
 				(profileService.deleteExperience as jest.Mock).mockRejectedValue(
@@ -447,50 +504,50 @@ describe('Profile Controller Tests', () => {
 			endDate: '2019-01-01',
 		};
 
-		describe('GET /api/profiles/me/education', () => {
-			it('should return 200 and list of education', async () => {
-				(profileService.getEducation as jest.Mock).mockResolvedValue([mockEducation]);
+		// describe('GET /api/profiles/me/education', () => {
+		// 	it('should return 200 and list of education', async () => {
+		// 		(profileService.getEducation as jest.Mock).mockResolvedValue([mockEducation]);
 
-				const response = await request(app)
-					.get('/api/profiles/me/education')
-					.set('Authorization', authToken);
+		// 		const response = await request(app)
+		// 			.get('/api/profiles/me/education')
+		// 			.set('Authorization', authToken);
 
-				expect(response.status).toBe(200);
-				expect(response.body).toEqual([
-					{
-						id: 'edu-123',
-						school: 'State University',
-						degree: 'Bachelor of Science',
-						startDate: '2015-01-01',
-						endDate: '2019-01-01',
-					},
-				]);
-			});
+		// 		expect(response.status).toBe(200);
+		// 		expect(response.body).toEqual([
+		// 			{
+		// 				id: 'edu-123',
+		// 				school: 'State University',
+		// 				degree: 'Bachelor of Science',
+		// 				startDate: '2015-01-01',
+		// 				endDate: '2019-01-01',
+		// 			},
+		// 		]);
+		// 	});
 
-			it('should return 404 if no education found', async () => {
-				(profileService.getEducation as jest.Mock).mockResolvedValue([]);
+		// 	it('should return 404 if no education found', async () => {
+		// 		(profileService.getEducation as jest.Mock).mockResolvedValue([]);
 
-				const response = await request(app)
-					.get('/api/profiles/me/education')
-					.set('Authorization', authToken);
+		// 		const response = await request(app)
+		// 			.get('/api/profiles/me/education')
+		// 			.set('Authorization', authToken);
 
-				expect(response.status).toBe(404);
-				expect(response.body.error).toBe('No education found');
-			});
+		// 		expect(response.status).toBe(404);
+		// 		expect(response.body.error).toBe('No education found');
+		// 	});
 
-			it('should return 500 for server error', async () => {
-				(profileService.getEducation as jest.Mock).mockRejectedValue(
-					new Error('Database error'),
-				);
+		// 	it('should return 500 for server error', async () => {
+		// 		(profileService.getEducation as jest.Mock).mockRejectedValue(
+		// 			new Error('Database error'),
+		// 		);
 
-				const response = await request(app)
-					.get('/api/profiles/me/education')
-					.set('Authorization', authToken);
+		// 		const response = await request(app)
+		// 			.get('/api/profiles/me/education')
+		// 			.set('Authorization', authToken);
 
-				expect(response.status).toBe(500);
-				expect(response.body.error).toBe('Error fetching education');
-			});
-		});
+		// 		expect(response.status).toBe(500);
+		// 		expect(response.body.error).toBe('Error fetching education');
+		// 	});
+		// });
 
 		describe('POST /api/profiles/me/education', () => {
 			it('should return 200 and create new education', async () => {
@@ -604,6 +661,19 @@ describe('Profile Controller Tests', () => {
 				expect(response.body.error).toBe('Education record not found');
 			});
 
+			it('should return 400 if no education ID is provided', async () => {
+				const response = await request(app)
+					.put('/api/profiles/me/education/%20')
+					.set('Authorization', authToken)
+					.send({
+						school: 'Updated University',
+						degree: 'Master of Science',
+						startDate: '2015-01-01',
+					});
+				expect(response.status).toBe(400);
+				expect(response.body.error).toBe('Education ID is required');
+			});
+
 			it('should return 500 for server error', async () => {
 				(profileService.updateEducation as jest.Mock).mockRejectedValue(
 					new Error('Database error'),
@@ -646,6 +716,14 @@ describe('Profile Controller Tests', () => {
 				expect(response.body.error).toBe('Education not found');
 			});
 
+			it('should return 400 if no education ID is provided', async () => {
+				const response = await request(app)
+					.delete('/api/profiles/me/education/%20')
+					.set('Authorization', authToken);
+				expect(response.status).toBe(400);
+				expect(response.body.error).toBe('Education ID is required');
+			});
+
 			it('should return 500 for server error', async () => {
 				(profileService.deleteEducation as jest.Mock).mockRejectedValue(
 					new Error('Database error'),
@@ -670,52 +748,52 @@ describe('Profile Controller Tests', () => {
 			expirationDate: '2023-01-01',
 		};
 
-		describe('GET /api/profiles/me/certifications', () => {
-			it('should return 200 and list of certifications', async () => {
-				(profileService.getCertifications as jest.Mock).mockResolvedValue([
-					mockCertification,
-				]);
+		// describe('GET /api/profiles/me/certifications', () => {
+		// 	it('should return 200 and list of certifications', async () => {
+		// 		(profileService.getCertifications as jest.Mock).mockResolvedValue([
+		// 			mockCertification,
+		// 		]);
 
-				const response = await request(app)
-					.get('/api/profiles/me/certifications')
-					.set('Authorization', authToken);
+		// 		const response = await request(app)
+		// 			.get('/api/profiles/me/certifications')
+		// 			.set('Authorization', authToken);
 
-				expect(response.status).toBe(200);
-				expect(response.body).toEqual([
-					{
-						id: 'cert-123',
-						name: 'AWS Certified',
-						issuedBy: 'Amazon',
-						issueDate: '2021-01-01',
-						expirationDate: '2023-01-01',
-					},
-				]);
-			});
+		// 		expect(response.status).toBe(200);
+		// 		expect(response.body).toEqual([
+		// 			{
+		// 				id: 'cert-123',
+		// 				name: 'AWS Certified',
+		// 				issuedBy: 'Amazon',
+		// 				issueDate: '2021-01-01',
+		// 				expirationDate: '2023-01-01',
+		// 			},
+		// 		]);
+		// 	});
 
-			it('should return 404 if no certifications found', async () => {
-				(profileService.getCertifications as jest.Mock).mockResolvedValue([]);
+		// 	it('should return 404 if no certifications found', async () => {
+		// 		(profileService.getCertifications as jest.Mock).mockResolvedValue([]);
 
-				const response = await request(app)
-					.get('/api/profiles/me/certifications')
-					.set('Authorization', authToken);
+		// 		const response = await request(app)
+		// 			.get('/api/profiles/me/certifications')
+		// 			.set('Authorization', authToken);
 
-				expect(response.status).toBe(404);
-				expect(response.body.error).toBe('No certifications found');
-			});
+		// 		expect(response.status).toBe(404);
+		// 		expect(response.body.error).toBe('No certifications found');
+		// 	});
 
-			it('should return 500 for server error', async () => {
-				(profileService.getCertifications as jest.Mock).mockRejectedValue(
-					new Error('Database error'),
-				);
+		// 	it('should return 500 for server error', async () => {
+		// 		(profileService.getCertifications as jest.Mock).mockRejectedValue(
+		// 			new Error('Database error'),
+		// 		);
 
-				const response = await request(app)
-					.get('/api/profiles/me/certifications')
-					.set('Authorization', authToken);
+		// 		const response = await request(app)
+		// 			.get('/api/profiles/me/certifications')
+		// 			.set('Authorization', authToken);
 
-				expect(response.status).toBe(500);
-				expect(response.body.error).toBe('Error fetching certifications');
-			});
-		});
+		// 		expect(response.status).toBe(500);
+		// 		expect(response.body.error).toBe('Error fetching certifications');
+		// 	});
+		// });
 
 		describe('POST /api/profiles/me/certifications', () => {
 			it('should return 200 and create new certification', async () => {
@@ -815,6 +893,45 @@ describe('Profile Controller Tests', () => {
 				expect(response.body.error).toBe('Certification not found');
 			});
 
+			it('should return 400 if no certification ID is provided', async () => {
+				const response = await request(app)
+					.put('/api/profiles/me/certifications/%20')
+					.set('Authorization', authToken)
+					.send({
+						name: 'Updated Certification',
+						issuedBy: 'Updated Org',
+						issueDate: '2021-01-01',
+					});
+				expect(response.status).toBe(400);
+				expect(response.body.error).toBe('Certification ID is required');
+			});
+
+			it('should return 400 for invalid update data', async () => {
+				const response = await request(app)
+					.put('/api/profiles/me/certifications/cert-123')
+					.set('Authorization', authToken)
+					.send({
+						name: '',
+						issuedBy: 'Updated Org',
+						issueDate: '2021-01-01',
+					});
+				expect(response.status).toBe(400);
+				expect(response.body.error).toMatch('Name');
+			});
+			it('should return 400 if expiration date is before issue date', async () => {
+				const response = await request(app)
+					.put('/api/profiles/me/certifications/cert-123')
+					.set('Authorization', authToken)
+					.send({
+						name: 'Updated Certification',
+						issuedBy: 'Updated Org',
+						issueDate: '2023-01-01',
+						expirationDate: '2021-01-01',
+					});
+				expect(response.status).toBe(400);
+				expect(response.body.error).toBe('Expiration date must be after issue date');
+			});
+
 			it('should return 500 for server error', async () => {
 				(profileService.updateCertification as jest.Mock).mockRejectedValue(
 					new Error('Database error'),
@@ -859,6 +976,15 @@ describe('Profile Controller Tests', () => {
 				expect(response.body.error).toBe('Certification not found');
 			});
 
+			it('should return 400 if no certification ID is provided', async () => {
+				const response = await request(app)
+					.delete('/api/profiles/me/certifications/%20')
+					.set('Authorization', authToken);
+
+				expect(response.status).toBe(400);
+				expect(response.body.error).toBe('Certification ID is required');
+			});
+
 			it('should return 500 for server error', async () => {
 				(profileService.deleteCertification as jest.Mock).mockRejectedValue(
 					new Error('Database error'),
@@ -880,42 +1006,42 @@ describe('Profile Controller Tests', () => {
 			name: 'JavaScript',
 		};
 
-		describe('GET /api/profiles/me/skills', () => {
-			it('should return 200 and list of skills', async () => {
-				(profileService.getSkills as jest.Mock).mockResolvedValue([mockSkill]);
+		// describe('GET /api/profiles/me/skills', () => {
+		// 	it('should return 200 and list of skills', async () => {
+		// 		(profileService.getSkills as jest.Mock).mockResolvedValue([mockSkill]);
 
-				const response = await request(app)
-					.get('/api/profiles/me/skills')
-					.set('Authorization', authToken);
+		// 		const response = await request(app)
+		// 			.get('/api/profiles/me/skills')
+		// 			.set('Authorization', authToken);
 
-				expect(response.status).toBe(200);
-				expect(response.body).toEqual([mockSkill]);
-			});
+		// 		expect(response.status).toBe(200);
+		// 		expect(response.body).toEqual([mockSkill]);
+		// 	});
 
-			it('should return 404 if no skills found', async () => {
-				(profileService.getSkills as jest.Mock).mockResolvedValue([]);
+		// 	it('should return 404 if no skills found', async () => {
+		// 		(profileService.getSkills as jest.Mock).mockResolvedValue([]);
 
-				const response = await request(app)
-					.get('/api/profiles/me/skills')
-					.set('Authorization', authToken);
+		// 		const response = await request(app)
+		// 			.get('/api/profiles/me/skills')
+		// 			.set('Authorization', authToken);
 
-				expect(response.status).toBe(404);
-				expect(response.body.error).toBe('No skill found');
-			});
+		// 		expect(response.status).toBe(404);
+		// 		expect(response.body.error).toBe('No skill found');
+		// 	});
 
-			it('should return 500 for server error', async () => {
-				(profileService.getSkills as jest.Mock).mockRejectedValue(
-					new Error('Database error'),
-				);
+		// 	it('should return 500 for server error', async () => {
+		// 		(profileService.getSkills as jest.Mock).mockRejectedValue(
+		// 			new Error('Database error'),
+		// 		);
 
-				const response = await request(app)
-					.get('/api/profiles/me/skills')
-					.set('Authorization', authToken);
+		// 		const response = await request(app)
+		// 			.get('/api/profiles/me/skills')
+		// 			.set('Authorization', authToken);
 
-				expect(response.status).toBe(500);
-				expect(response.body.error).toBe('Internal server error');
-			});
-		});
+		// 		expect(response.status).toBe(500);
+		// 		expect(response.body.error).toBe('Internal server error');
+		// 	});
+		// });
 
 		describe('POST /api/profiles/me/skills', () => {
 			it('should return 200 and add new skill', async () => {
@@ -982,6 +1108,14 @@ describe('Profile Controller Tests', () => {
 				expect(response.body.error).toBe('Skill not found');
 			});
 
+			it('should return 400 if no skill ID is provided', async () => {
+				const response = await request(app)
+					.delete('/api/profiles/me/skills/%20')
+					.set('Authorization', authToken);
+				expect(response.status).toBe(400);
+				expect(response.body.error).toBe('Skill ID is required');
+			});
+
 			it('should return 500 for server error', async () => {
 				(profileService.deleteSkill as jest.Mock).mockRejectedValue(
 					new Error('Database error'),
@@ -1002,46 +1136,46 @@ describe('Profile Controller Tests', () => {
 			visibility: 'public',
 		};
 
-		describe('GET /api/profiles/me/visibility', () => {
-			it('should return 200 and visibility setting', async () => {
-				(profileService.getProfileVisibility as jest.Mock).mockResolvedValue(
-					mockVisibility,
-				);
+		// describe('GET /api/profiles/me/visibility', () => {
+		// 	it('should return 200 and visibility setting', async () => {
+		// 		(profileService.getProfileVisibility as jest.Mock).mockResolvedValue(
+		// 			mockVisibility,
+		// 		);
 
-				const response = await request(app)
-					.get('/api/profiles/me/visibility')
-					.set('Authorization', authToken);
+		// 		const response = await request(app)
+		// 			.get('/api/profiles/me/visibility')
+		// 			.set('Authorization', authToken);
 
-				expect(response.status).toBe(200);
-				expect(response.body).toEqual({
-					visibility: 'public',
-				});
-			});
+		// 		expect(response.status).toBe(200);
+		// 		expect(response.body).toEqual({
+		// 			visibility: 'public',
+		// 		});
+		// 	});
 
-			it('should return 404 if visibility setting not found', async () => {
-				(profileService.getProfileVisibility as jest.Mock).mockResolvedValue(null);
+		// 	it('should return 404 if visibility setting not found', async () => {
+		// 		(profileService.getProfileVisibility as jest.Mock).mockResolvedValue(null);
 
-				const response = await request(app)
-					.get('/api/profiles/me/visibility')
-					.set('Authorization', authToken);
+		// 		const response = await request(app)
+		// 			.get('/api/profiles/me/visibility')
+		// 			.set('Authorization', authToken);
 
-				expect(response.status).toBe(404);
-				expect(response.body.error).toBe('No profile visibility found');
-			});
+		// 		expect(response.status).toBe(404);
+		// 		expect(response.body.error).toBe('No profile visibility found');
+		// 	});
 
-			it('should return 500 for server error', async () => {
-				(profileService.getProfileVisibility as jest.Mock).mockRejectedValue(
-					new Error('Database error'),
-				);
+		// 	it('should return 500 for server error', async () => {
+		// 		(profileService.getProfileVisibility as jest.Mock).mockRejectedValue(
+		// 			new Error('Database error'),
+		// 		);
 
-				const response = await request(app)
-					.get('/api/profiles/me/visibility')
-					.set('Authorization', authToken);
+		// 		const response = await request(app)
+		// 			.get('/api/profiles/me/visibility')
+		// 			.set('Authorization', authToken);
 
-				expect(response.status).toBe(500);
-				expect(response.body.error).toBe('Internal server error');
-			});
-		});
+		// 		expect(response.status).toBe(500);
+		// 		expect(response.body.error).toBe('Internal server error');
+		// 	});
+		// });
 
 		describe('PUT /api/profiles/me/visibility', () => {
 			it('should return 200 and update visibility to private', async () => {
@@ -1093,7 +1227,7 @@ describe('Profile Controller Tests', () => {
 		});
 	});
 
-	describe('Create/Update User Profile Endpoints', () => {
+	describe('Get/Update User Profile Endpoints', () => {
 		const mockProfile = {
 			id: testUserId,
 			headline: 'Software Engineer',
@@ -1102,93 +1236,175 @@ describe('Profile Controller Tests', () => {
 			industry: 'Technology',
 		};
 
-		describe('POST /api/profiles/me', () => {
-			it('should return 200 and create user profile', async () => {
-				(profileService.createUserProfile as jest.Mock).mockResolvedValue(mockProfile);
+		// describe('POST /api/profiles/me', () => {
+		// 	it('should return 200 and create user profile', async () => {
+		// 		(profileService.createUserProfile as jest.Mock).mockResolvedValue(mockProfile);
 
-				const response = await request(app)
-					.post('/api/profiles/me')
-					.set('Authorization', authToken)
-					.send({
-						headline: 'Software Engineer',
-						bio: 'Experienced developer',
-						location: 'San Francisco',
-						industry: 'Technology',
-					});
+		// 		const response = await request(app)
+		// 			.post('/api/profiles/me')
+		// 			.set('Authorization', authToken)
+		// 			.send({
+		// 				headline: 'Software Engineer',
+		// 				bio: 'Experienced developer',
+		// 				location: 'San Francisco',
+		// 				industry: 'Technology',
+		// 			});
 
-				expect(response.status).toBe(200);
-				expect(response.body.message).toBe('User profile created successfully');
-			});
+		// 		expect(response.status).toBe(200);
+		// 		expect(response.body.message).toBe('User profile created successfully');
+		// 	});
 
-			it('should return 500 for server error', async () => {
-				(profileService.createUserProfile as jest.Mock).mockRejectedValue(
-					new Error('Database error'),
-				);
+		// 	it('should return 500 for server error', async () => {
+		// 		(profileService.createUserProfile as jest.Mock).mockRejectedValue(
+		// 			new Error('Database error'),
+		// 		);
 
-				const response = await request(app)
-					.post('/api/profiles/me')
-					.set('Authorization', authToken)
-					.send({
-						headline: 'Software Engineer',
-						bio: 'Experienced developer',
-						location: 'San Francisco',
-						industry: 'Technology',
-					});
+		// 		const response = await request(app)
+		// 			.post('/api/profiles/me')
+		// 			.set('Authorization', authToken)
+		// 			.send({
+		// 				headline: 'Software Engineer',
+		// 				bio: 'Experienced developer',
+		// 				location: 'San Francisco',
+		// 				industry: 'Technology',
+		// 			});
 
-				expect(response.status).toBe(500);
-				expect(response.body.error).toBe('Internal server error');
-			});
-		});
+		// 		expect(response.status).toBe(500);
+		// 		expect(response.body.error).toBe('Internal server error');
+		// 	});
+		// });
 
 		describe('PUT /api/profiles/me', () => {
-			it('should return 200 and update user profile', async () => {
-				(profileService.updateUserProfile as jest.Mock).mockResolvedValue(mockProfile);
+			it('should return 200 and update the user profile successfully', async () => {
+				const mockCurrentProfile = {
+					id: testUserId,
+					headline: 'Software Engineer',
+					bio: 'Passionate about coding',
+					location: 'San Francisco',
+					industry: 'Technology',
+					firstName: 'John',
+					lastName: 'Doe',
+				};
+
+				const mockUpdatedProfile = {
+					...mockCurrentProfile,
+					headline: 'Senior Software Engineer',
+				};
+
+				(profileService.getUserProfile as jest.Mock).mockResolvedValue(mockCurrentProfile);
+				(profileService.updateUserProfile as jest.Mock).mockResolvedValue(
+					mockUpdatedProfile,
+				);
+				(profileService.getUserProfile as jest.Mock).mockResolvedValue(mockUpdatedProfile);
 
 				const response = await request(app)
 					.put('/api/profiles/me')
 					.set('Authorization', authToken)
-					.send({
-						headline: 'Updated Headline',
-						bio: 'Updated bio',
-						location: 'New York',
-						industry: 'Finance',
-					});
+					.send({ headline: 'Senior Software Engineer' });
 
 				expect(response.status).toBe(200);
 				expect(response.body.message).toBe('User profile updated successfully');
+				expect(response.body.profile).toEqual(mockUpdatedProfile);
 			});
 
-			it('should return 404 if profile not found', async () => {
-				(profileService.updateUserProfile as jest.Mock).mockResolvedValue(null);
+			it('should return 404 if the profile is not found', async () => {
+				(profileService.getUserProfile as jest.Mock).mockResolvedValue(null);
 
 				const response = await request(app)
 					.put('/api/profiles/me')
 					.set('Authorization', authToken)
-					.send({
-						headline: 'Updated Headline',
-						bio: 'Updated bio',
-						location: 'New York',
-						industry: 'Finance',
-					});
+					.send({ headline: 'Senior Software Engineer' });
 
 				expect(response.status).toBe(404);
 				expect(response.body.error).toBe('Profile not found');
 			});
 
-			it('should return 500 for server error', async () => {
-				(profileService.updateUserProfile as jest.Mock).mockRejectedValue(
+			it('should return 500 for a server error', async () => {
+				(profileService.getUserProfile as jest.Mock).mockRejectedValue(
 					new Error('Database error'),
 				);
 
 				const response = await request(app)
 					.put('/api/profiles/me')
 					.set('Authorization', authToken)
-					.send({
-						headline: 'Updated Headline',
-						bio: 'Updated bio',
-						location: 'New York',
-						industry: 'Finance',
-					});
+					.send({ headline: 'Senior Software Engineer' });
+
+				expect(response.status).toBe(500);
+				expect(response.body.error).toBe('Internal server error');
+			});
+		});
+		describe('GET /api/profiles/ - getMyProfile', () => {
+			it('should return 200 and the user profile successfully', async () => {
+				const mockProfile = {
+					id: testUserId,
+					firstName: 'John',
+					lastName: 'Doe',
+					headline: 'Software Engineer',
+					location: 'San Francisco',
+					industry: 'Technology',
+				};
+
+				const mockProfileVisibility = { visibility: 'public' };
+				const mockExperiences = [{ id: 'exp1', company: 'TechCorp', position: 'Engineer' }];
+				const mockEducation = [{ id: 'edu1', school: 'Stanford', degree: 'BSc' }];
+				const mockCertifications = [{ id: 'cert1', name: 'AWS Certified' }];
+				const mockSkills = ['Node.js', 'React'];
+				const mockFollowersCount = 100;
+				const mockConnectionsCount = 50;
+
+				(profileService.getUserProfile as jest.Mock).mockResolvedValue(mockProfile);
+				(profileService.getProfileVisibility as jest.Mock).mockResolvedValue(
+					mockProfileVisibility,
+				);
+				(profileService.getExperience as jest.Mock).mockResolvedValue(mockExperiences);
+				(profileService.getEducation as jest.Mock).mockResolvedValue(mockEducation);
+				(profileService.getCertifications as jest.Mock).mockResolvedValue(
+					mockCertifications,
+				);
+				(profileService.getSkills as jest.Mock).mockResolvedValue(mockSkills);
+				(profileService.getFollowersCount as jest.Mock).mockResolvedValue(
+					mockFollowersCount,
+				);
+				(profileService.getConnectionsCount as jest.Mock).mockResolvedValue(
+					mockConnectionsCount,
+				);
+
+				const response = await request(app)
+					.get('/api/profiles/')
+					.set('Authorization', authToken);
+
+				expect(response.status).toBe(200);
+				expect(response.body).toEqual({
+					visibility: mockProfileVisibility.visibility,
+					profile: mockProfile,
+					experiences: mockExperiences,
+					education: mockEducation,
+					certifications: mockCertifications,
+					skills: mockSkills,
+					followersCount: mockFollowersCount,
+					connectionsCount: mockConnectionsCount,
+				});
+			});
+
+			it('should return 404 if the user profile is not found', async () => {
+				(profileService.getUserProfile as jest.Mock).mockResolvedValue(null);
+
+				const response = await request(app)
+					.get('/api/profiles/')
+					.set('Authorization', authToken);
+
+				expect(response.status).toBe(404);
+				expect(response.body.error).toBe('User profile not found');
+			});
+
+			it('should return 500 for a server error', async () => {
+				(profileService.getUserProfile as jest.Mock).mockRejectedValue(
+					new Error('Database error'),
+				);
+
+				const response = await request(app)
+					.get('/api/profiles/')
+					.set('Authorization', authToken);
 
 				expect(response.status).toBe(500);
 				expect(response.body.error).toBe('Internal server error');

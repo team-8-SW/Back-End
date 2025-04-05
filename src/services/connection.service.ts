@@ -4,6 +4,11 @@ import { knexInstance } from '../config/db';
 //------------Send connection requests to other users---------//
 
 export const sendConnectionRequest = async (userId: string, targetUserId: string) => {
+	const existingUser = await knexInstance('users').where({ id: targetUserId }).first();
+	if (!existingUser) {
+		return 'not found';
+	}
+
 	const existingRequest = await knexInstance('connections')
 		.where({ requester_id: userId, receiver_id: targetUserId })
 		.orWhere({ requester_id: targetUserId, receiver_id: userId })
