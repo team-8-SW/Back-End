@@ -108,3 +108,43 @@ export const postUpdate = async (req: Request, res: Response) => {
 		res.status(500).json({ error: 'Internal server error' });
 	}
 };
+
+export const getCompanyFollowers = async (req: Request, res: Response) => {
+	try {
+		// eslint-disable-next-line @typescript-eslint/naming-convention
+		const company_id = req.params.id;
+		// eslint-disable-next-line @typescript-eslint/naming-convention
+		const admin_user_id = (req as any).user?.user_id;
+		const company = await companyService.getCompanyById(company_id);
+		if (!company || company.admin_user_id !== admin_user_id) {
+			return res.status(403).json({ message: 'Access denied' });
+		}
+
+		const followers = await companyService.getCompanyFollowers(company_id);
+
+		res.status(200).json(followers);
+	} catch (error) {
+		console.error('Error getting followers list', error);
+		res.status(500).json({ error: 'Internal server error' });
+	}
+};
+
+export const removeFollower = async (req: Request, res: Response) => {
+	try {
+		// eslint-disable-next-line @typescript-eslint/naming-convention
+		const { company_id, user_id } = req.params;
+		// eslint-disable-next-line @typescript-eslint/naming-convention
+		const admin_user_id = (req as any).user?.user_id;
+
+		const company = await companyService.getCompanyById(company_id);
+		if (!company || company.admin_user_id !== admin_user_id) {
+			return res.status(403).json({ message: 'Unauthorized action' });
+		}
+
+		await companyService.removeFollower(company_id, user_id);
+		res.status(200).json({ message: 'Follower removed successfully' });
+	} catch (error) {
+		console.error('Error getting followers list', error);
+		res.status(500).json({ error: 'Internal server error' });
+	}
+};

@@ -81,3 +81,20 @@ export const postUpdate = async (
 
 	return newUpdate;
 };
+
+export const getCompanyFollowers = async (companyId: string) => {
+	return await knexInstance('company_followers')
+		.join('users', 'company_followers.user_id', 'users.id')
+		.select(
+			'users.id as user_id',
+			knexInstance.raw(`users.first_name || ' ' || users.last_name as full_name`),
+			'company_followers.followed_at',
+		)
+		.where('company_followers.company_id', companyId);
+};
+
+export const removeFollower = async (companyId: string, userId: string) => {
+	return await knexInstance('company_followers')
+		.where({ company_id: companyId, user_id: userId })
+		.del();
+};

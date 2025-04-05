@@ -11,5 +11,11 @@ router.post('/', newAuthMiddleware, companyController.createCompany);
 router.put('/:id', newAuthMiddleware, companyController.updateCompany); //update company
 router.post('/job', newAuthMiddleware, companyController.postJob); //post a job
 router.post('/:id/update', newAuthMiddleware, companyController.postUpdate); //post an update
+router.get('/:id/followers-list', newAuthMiddleware, companyController.getCompanyFollowers); //getting followers list
+router.delete(
+	'/:company_id/followers/:user_id',
+	newAuthMiddleware,
+	companyController.removeFollower,
+);
 
 export default router;
