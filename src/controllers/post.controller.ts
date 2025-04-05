@@ -141,3 +141,27 @@ export const savepost = async (req: Request, res: Response) => {
         res.status(500).json({ message: 'Failed to save post' });
     }
 };
+
+//View post engagement (likes, comments, shares)
+export const viewpostengagement = async (req: Request, res: Response) => {
+    try {
+        const user_id = (req as any).user?.user_id; // Extract user_id from authenticated user
+        if (!user_id) {
+            return res.status(400).json({ message: 'User ID is required' });
+        }
+        const { post_id } = req.body;
+        // Validate required fields
+        if (!post_id) {
+            return res.status(400).json({ message: 'postid and content is required' });
+        }
+        // Call the service to create the post
+        const engagement = await postService.viewpostengagement({
+            user_id,
+            post_id,
+        });
+        res.status(201).json(engagement);
+    } catch (error) {
+        console.error('Error viewing post engagement:', error);
+        res.status(500).json({ message: 'Failed to view post engagement' });
+    }
+};

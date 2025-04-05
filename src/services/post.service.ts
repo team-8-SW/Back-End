@@ -246,3 +246,35 @@ export const savepost = async (save: { post_id: string; user_id: string; }): Pro
         throw new Error('Failed to save post');
     }
 };
+//viewpostengagement
+export const viewpostengagement = async (engagement: { post_id: string; user_id: string; }): Promise<any> => {
+    try {
+        const { user_id, post_id } = engagement;
+
+        // Validate inputs
+        if (!user_id || !isUUID(user_id)) {
+            throw new Error('Invalid user_id');
+        }
+        if (post_id && !isUUID(post_id)) {
+            throw new Error('Invalid post_id');
+        }
+        if (!post_id) {
+            throw new Error('post_id must be provided');
+        }
+        // Ensure the post exists
+        const postExists = await knexInstance('posts')
+            .where({ id: post_id })
+            .first();
+        if (!postExists) {
+            throw new Error('Post not found');
+        }
+        const viewengagement = await knexInstance('posts')
+            .where({ id: post_id })
+            .select('like_count', 'comment_count', 'repost_count')
+            .first();
+        return viewengagement;
+    } catch (error) {
+        console.error('Error viewing post engagement:', error);
+        throw new Error('Failed to view post engagement');
+    }
+};

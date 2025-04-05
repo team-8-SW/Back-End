@@ -10,4 +10,5 @@ router.post('/me/newpost', newAuthMiddleware, postsController.createPost);
 router.post('/me/like', newAuthMiddleware, postsController.like);
 router.post('/me/comment', newAuthMiddleware, postsController.comment);
 router.post('/me/save', newAuthMiddleware, postsController.savepost);
+router.get('/me/postengagement', newAuthMiddleware, postsController.viewpostengagement);
 export default router;
