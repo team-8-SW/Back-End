@@ -27,7 +27,6 @@ export async function seed(knex: Knex): Promise<void> {
 				type: type,
 				content: content,
 				is_read: faker.datatype.boolean(),
-				unseen_count: faker.datatype.boolean() ? 1 : 0,
 				created_at: faker.date.recent(),
 			});
 		}

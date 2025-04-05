@@ -25,7 +25,9 @@ export async function seed(knex: Knex): Promise<void> {
                 id: uuidv4(),
                 post_id: post.id,
                 user_id: user.id,
-                content: faker.lorem.sentence(),
+				content: faker.lorem.sentence(),
+				like_count: faker.datatype.number({ min: 0, max: 10 }),
+				reply_count: faker.datatype.number({ min: 0, max: 10 }),
                 created_at: faker.date.recent(30),
                 edited_at: faker.date.recent(30),
                 parent_comment_id: null, // Assuming no parent comment for simplicity
