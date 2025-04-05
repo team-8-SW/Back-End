@@ -278,3 +278,97 @@ export const viewpostengagement = async (engagement: { post_id: string; user_id:
         throw new Error('Failed to view post engagement');
     }
 };
+//share
+export const share = async (share: { post_id: string; user_id: string; }): Promise<any> => {
+    try {
+        const { user_id, post_id} = share;
+
+        // Validate inputs
+        if (!user_id || !isUUID(user_id)) {
+            throw new Error('Invalid user_id');
+        }
+        if (post_id && !isUUID(post_id)) {
+            throw new Error('Invalid post_id');
+        }
+        if (!post_id) {
+            throw new Error('post_id must be provided');
+        }
+        // Ensure the post exists
+        const postExists = await knexInstance('posts')
+            .where({ id: post_id })
+            .first();
+        if (!postExists) {
+            throw new Error('Post not found');
+        }
+        const savedId = uuidv4(); // Generate a unique ID for the repost
+        const [shared] = await knexInstance('reposts')
+            .insert({
+                id: savedId,
+                user_id: user_id,
+                reposted_post_id: post_id,
+                reposted_at: new Date(),
+            })
+            .returning('*');
+        return shared;
+    } catch (error) {
+        console.error('Error sharing post:', error);
+        throw new Error('Failed to share post');
+    }
+};
+
+//delete
+export const deletepost = async (share: { post_id: string; user_id: string; }): Promise<any> => {
+    try {
+        const { user_id, post_id} = share;
+
+        // Validate inputs
+        if (!user_id || !isUUID(user_id)) {
+            throw new Error('Invalid user_id');
+        }
+        if (post_id && !isUUID(post_id)) {
+            throw new Error('Invalid post_id');
+        }
+        if (!post_id) {
+            throw new Error('post_id must be provided');
+        }
+        // Ensure the post exists
+        //DELETE FROM posts
+        // WHERE post_id = '<post_id>' AND user_id = '<user_id>';
+        const postExists = await knexInstance('posts')
+            .where({ id: post_id })
+            .first();
+        if (!postExists) {
+            throw new Error('Post not found');
+        }
+        const mypost = await knexInstance('posts')
+            .where({ id: post_id, user_id: user_id })
+            .first();
+        if (!mypost) {
+            throw new Error('cant delete this post, you are not the author of it');
+        }
+        await knexInstance('posts')
+            .where({ id: post_id, user_id: user_id }) // Match post_id and user_id
+            .del(); // Delete the matching row(s)
+            
+        console.log(`Post with ID ${post_id} deleted successfully.`);
+    } catch (error) {
+        console.error('Error deleeting post:', error);
+        throw new Error('Failed to delete post');
+    }
+};
+//searchpost
+export const searchpost = async (share: { keyword: string; }): Promise<any> => {
+    try {
+        const { keyword } = share;
+
+        if (!keyword) {
+            throw new Error('keyword must be provided');
+        }
+        const results = await knexInstance('posts')
+            .where('content', 'like', `%${keyword}%`); // Search for the keyword in the 'content' column
+        return results;
+    } catch (error) {
+        console.error('Error searching:', error);
+        throw new Error('Failed to search in posts');
+    }
+};

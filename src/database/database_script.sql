@@ -176,6 +176,12 @@ CREATE TABLE posts (
     edited_at TIMESTAMP DEFAULT NOW(),
     visibility VARCHAR(20) NOT NULL CHECK (visibility IN ('public', 'connections', 'private'))
 );
+CREATE TABLE reposts (
+    id UUID PRIMARY KEY,
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    reposted_post_id UUID NOT NULL REFERENCES posts(id) ON DELETE CASCADE,
+    reposted_at TIMESTAMP DEFAULT now()
+);
 
 CREATE TABLE comments (
     id UUID PRIMARY KEY,
