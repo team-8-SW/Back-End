@@ -246,7 +246,8 @@ export const editpost = async (req: Request, res: Response) => {
         }
         
         // Call the service to create the post
-        const post = await postService.createPost({
+        const post = await postService.editpost({
+            post_id,
             user_id,
             content,
             media_url,
@@ -256,7 +257,7 @@ export const editpost = async (req: Request, res: Response) => {
         });
         res.status(201).json(post); // Return the created post
     } catch (error) {
-        console.error('Error creating post:', error);
-        res.status(500).json({ message: 'Failed to create post' });
+        console.error('Error editing post:', error);
+        res.status(500).json({ message: 'Failed to edit post' });
     }
 };

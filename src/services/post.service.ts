@@ -372,3 +372,43 @@ export const searchpost = async (share: { keyword: string; }): Promise<any> => {
         throw new Error('Failed to search in posts');
     }
 };
+
+export const editpost = async (post: { post_id: string; user_id: string; content?: string; media_url?: string; media_type?: string; visibility?: string; company_id?: string }): Promise<any> => {
+    try {
+        const { post_id, user_id, ...fieldsToUpdate } = post;
+
+        if (!user_id || !isUUID(user_id)) {
+            throw new Error('Invalid user_id');
+        }
+        if (!post_id || !isUUID(post_id)) {
+            throw new Error('Invalid post_id');
+        }
+
+        const postExists = await knexInstance('posts')
+            .where({ id: post_id, user_id })
+            .first();
+        if (!postExists) {
+            throw new Error('Post not found or you cannot edit it');
+        }
+
+        // Remove undefined fields from the update object
+        const updateFields = Object.fromEntries(
+            Object.entries(fieldsToUpdate).filter(([_, value]) => value !== undefined)
+        );
+
+        if (Object.keys(updateFields).length === 0) {
+            throw new Error('Nothing provided to update');
+        }
+
+        // Update the post with the provided fields
+        const [updatedPost] = await knexInstance('posts')
+            .where({ id: post_id, user_id })
+            .update(updateFields)
+            .returning('*'); // Return the updated post
+
+        return updatedPost;
+    } catch (error) {
+        console.error('Error editing post:', error);
+        throw new Error('Failed to edit post');
+    }
+};
