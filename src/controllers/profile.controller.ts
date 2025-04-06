@@ -913,9 +913,9 @@ export const updateProfileVisibility = async (req: Request, res: Response) => {
 
 		const { visibility } = req.body;
 
-		if (visibility != 'public' && visibility != 'private' && visibility != 'connections-only') {
+		if (visibility != 'public' && visibility != 'private' && visibility != 'connections') {
 			return res.status(400).json({
-				error: 'Profile Visibility can only be public, private or connections-only',
+				error: 'Profile Visibility can only be public, private or connections',
 			});
 		}
 
