@@ -169,6 +169,7 @@ CREATE TABLE posts (
     content TEXT,
     media_url VARCHAR(255),
     media_type VARCHAR(50),
+    link_url TEXT,
     like_count INTEGER NOT NULL DEFAULT 0,
     comment_count INTEGER NOT NULL DEFAULT 0,
     repost_count INTEGER NOT NULL DEFAULT 0,
@@ -261,7 +262,9 @@ CREATE TABLE notifications (
     type VARCHAR(50) NOT NULL CHECK (type IN ('like', 'comment', 'connection', 'message')),
     content TEXT NOT NULL,
     is_read BOOLEAN NOT NULL DEFAULT FALSE,
-    created_at TIMESTAMP NOT NULL DEFAULT NOW()
+    created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+    post_id UUID REFERENCES posts(id) ON DELETE CASCADE,
+    comment_id UUID REFERENCES comments(id) ON DELETE CASCADE
 );
 
 CREATE TABLE user_privacy_settings (

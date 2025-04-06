@@ -51,6 +51,8 @@
 		"pg-promise": "^11.11.0",
 		"psql": "^0.0.1",
 		"reflect-metadata": "^0.2.2",
+		"socket.io": "^4.8.1",
+		"socket.io-client": "^4.8.1",
 		"typeorm": "^0.3.21",
 		"uuid": "^11.1.0"
 	},

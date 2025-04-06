@@ -12,6 +12,15 @@ import profileRoutes from './src/routes/profile.route';
 import followingRoutes from './src/routes/following.route';
 import postsRoutes from './src/routes/post.route';
 import notificationsRouter from './src/routes/notifications.route';
+import http from 'http';
+import { initializeWebSocket } from './websocket';
+const apps = express();
+const server = http.createServer(apps);
+
+// Initialize WebSocket
+initializeWebSocket(server);
+
+
 // Initialize environment variables
 dotenv.config();
 
@@ -21,6 +30,8 @@ const app: Express = express();
 // Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+
 // Enable CORS for all routes		
 // Add CORS middleware - PUT THIS BEFORE YOUR ROUTES
 app.use(cors({

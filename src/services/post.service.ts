@@ -3,6 +3,7 @@ import { validate as isUUID } from 'uuid';
 import { knexInstance } from '../config/db';
 import { posts } from '../models/post.model';
 import { Knex } from 'knex';
+import { notifyUser } from '../utils/notifications';
 // eslint-disable-next-line @typescript-eslint/naming-convention
 export const displayPosts = async (user_id: string): Promise<posts[]> => {
     try {
@@ -26,8 +27,6 @@ export const displayPosts = async (user_id: string): Promise<posts[]> => {
 export const createPost = async (post: {
     user_id: string; // Must be valid UUID
     content: string;
-    media_url?: string;
-    media_type?: string;
     visibility: string;
     company_id?: string; // Must be valid UUID if provided
 }) => {
@@ -92,7 +91,7 @@ export const getfeedposts = async (user_id: string): Promise<posts[]> => {
     }
 };
 
-export const likepost = async (like: { post_id?: string; comment_id?: string; user_id: string }): Promise<any> => {
+export const like = async (like: { post_id?: string; comment_id?: string; user_id: string }): Promise<any> => {
     try {
         const { post_id, comment_id, user_id } = like;
 
@@ -112,8 +111,37 @@ export const likepost = async (like: { post_id?: string; comment_id?: string; us
         if (post_id && comment_id) {
             throw new Error('Cannot like both a post and a comment at the same time');
         }
-
-
+        //check like if it exists
+        if (post_id) {
+            // Ensure the post exists
+        const postExists = await knexInstance('posts')
+        .where({ id: post_id })
+        .first();
+    if (!postExists) {
+        throw new Error('Post not found');
+    }
+        const likeExists = await knexInstance('likes')
+                .where({ user_id, post_id })
+                .first();
+            if (likeExists) {
+                throw new Error('already liked this post');
+            }
+        } else if (comment_id) {
+            // Ensure the comment exists
+        const commentExists = await knexInstance('comments')
+                .where({ id: comment_id })
+                .first();
+            if (!commentExists) {
+             throw new Error('Post not found');
+            }
+            const likeExists = await knexInstance('likes')
+                .where({ user_id, comment_id })
+                .first();
+            if (likeExists) {
+                throw new Error('already liked this comment');
+            }
+        }
+       
         // Add a new like to the likes table
         const likeId = uuidv4(); // Generate a unique ID for the like
         const [createdLike] = await knexInstance('likes')
@@ -132,7 +160,28 @@ export const likepost = async (like: { post_id?: string; comment_id?: string; us
                 .where({ id: post_id })
                 .increment('like_count', 1);
         }
-
+        else if (comment_id) {
+            await knexInstance('comments')
+                .where({ id: comment_id })
+                .increment('like_count', 1);
+        }
+        // Fetch the post owner to notify them
+        const postOwner = await knexInstance('posts')
+            .where({ id: post_id })
+            .select('user_id')
+            .first();
+        const postOwnername = await knexInstance('users')
+            .where({ id: postOwner.user_id })
+            .select('user_name')
+            .first();
+            if (postOwner) {
+                // Emit a notification to the post owner
+                notifyUser(postOwner.user_id, {
+                    type: 'like',
+                    content: `Your post was liked by user ${postOwnername.user_name}`,
+                    post_id,
+                });
+            }
         return createdLike;
     } catch (error) {
         console.error('Error liking post or comment:', error);
@@ -140,14 +189,6 @@ export const likepost = async (like: { post_id?: string; comment_id?: string; us
     }
 };
 
- // Check if the user has already liked the post or comment
- //const existingLike = await knexInstance('likes')
- //.where({ user_id, post_id, comment_id })
- //.first();
-
-//if (existingLike) {
- //throw new Error('User has already liked this post or comment');
-//}
 
 export const commentpost = async (comment: { post_id: string; user_id: string; content: string;  parent_comment_id?:string }): Promise<any> => {
     try {
@@ -203,7 +244,29 @@ export const commentpost = async (comment: { post_id: string; user_id: string; c
                 .where({ id: post_id })
                 .increment('comment_count', 1);
         } //3lshan law howa reply han increment commen t count beta3 el comment
-
+        else if (!parent_comment_id) {
+            await knexInstance('comments')
+                .where({ id: parent_comment_id })
+                .increment('reply_count', 1);
+        } 
+        // Fetch the post owner to notify them
+        const postOwner = await knexInstance('posts')
+            .where({ id: post_id })
+            .select('user_id')
+            .first();
+        const postOwnername = await knexInstance('users')
+            .where({ id: postOwner.user_id })
+            .select('user_name')
+            .first();
+            if (postOwner) {
+                // Emit a notification to the post owner
+                notifyUser(postOwner.user_id, {
+                    type: 'like',
+                    content: `Your post was commented on by user ${postOwnername.user_name}`,
+                    post_id,
+                    comment_id: parent_comment_id,
+                });
+            }
         return createdComment;
     } catch (error) {
         console.error('Error commenting:', error);
@@ -309,6 +372,10 @@ export const share = async (share: { post_id: string; user_id: string; }): Promi
                 reposted_at: new Date(),
             })
             .returning('*');
+        // Increment the repost_count in the posts table
+        await knexInstance('posts')
+            .where({ id: post_id })
+            .increment('repost_count', 1);
         return shared;
     } catch (error) {
         console.error('Error sharing post:', error);
@@ -411,4 +478,24 @@ export const editpost = async (post: { post_id: string; user_id: string; content
         console.error('Error editing post:', error);
         throw new Error('Failed to edit post');
     }
+};
+export const addMediaToPost = async (post_id: string, user_id: string, media_url: string, media_type: string): Promise<any> => {
+    // Ensure the post exists and belongs to the user
+    const postExists = await knexInstance('posts')
+        .where({ id: post_id, user_id })
+        .first();
+    if (!postExists) {
+        throw new Error('Post not found or you do not have permission to edit it');
+    }
+
+    // Update the post with the media URL and type
+    const [updatedPost] = await knexInstance('posts')
+        .where({ id: post_id, user_id })
+        .update({
+            media_url,
+            media_type,
+        })
+        .returning('*'); // Return the updated post
+
+    return updatedPost;
 };
