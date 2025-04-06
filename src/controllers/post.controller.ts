@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import * as postService from '../services/post.service';
 
-export const getmyposts = async (req: Request, res: Response) => {
+export const getMyPosts = async (req: Request, res: Response) => {
     try {
         const user_id = (req as any).user?.user_id;
         console.log('User ID in controller:', user_id);
@@ -46,7 +46,7 @@ export const createPost = async (req: Request, res: Response) => {
         res.status(500).json({ message: 'Failed to create post' });
     }
 };
-export const getfeedposts = async (req: Request, res: Response) => {
+export const getFeedPosts = async (req: Request, res: Response) => {
     try {
         const user_id = (req as any).user?.user_id;
         console.log('User ID in controller:', user_id);
@@ -67,7 +67,7 @@ export const getfeedposts = async (req: Request, res: Response) => {
     }
 };
 
-export const like = async (req: Request, res: Response) => {
+export const likePost = async (req: Request, res: Response) => {
     try {
         const user_id = (req as any).user?.user_id; // Extract user_id from authenticated user
         if (!user_id) {
@@ -94,7 +94,7 @@ export const like = async (req: Request, res: Response) => {
         res.status(500).json({ message: 'Failed to create like' });
     }
 };
-export const comment = async (req: Request, res: Response) => {
+export const commentPost = async (req: Request, res: Response) => {
     try {
         const user_id = (req as any).user?.user_id; // Extract user_id from authenticated user
         if (!user_id) {
@@ -118,7 +118,7 @@ export const comment = async (req: Request, res: Response) => {
     }
 };
 
-export const savepost = async (req: Request, res: Response) => {
+export const savePost = async (req: Request, res: Response) => {
     try {
         const user_id = (req as any).user?.user_id; // Extract user_id from authenticated user
         if (!user_id) {
@@ -142,7 +142,7 @@ export const savepost = async (req: Request, res: Response) => {
 };
 
 //View post engagement (likes, comments, shares)
-export const viewpostengagement = async (req: Request, res: Response) => {
+export const viewPostEngagement = async (req: Request, res: Response) => {
     try {
         const user_id = (req as any).user?.user_id; // Extract user_id from authenticated user
         if (!user_id) {
@@ -164,7 +164,7 @@ export const viewpostengagement = async (req: Request, res: Response) => {
     }
 };
 
-export const sharepost = async (req: Request, res: Response) => {
+export const sharePost = async (req: Request, res: Response) => {
     try {
         const user_id = (req as any).user?.user_id; // Extract user_id from authenticated user
         if (!user_id) {
@@ -187,7 +187,7 @@ export const sharepost = async (req: Request, res: Response) => {
 };
 
 //deletepost
-export const deletepost = async (req: Request, res: Response) => {
+export const deletePost = async (req: Request, res: Response) => {
     try {
         const user_id = (req as any).user?.user_id;
         console.log('User ID in controller:', user_id);
@@ -215,7 +215,7 @@ export const deletepost = async (req: Request, res: Response) => {
     }
 };
 //searchpost
-export const searchpost = async (req: Request, res: Response) => {
+export const searchPost = async (req: Request, res: Response) => {
     try {
         const { keyword } = req.body;
         // Validate required fields
@@ -233,7 +233,7 @@ export const searchpost = async (req: Request, res: Response) => {
 };
 //editpost
 //zabaty this function
-export const editpost = async (req: Request, res: Response) => {
+export const editPost = async (req: Request, res: Response) => {
     try {
         const { post_id, content, media_url, media_type, visibility, company_id } = req.body;
         const user_id = (req as any).user?.user_id; // Extract user_id from authenticated user
