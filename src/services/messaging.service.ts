@@ -1,12 +1,6 @@
 import { v4 as uuidv4 } from 'uuid';
 import cloudinary from '../utils/cloudinary';
-import knex from 'knex';
-import { pool } from '../config/db';
-
-const db = knex({
-	client: 'pg',
-	connection: pool.options,
-});
+import { knexInstance as db } from '../config/db';
 
 /* ======================= Send private messages to connections =============================*/
 export const createTextMessage = async (senderId: string, receiverId: string, content: string) => {
@@ -158,7 +152,7 @@ export const getUnreadMessageCount = async (userId: string) => {
 		.count('id as count')
 		.first();
 
-	return Number(result?.count || 0);
+	return Number((result as any)?.count || 0);
 };
 
 /* ======================= Mark conversation as read/unread =============================*/
