@@ -54,7 +54,12 @@ export const sendMediaMessage = async (req: AuthenticatedRequest, res: Response)
 		const receiverId = req.body.receiverId;
 		const file = req.file;
 
+		console.log('senderId:', senderId);
+		console.log('receiverId:', receiverId);
+		console.log('file:', file);
+
 		if (!senderId || !receiverId || !file) {
+			console.warn('Missing field(s)', { senderId, receiverId, file });
 			return res.status(400).json({ message: 'Missing required fields' });
 		}
 
@@ -78,8 +83,8 @@ export const sendMediaMessage = async (req: AuthenticatedRequest, res: Response)
 			},
 		});
 	} catch (err: any) {
-		console.error('Media message error:', err.message);
-		return res.status(500).json({ message: err.message || 'Server error' });
+		console.error('Media message error:', err);
+		return res.status(500).json({ message: err?.message || 'Server error' });
 	}
 };
 
