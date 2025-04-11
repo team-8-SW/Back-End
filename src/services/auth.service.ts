@@ -66,7 +66,7 @@ export const registerService = async (
 		emailVerified: false,
 		isPremium: false,
 		isActive: true,
-		isAdmin: false,
+		is_admin: false,
 		verification_token: null,
 	};
 
@@ -162,7 +162,7 @@ export const socialLoginGoogleService = async (idToken: string): Promise<string>
 			emailVerified: true,
 			isPremium: false,
 			isActive: true,
-			isAdmin: false,
+			is_admin: false,
 			googleId: sub,
 		});
 	}
