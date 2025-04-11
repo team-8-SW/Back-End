@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import * as followingService from '../services/following.service';
+import { profile } from 'console';
 
 export const getFollowing = async (req: Request, res: Response) => {
 	const userId = (req as any).user?.id;
@@ -15,6 +16,7 @@ export const getFollowing = async (req: Request, res: Response) => {
 				firstName: fol.firstName,
 				lastName: fol.lastName,
 				headline: fol.headline,
+				profilePictureUrl: fol.profilePictureUrl,
 			})),
 		);
 	} catch (error) {
@@ -38,6 +40,7 @@ export const getFollowers = async (req: Request, res: Response) => {
 				firstName: fol.firstName,
 				lastName: fol.lastName,
 				headline: fol.headline,
+				profilePictureUrl: fol.profilePictureUrl,
 			})),
 		);
 	} catch (error) {

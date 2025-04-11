@@ -10,7 +10,7 @@ export const getFollowing = async (userId: string) => {
 			'users.first_name as firstName',
 			'users.last_name as lastName',
 			'user_profiles.headline',
-			'user_profiles.profile_picture as profilePicture',
+			'user_profiles.profile_picture_url as profilePictureUrl',
 		)
 		.where('following.follower_id', userId);
 };
@@ -24,7 +24,7 @@ export const getFollowers = async (userId: string) => {
 			'users.first_name as firstName',
 			'users.last_name as lastName',
 			'user_profiles.headline',
-			'user_profiles.profile_picture as profilePicture',
+			'user_profiles.profile_picture_url as profilePictureUrl',
 		)
 		.where('following.followed_id', userId);
 
