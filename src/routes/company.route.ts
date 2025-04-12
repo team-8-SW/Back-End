@@ -17,5 +17,11 @@ router.delete(
 	newAuthMiddleware,
 	companyController.removeFollower,
 );
+router.get('/:company_id/applications', newAuthMiddleware, companyController.getJobApplications);
+router.get(
+	'/:company_id/followers-analytics',
+	newAuthMiddleware,
+	companyController.getCompanyFollowersAnalytics,
+);
 
 export default router;

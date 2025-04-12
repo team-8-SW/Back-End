@@ -148,3 +148,55 @@ export const removeFollower = async (req: Request, res: Response) => {
 		res.status(500).json({ error: 'Internal server error' });
 	}
 };
+
+export const getJobApplications = async (req: Request, res: Response) => {
+	try {
+		// eslint-disable-next-line @typescript-eslint/naming-convention
+		const { company_id } = req.params;
+		// eslint-disable-next-line @typescript-eslint/naming-convention
+		const admin_user_id = (req as any).user?.user_id;
+
+		const company = await companyService.getCompanyById(company_id);
+		if (!company || company.admin_user_id !== admin_user_id) {
+			return res.status(403).json({ message: 'Unauthorized action' });
+		}
+
+		const applications = await companyService.getJobApplications(company_id);
+		res.status(200).json({ applications });
+	} catch (error) {
+		console.error('Error getting job applications', error);
+		res.status(500).json({ error: 'Internal server error' });
+	}
+};
+
+export const getCompanyFollowersAnalytics = async (req: Request, res: Response) => {
+	try {
+		// eslint-disable-next-line @typescript-eslint/naming-convention
+		const { company_id } = req.params;
+		// eslint-disable-next-line @typescript-eslint/naming-convention
+		const admin_user_id = (req as any).user?.user_id;
+
+		const company = await companyService.getCompanyById(company_id);
+		if (!company || company.admin_user_id !== admin_user_id) {
+			return res.status(403).json({ message: 'Unauthorized action' });
+		}
+
+		const [totalFollowers, newFollowersLast30days, newFollowersPerDay, followersList] =
+			await Promise.all([
+				companyService.getCompanyTotalFollowers(company_id),
+				companyService.getFollowersLast30(company_id),
+				companyService.getFollowersPerDay(company_id),
+				companyService.getCompanyFollowers(company_id),
+			]);
+
+		res.status(200).json({
+			totalFollowers,
+			newFollowersLast30days,
+			newFollowersPerDay,
+			followersList,
+		});
+	} catch (error) {
+		console.error('Error getting company analytics', error);
+		res.status(500).json({ error: 'Internal server error' });
+	}
+};

@@ -326,4 +326,12 @@ CREATE TABLE IF NOT EXISTS public.saved_jobs (
     UNIQUE(user_id, job_id) 
 );
 
+CREATE TABLE IF NOT EXISTS company_followers (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    company_id UUID NOT NULL REFERENCES company_pages(id) ON DELETE CASCADE,
+    followed_at TIMESTAMP NOT NULL DEFAULT NOW(),
+    UNIQUE(user_id, company_id)
+);
+
 END;

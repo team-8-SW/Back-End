@@ -98,3 +98,47 @@ export const removeFollower = async (companyId: string, userId: string) => {
 		.where({ company_id: companyId, user_id: userId })
 		.del();
 };
+
+export const getJobApplications = async (companyId: string) => {
+	return await knexInstance('jobapplications')
+		.select(
+			'jobapplications.id AS application_id',
+			'jobapplications.status',
+			'jobapplications.applied_at',
+			'users.id AS user_id',
+			'users.first_name',
+			'users.last_name',
+			'joblistings.id AS job_id',
+			'joblistings.title AS job_title',
+		)
+		.join('users', 'jobapplications.applicant_id', '=', 'users.id')
+		.join('joblistings', 'jobapplications.job_id', '=', 'joblistings.id')
+		.where('joblistings.company_id', companyId)
+		.orderBy('jobapplications.applied_at', 'desc');
+};
+
+export const getCompanyTotalFollowers = async (companyId: string) => {
+	return await knexInstance('company_followers')
+		.where({ company_id: companyId })
+		.count('id as total')
+		.first();
+};
+
+export const getFollowersLast30 = async (companyId: string) => {
+	return await knexInstance('company_followers')
+		.where({ company_id: companyId })
+		.andWhere('followed_at', '>=', knexInstance.raw("NOW() - INTERVAL '30 days'"))
+		.count('* as total')
+		.first();
+};
+
+export const getFollowersPerDay = async (companyId: string) => {
+	return await knexInstance('company_followers')
+		.where({ company_id: companyId })
+		.groupByRaw('DATE(followed_at)')
+		.select(
+			knexInstance.raw('DATE(followed_at) as date'),
+			knexInstance.raw('COUNT(*) as count'),
+		)
+		.orderBy('date', 'asc');
+};
