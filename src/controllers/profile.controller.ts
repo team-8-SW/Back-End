@@ -1,6 +1,8 @@
 import { Request, Response } from 'express';
 import * as profileService from '../services/profile.service';
 import cloudinary from '../utils/cloudinary';
+import { v4 as uuidv4 } from 'uuid';
+import { knexInstance } from '../config/db';
 
 //--------------------Profile Picture--------------------//
 export const updateProfilePicture = async (req: Request, res: Response) => {
@@ -543,9 +545,12 @@ export const addEducation = async (req: Request, res: Response) => {
 				.json({ error: 'School name, degree, and start date are required' });
 		}
 
-		const university = await profileService.findUniversity(school);
+		let university = await profileService.findUniversity(school);
 		if (!university) {
-			return res.status(400).json({ error: 'School is invalid' });
+			const [newUniversity] = await knexInstance('universities')
+				.insert({ id: uuidv4(), university_name: school })
+				.returning('*');
+			university = newUniversity;
 		}
 
 		const educationData = {

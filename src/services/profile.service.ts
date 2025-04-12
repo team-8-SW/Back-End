@@ -239,9 +239,15 @@ export const addEducation = async (userId: string, education: any) => {
 };
 
 export const updateEducation = async (userId: string, educationId: string, education: any) => {
-	const university = await findUniversity(education.school);
+	let university = await findUniversity(education.school);
+	// if (!university) {
+	// 	throw new Error(`University '${education.school}' not found`);
+	// }
 	if (!university) {
-		throw new Error(`University '${education.school}' not found`);
+		const [newUniversity] = await knexInstance('universities')
+			.insert({ id: uuidv4(), university_name: education.school })
+			.returning('*');
+		university = newUniversity;
 	}
 
 	const updatedEducation = {
