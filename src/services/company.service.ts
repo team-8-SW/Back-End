@@ -61,7 +61,23 @@ export const postJob = async (
 
 	return job;
 };
-
+//getJobs
+export const getJobs = async (companyId: string) => {
+    return await knexInstance('job_listings')
+        .select(
+            'job_listings.id',
+            'job_listings.title',
+            'job_listings.description',
+            'job_listings.location',
+            'job_listings.type',
+            'job_listings.salary',
+            'job_listings.created_at',
+            'users.first_name',
+            'users.last_name',
+            'job_listings.company_name' // Include the company name if needed
+        )
+        .where('job_listings.company_id', companyId) // Filter by company_id
+};
 export const postUpdate = async (
 	companyId: string,
 	adminUserId: string,

@@ -83,6 +83,19 @@ export const postJob = async (req: Request, res: Response) => {
 		res.status(500).json({ error: 'Internal server error' });
 	}
 };
+//getJobs
+export const getJobs = async (req: Request, res: Response) => {
+	try {
+		const { company_id } = req.body;
+		if (!company_id) return res.status(400).json({ message: 'Company ID is required' });
+
+		const jobs = await companyService.getJobs(company_id);
+		res.status(200).json(jobs);
+	} catch (error) {
+		console.error('Error getting jobs', error);
+		res.status(500).json({ error: 'Internal server error' });
+	}
+};
 
 export const postUpdate = async (req: Request, res: Response) => {
 	try {
