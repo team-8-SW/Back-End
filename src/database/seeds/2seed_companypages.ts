@@ -12,27 +12,35 @@ export async function seed(knex: Knex): Promise<void> {
 			console.error('No users found. Please seed users first.');
 			return;
 		}
-		const companies = [];
-
+	const companies = [];
 		for (let i = 0; i < 10; i++) {
-			const user = faker.helpers.arrayElement(users);
-
+			const user = faker.helpers.arrayElement(users); // Randomly pick a user
 			companies.push({
 				id: uuidv4(),
-				name: faker.company.companyName(),
+				name: faker.company.name(),
 				description: faker.lorem.paragraphs(2),
 				industry: faker.commerce.department(),
 				logo_url: faker.internet.url(),
 				organization_type: faker.helpers.arrayElement([
-					'Startup',
-					'Enterprise',
-					'Non-Profit',
+					'Public company',
+					'Self-employed',
+					'Government agency',
+					'Nonprofit',
+					'Sole proprietorship',
+					'Privately held',
+					'Partnership',
 				]),
 				website: faker.internet.url(),
 				size: faker.helpers.arrayElement([
-					'1-10 employees',
+					'0-1 employees',
+					'2-10 employees',
 					'11-50 employees',
 					'51-200 employees',
+					'201-500 employees',
+					'501-1000 employees',
+					'1001-5000 employees',
+					'5001-10000 employees',
+					'10000+ employees',
 				]),
 				location: faker.address.city(),
 				admin_user_id: user.id,
@@ -41,7 +49,7 @@ export async function seed(knex: Knex): Promise<void> {
 				cover_photo_url: faker.internet.url(),
 				follower_count: faker.datatype.number({ min: 0, max: 10000 }),
 			});
-		}
+	}
 
 		await knex('company_pages').insert(companies);
 		console.log('Inserted company_pages into the company_pages table');

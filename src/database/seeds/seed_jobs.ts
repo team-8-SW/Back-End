@@ -4,11 +4,11 @@ import { faker } from '@faker-js/faker';
 
 export async function seed(knex: Knex): Promise<void> {
 	console.log('Seeding joblistings');
-	await knex('joblistings').del();
+	await knex('job_listings').del();
 
 	const users = await knex('users').select('id');
 
-	const companies = await knex('companypages').select('id', 'name');
+	const companies = await knex('company_pages').select('id', 'name');
 
 	const jobs = [];
 	for (let i = 0; i < 10; i++) {
@@ -35,7 +35,7 @@ export async function seed(knex: Knex): Promise<void> {
 			title: faker.name.jobTitle(),
 			description: faker.lorem.paragraph(),
 			location: faker.address.city(),
-			employment_type: faker.helpers.arrayElement(['Full-time', 'Part-time', 'Contract']),
+			employment_type: faker.helpers.arrayElement(['full-time', 'part-time', 'contract']),
 			workplace_type: faker.helpers.arrayElement(['On-site', 'Remote', 'Hybrid']),
 			experience_level: faker.helpers.arrayElement([
 				'Entry-level',
@@ -49,6 +49,6 @@ export async function seed(knex: Knex): Promise<void> {
 		});
 	}
 
-	await knex('joblistings').insert(jobs);
+	await knex('job_listings').insert(jobs);
 	console.log('Joblistings seeded successfully!');
 }

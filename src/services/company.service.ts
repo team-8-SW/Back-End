@@ -4,11 +4,11 @@ import { v4 as uuidv4 } from 'uuid';
 import * as jobModel from '../models/job.model';
 
 export const getAllCompanies = async () => {
-	return await knexInstance('companypages').select('*');
+	return await knexInstance('company_pages').select('*');
 };
 
 export async function getCompanyById(id: string): Promise<companyModels.company | null> {
-	return knexInstance('companypages').where({ id }).first() || null;
+	return knexInstance('company_pages').where({ id }).first() || null;
 }
 
 export const createCompany = async (
@@ -20,7 +20,7 @@ export const createCompany = async (
 		follower_count: 0,
 		...data,
 	};
-	await knexInstance('companypages').insert(newCompany);
+	await knexInstance('company_pages').insert(newCompany);
 	return newCompany;
 };
 
@@ -30,7 +30,7 @@ export const updateCompany = async (
 	admin_user_id: string,
 	data: Partial<companyModels.company>,
 ): Promise<number> => {
-	return await knexInstance('companypages')
+	return await knexInstance('company_pages')
 		.where({ id: id, admin_user_id: admin_user_id })
 		.update(data);
 };
@@ -41,7 +41,7 @@ export const postJob = async (
 	companyName: string,
 	jobData: Partial<jobModel.job>,
 ) => {
-	const company = await knexInstance('companypages')
+	const company = await knexInstance('company_pages')
 		.where({ id: companyId, admin_user_id: cretedBy })
 		.first();
 
@@ -57,7 +57,7 @@ export const postJob = async (
 		...jobData,
 	};
 
-	await knexInstance('joblistings').insert(job);
+	await knexInstance('job_listings').insert(job);
 
 	return job;
 };
@@ -100,7 +100,7 @@ export const removeFollower = async (companyId: string, userId: string) => {
 };
 
 export const getJobApplications = async (companyId: string) => {
-	return await knexInstance('jobapplications')
+	return await knexInstance('job_applications')
 		.select(
 			'jobapplications.id AS application_id',
 			'jobapplications.status',
