@@ -300,7 +300,17 @@ CREATE TABLE IF NOT EXISTS post_impressions (
     viewed_at TIMESTAMP NOT NULL DEFAULT NOW()
 );
 
-
+CREATE TABLE company_updates (
+    id UUID PRIMARY KEY,
+    admin_user_id UUID NOT NULL,
+    company_id UUID NOT NULL,
+    title VARCHAR(255),
+    content TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    
+    FOREIGN KEY (admin_user_id) REFERENCES users(id),
+    FOREIGN KEY (company_id) REFERENCES company_pages(id)
+);
 -- Indexes for new tables (skills, universities, user_skills, user_education)
 CREATE INDEX IF NOT EXISTS idx_skills_skill_name ON skills(skill_name);
 CREATE INDEX IF NOT EXISTS idx_universities_university_name ON universities(university_name);
