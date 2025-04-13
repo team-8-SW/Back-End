@@ -105,11 +105,6 @@
 		"emitDecoratorMetadata": true, // Required for TypeORM
 		"experimentalDecorators": true // Required for TypeORM
 	},
-<<<<<<< HEAD
-	"include": ["src/**/*", "knexfile.ts"],
-	"exclude": ["node_modules", "dist"]
-=======
 	"include": ["src/**/*", "knexfile.ts", "websocket.ts"],
 	"exclude": ["node_modules"]
->>>>>>> 733eeae24b7e79e8db245ef8c0249eed67a2f6dc
 }
