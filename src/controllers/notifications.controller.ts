@@ -36,9 +36,10 @@ export const getUnreadCount = async (req: Request, res: Response) => {
 
 export const markNotificationAsRead = async (req: Request, res: Response) => {
 	try {
+		const user_id = (req as any).user?.user_id;
 		const id = req.params.id; // Extract id from URL parameters
 		console.log('Notification ID:', id);
-		const notification = await notificationService.markNotificationAsRead(id);
+		const notification = await notificationService.markNotificationAsRead(id, user_id);
 		res.status(200).json({ message: 'Notification marked as read', notification });
 	} catch (error) {
 		console.error('Error marking notification as read:', error); // Log the error
