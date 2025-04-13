@@ -51,8 +51,13 @@
 		"pg-promise": "^11.11.0",
 		"psql": "^0.0.1",
 		"reflect-metadata": "^0.2.2",
+<<<<<<< HEAD
 		"swagger-jsdoc": "^6.2.8",
 		"swagger-ui-express": "^5.0.1",
+=======
+		"socket.io": "^4.8.1",
+		"socket.io-client": "^4.8.1",
+>>>>>>> 733eeae24b7e79e8db245ef8c0249eed67a2f6dc
 		"typeorm": "^0.3.21",
 		"uuid": "^11.1.0",
 		"yamljs": "^0.3.0"
@@ -62,7 +67,7 @@
 		"@types/bcrypt": "^5.0.0",
 		"@types/body-parser": "^1.19.1",
 		"@types/config": "^0.0.39",
-		"@types/cors": "^2.8.12",
+		"@types/cors": "^2.8.17",
 		"@types/express": "^4.17.21",
 		"@types/faker": "^6.6.8",
 		"@types/jest": "^29.5.14",

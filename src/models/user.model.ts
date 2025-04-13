@@ -17,7 +17,7 @@ export interface User {
 	emailVerified: boolean;
 	isPremium: boolean;
 	isActive: boolean;
-	isAdmin: boolean;
+	is_admin: boolean;
 	verification_token?: string | null;
 	googleId?: string | null;
 	resetToken?: string | null;
@@ -41,7 +41,7 @@ export const findUserByEmail = async (email: string): Promise<User | null> => {
 			'email_verified as emailVerified',
 			'is_premium as isPremium',
 			'is_active as isActive',
-			'isadmin as isAdmin',
+			'is_admin as is_admin',
 			'verification_token',
 			'reset_token as resetToken',
 			'reset_token_expiry as resetTokenExpiry',
@@ -64,7 +64,7 @@ export const findUserByGoogleId = async (googleId: string): Promise<User | null>
 			'email_verified as emailVerified',
 			'is_premium as isPremium',
 			'is_active as isActive',
-			'isadmin as isAdmin',
+			'is_admin as is_admin',
 			'google_id as googleId',
 		])
 		.where('google_id', googleId)
@@ -93,7 +93,7 @@ export const createUser = async (user: User): Promise<User> => {
 		email_verified: user.emailVerified ?? false,
 		is_premium: user.isPremium ?? false,
 		is_active: user.isActive ?? true,
-		isadmin: user.isAdmin ?? false,
+		is_admin: user.is_admin ?? false,
 		verification_token: user.verification_token ?? null,
 		google_id: user.googleId || null,
 	};
@@ -109,7 +109,7 @@ export const createUser = async (user: User): Promise<User> => {
 			'email_verified as emailVerified',
 			'is_premium as isPremium',
 			'is_active as isActive',
-			'isadmin as isAdmin',
+			'is_admin as is_admin',
 			'verification_token',
 			'google_id as googleId',
 		]);
@@ -187,7 +187,7 @@ export const createOrUpdateGoogleUser = async (
 		email_verified: true, // Google-registered users are already verified
 		is_premium: false,
 		is_active: true,
-		isadmin: false,
+		is_admin: false,
 	};
 
 	const [createdUser] = await db('users')

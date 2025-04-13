@@ -293,4 +293,18 @@ export async function seed(knex: Knex): Promise<void> {
 
 	await knex('skill_contexts').insert(skillContexts);
 	console.log(`Inserted ${skillContexts.length} skill contexts`);
+
+	// Seed user_privacy_settings
+	await knex('user_privacy_settings').del();
+	const userPrivacySettings = users.map((user) => ({
+		id: uuidv4(),
+		user_id: user.id,
+		profile_visibility: 'public',
+		show_email: false,
+		allow_connection_requests: true,
+		allow_messages_from_non_connections: false,
+		show_active_status: true,
+	}));
+	await knex('user_privacy_settings').insert(userPrivacySettings);
+	console.log('Inserted user privacy settings');
 }

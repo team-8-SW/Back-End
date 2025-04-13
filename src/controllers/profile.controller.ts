@@ -1,26 +1,9 @@
 import { Request, Response } from 'express';
 import * as profileService from '../services/profile.service';
 import cloudinary from '../utils/cloudinary';
+import { v4 as uuidv4 } from 'uuid';
+import { knexInstance } from '../config/db';
 
-export const getProfileById = async (req: Request, res: Response) => {
-	try {
-		const userId = req.params.userId;
-		// Validate userId
-		if (!userId) {
-			return res.status(401).json({ error: 'User ID is required' });
-		}
-		const profile = await profileService.getProfileById(userId);
-
-		if (!profile) {
-			return res.status(404).json({ error: 'Profile not found' });
-		}
-
-		res.status(200).json(profile);
-	} catch (error) {
-		const errorMessage = error instanceof Error ? error.message : JSON.stringify(error);
-		res.status(500).json({ error: 'Internal server error', details: errorMessage });
-	}
-};
 //--------------------Profile Picture--------------------//
 export const updateProfilePicture = async (req: Request, res: Response) => {
 	const userId = (req as any).user?.id;
@@ -418,6 +401,10 @@ export const updateExperience = async (req: Request, res: Response) => {
 	try {
 		const userId = (req as any).user?.id;
 		const experienceId = req.params.experienceId;
+
+		if (!experienceId || experienceId.trim() === '') {
+			return res.status(400).json({ error: 'Experience ID is required' });
+		}
 		const {
 			companyName,
 			position,
@@ -500,6 +487,10 @@ export const deleteExperience = async (req: Request, res: Response) => {
 		const userId = (req as any).user?.id;
 		const experienceId = req.params.experienceId;
 
+		if (!experienceId || experienceId.trim() === '') {
+			return res.status(400).json({ error: 'Experience ID is required' });
+		}
+
 		const deletedExperience = await profileService.deleteExperience(userId, experienceId);
 
 		if (!deletedExperience) {
@@ -554,9 +545,12 @@ export const addEducation = async (req: Request, res: Response) => {
 				.json({ error: 'School name, degree, and start date are required' });
 		}
 
-		const university = await profileService.findUniversity(school);
+		let university = await profileService.findUniversity(school);
 		if (!university) {
-			return res.status(400).json({ error: 'School is invalid' });
+			const [newUniversity] = await knexInstance('universities')
+				.insert({ id: uuidv4(), university_name: school })
+				.returning('*');
+			university = newUniversity;
 		}
 
 		const educationData = {
@@ -618,6 +612,9 @@ export const updateEducation = async (req: Request, res: Response) => {
 				error: 'School name, degree, and start date are required',
 			});
 		}
+		if (!educationId || educationId.trim() === '') {
+			return res.status(400).json({ error: 'Education ID is required' });
+		}
 
 		const educationData = {
 			school,
@@ -669,6 +666,9 @@ export const deleteEducation = async (req: Request, res: Response) => {
 		const userId = (req as any).user?.id;
 
 		const educationId = req.params.educationId;
+		if (!educationId || educationId.trim() === '') {
+			return res.status(400).json({ error: 'Education ID is required' });
+		}
 
 		const deletedEducation = await profileService.deleteEducation(userId, educationId);
 
@@ -755,11 +755,22 @@ export const updateCertification = async (req: Request, res: Response) => {
 		const userId = (req as any).user?.id;
 
 		const certificationId = req.params.certificationId;
+
+		if (!certificationId || certificationId.trim() === '') {
+			return res.status(400).json({ error: 'Certification ID is required' });
+		}
 		const { name, issuedBy, issueDate, expirationDate } = req.body;
 		if (!name || !issuedBy || !issueDate) {
 			return res
 				.status(400)
 				.json({ error: 'Name, issuing organization, and issue date are required' });
+		}
+
+		if (issueDate && new Date(issueDate) > new Date()) {
+			return res.status(400).json({ error: 'Issue date must be in the past' });
+		}
+		if (expirationDate && new Date(expirationDate) < new Date(issueDate)) {
+			return res.status(400).json({ error: 'Expiration date must be after issue date' });
 		}
 
 		const certificationData = {
@@ -800,6 +811,10 @@ export const deleteCertification = async (req: Request, res: Response) => {
 		const userId = (req as any).user?.id;
 
 		const certificationId = req.params.certificationId;
+
+		if (!certificationId || certificationId.trim() === '') {
+			return res.status(400).json({ error: 'Certification ID is required' });
+		}
 
 		const deletedCertification = await profileService.deleteCertification(
 			userId,
@@ -863,7 +878,7 @@ export const deleteSkill = async (req: Request, res: Response) => {
 
 		const skillId = req.params.skillId;
 
-		if (!skillId) {
+		if (!skillId || skillId.trim() === '') {
 			return res.status(400).json({ error: 'Skill ID is required' });
 		}
 
@@ -903,9 +918,9 @@ export const updateProfileVisibility = async (req: Request, res: Response) => {
 
 		const { visibility } = req.body;
 
-		if (visibility != 'public' && visibility != 'private' && visibility != 'connections-only') {
+		if (visibility != 'public' && visibility != 'private' && visibility != 'connections') {
 			return res.status(400).json({
-				error: 'Profile Visibility can only be public, private or connections-only',
+				error: 'Profile Visibility can only be public, private or connections',
 			});
 		}
 
@@ -933,21 +948,24 @@ export const getMyProfile = async (req: Request, res: Response) => {
 		if (!user) {
 			return res.status(404).json({ error: 'User profile not found' });
 		}
-
+		const profileVisibility = await profileService.getProfileVisibility(userId);
 		const experiences = await profileService.getExperience(userId);
 		const education = await profileService.getEducation(userId);
 		const certifications = await profileService.getCertifications(userId);
 		const skills = await profileService.getSkills(userId);
 		const followersCount = await profileService.getFollowersCount(userId);
+		const connectionsCount = await profileService.getConnectionsCount(userId);
 
 		// Combine all data into a single response
 		res.json({
+			visibility: profileVisibility.visibility,
 			profile: user,
 			experiences,
 			education,
 			certifications,
 			skills,
 			followersCount,
+			connectionsCount,
 		});
 	} catch (error) {
 		const errorMessage = error instanceof Error ? error.message : JSON.stringify(error);
@@ -978,6 +996,7 @@ export const createUserProfile = async (req: Request, res: Response) => {
 		const cert = await profileService.getCertifications(userId);
 		const ski = await profileService.getSkills(userId);
 		const followersCount = await profileService.getFollowersCount(userId);
+		const connectionsCount = await profileService.getConnectionsCount(userId);
 
 		res.status(200).json({
 			message: 'User profile created successfully',
@@ -987,6 +1006,7 @@ export const createUserProfile = async (req: Request, res: Response) => {
 			certifications: cert,
 			skills: ski,
 			followersCount,
+			connectionsCount,
 		});
 	} catch (error) {
 		const errorMessage = error instanceof Error ? error.message : JSON.stringify(error);
@@ -1023,6 +1043,58 @@ export const updateUserProfile = async (req: Request, res: Response) => {
 		const user = await profileService.getUserProfile(userId);
 
 		res.json({ message: 'User profile updated successfully', profile: user });
+	} catch (error) {
+		const errorMessage = error instanceof Error ? error.message : JSON.stringify(error);
+		res.status(500).json({ error: 'Internal server error', details: errorMessage });
+	}
+};
+
+//---------------------View other user profile------------//
+export const getProfileById = async (req: Request, res: Response) => {
+	try {
+		const userId = req.params.userId;
+		const currentUserId = (req as any).user?.id;
+
+		if (!userId || userId.trim() === '') {
+			return res.status(400).json({ error: 'User ID is required' });
+		}
+
+		const user = await profileService.getUserProfile(userId);
+		if (!user) {
+			return res.status(404).json({ error: 'Profile not found' });
+		}
+
+		const profileVisibility = await profileService.getProfileVisibility(userId);
+
+		const isConnected = await profileService.areUsersConnected(currentUserId, userId);
+
+		// Determine if the profile is public
+		let isPublic = false;
+		if (profileVisibility.visibility === 'public') {
+			isPublic = true;
+		} else if (profileVisibility.visibility === 'connections-only' && isConnected) {
+			isPublic = true;
+		}
+
+		// Fetch additional profile data
+		const experiences = await profileService.getExperience(userId);
+		const education = await profileService.getEducation(userId);
+		const certifications = await profileService.getCertifications(userId);
+		const skills = await profileService.getSkills(userId);
+		const followersCount = await profileService.getFollowersCount(userId);
+		const connectionsCount = await profileService.getConnectionsCount(userId);
+
+		// Combine all data into a single response
+		res.json({
+			public: isPublic,
+			profile: user,
+			experiences,
+			education,
+			certifications,
+			skills,
+			followersCount,
+			connectionsCount,
+		});
 	} catch (error) {
 		const errorMessage = error instanceof Error ? error.message : JSON.stringify(error);
 		res.status(500).json({ error: 'Internal server error', details: errorMessage });

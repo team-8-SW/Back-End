@@ -88,29 +88,6 @@ export async function up(knex: Knex): Promise<void> {
 		table.unique(['user_skill_id', 'education_id', 'experience_id']);
 	});
 
-	// Create remaining tables
-	await knex.schema.createTable('projects', (table) => {
-		table.uuid('id').primary();
-		table.uuid('user_id').notNullable().references('id').inTable('users').onDelete('CASCADE');
-		table.string('project_name', 255).notNullable();
-		table.string('institution', 255);
-		table.date('start_date');
-		table.date('end_date');
-		table.boolean('is_active').defaultTo(false);
-		table.text('description');
-	});
-
-	await knex.schema.createTable('project_contributors', (table) => {
-		table
-			.uuid('project_id')
-			.notNullable()
-			.references('id')
-			.inTable('projects')
-			.onDelete('CASCADE');
-		table.uuid('user_id').notNullable().references('id').inTable('users').onDelete('CASCADE');
-		table.primary(['project_id', 'user_id']);
-	});
-
 	await knex.schema.createTable('certifications', (table) => {
 		table.uuid('id').primary();
 		table.uuid('user_id').notNullable().references('id').inTable('users').onDelete('CASCADE');
@@ -120,6 +97,25 @@ export async function up(knex: Knex): Promise<void> {
 		table.date('expiration_date');
 		table.string('credential_url', 255);
 	});
+	await knex.schema.createTable('user_privacy_settings', (table) => {
+		table.uuid('id').primary();
+		table
+			.uuid('user_id')
+			.notNullable()
+			.references('id')
+			.inTable('users')
+			.onDelete('CASCADE')
+			.unique();
+		table
+			.string('profile_visibility', 20)
+			.notNullable()
+			.defaultTo('public')
+			.checkIn(['public', 'connections', 'private']);
+		table.boolean('show_email').notNullable().defaultTo(false);
+		table.boolean('allow_connection_requests').notNullable().defaultTo(true);
+		table.boolean('allow_messages_from_non_connections').notNullable().defaultTo(false);
+		table.boolean('show_active_status').notNullable().defaultTo(true);
+	});
 }
 
 export async function down(knex: Knex): Promise<void> {
@@ -127,8 +123,7 @@ export async function down(knex: Knex): Promise<void> {
 	await knex.schema.dropTableIfExists('skill_contexts');
 	await knex.schema.dropTableIfExists('user_skills');
 	await knex.schema.dropTableIfExists('certifications');
-	await knex.schema.dropTableIfExists('project_contributors');
-	await knex.schema.dropTableIfExists('projects');
+	await knex.schema.dropTableIfExists('user_privacy_settings');
 	await knex.schema.dropTableIfExists('user_education');
 	await knex.schema.dropTableIfExists('work_experience');
 	await knex.schema.dropTableIfExists('user_profiles');

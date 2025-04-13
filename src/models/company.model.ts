@@ -11,7 +11,7 @@ export interface company {
 	website?: string;
 	size: string;
 	location?: string;
-	admin_user: number;
+	admin_user_id: string;
 	created_at: Date;
 	about?: string;
 	cover_photo_url?: string;

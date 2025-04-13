@@ -239,9 +239,15 @@ export const addEducation = async (userId: string, education: any) => {
 };
 
 export const updateEducation = async (userId: string, educationId: string, education: any) => {
-	const university = await findUniversity(education.school);
+	let university = await findUniversity(education.school);
+	// if (!university) {
+	// 	throw new Error(`University '${education.school}' not found`);
+	// }
 	if (!university) {
-		throw new Error(`University '${education.school}' not found`);
+		const [newUniversity] = await knexInstance('universities')
+			.insert({ id: uuidv4(), university_name: education.school })
+			.returning('*');
+		university = newUniversity;
 	}
 
 	const updatedEducation = {
@@ -614,7 +620,6 @@ export const updateUserProfile = async (userId: string, profileData: any) => {
 	return await knexInstance('user_profiles')
 		.join('users', 'user_profiles.user_id', 'users.id')
 		.select(
-			'user_profiles.id as profileId',
 			'user_profiles.headline',
 			'user_profiles.location',
 			'user_profiles.profile_picture_url as profilePictureUrl',
@@ -626,7 +631,6 @@ export const updateUserProfile = async (userId: string, profileData: any) => {
 			'users.first_name as firstName',
 			'users.last_name as lastName',
 			'users.is_premium',
-			'users.email_verified',
 			'users.is_active',
 		)
 		.where('user_profiles.user_id', userId)
@@ -637,7 +641,6 @@ export const getUserProfile = async (userId: string) => {
 	return await knexInstance('user_profiles')
 		.join('users', 'user_profiles.user_id', 'users.id')
 		.select(
-			'user_profiles.id as profileId',
 			'user_profiles.headline',
 			'user_profiles.location',
 			'user_profiles.profile_picture_url as profilePictureUrl',
@@ -649,7 +652,6 @@ export const getUserProfile = async (userId: string) => {
 			'users.first_name as firstName',
 			'users.last_name as lastName',
 			'users.is_premium',
-			'users.email_verified',
 			'users.is_active',
 		)
 		.where('user_profiles.user_id', userId)
@@ -662,5 +664,31 @@ export const getFollowersCount = async (userId: string) => {
 		.count('id as count')
 		.first();
 
-	return result?.count || 0; // Return 0 if no followers are found
+	return result?.count || 0;
+};
+
+export const getConnectionsCount = async (userId: string) => {
+	const result = await knexInstance('connections')
+		.where(function () {
+			this.where({ requester_id: userId }).orWhere({ receiver_id: userId });
+		})
+		.andWhere({ status: 'accepted' })
+		.count('id as count')
+		.first();
+
+	return result?.count || 0;
+};
+
+export const areUsersConnected = async (userId1: string, userId2: string): Promise<boolean> => {
+	const connection = await knexInstance('connections')
+		.where(function () {
+			this.where({ requester_id: userId1, receiver_id: userId2 }).orWhere({
+				requester_id: userId2,
+				receiver_id: userId1,
+			});
+		})
+		.andWhere({ status: 'accepted' })
+		.first();
+
+	return !!connection;
 };
