@@ -51,13 +51,8 @@
 		"pg-promise": "^11.11.0",
 		"psql": "^0.0.1",
 		"reflect-metadata": "^0.2.2",
-<<<<<<< HEAD
 		"swagger-jsdoc": "^6.2.8",
 		"swagger-ui-express": "^5.0.1",
-=======
-		"socket.io": "^4.8.1",
-		"socket.io-client": "^4.8.1",
->>>>>>> 733eeae24b7e79e8db245ef8c0249eed67a2f6dc
 		"typeorm": "^0.3.21",
 		"uuid": "^11.1.0",
 		"yamljs": "^0.3.0"
@@ -81,6 +76,7 @@
 		"@types/pg": "^8.11.11",
 		"@types/pino": "^6.3.11",
 		"@types/response-time": "^2.3.5",
+		"@types/socket.io": "^3.0.1",
 		"@types/supertest": "^6.0.2",
 		"@types/swagger-jsdoc": "^6.0.4",
 		"@types/swagger-ui-express": "^4.1.8",

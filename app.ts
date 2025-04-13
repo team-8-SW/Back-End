@@ -3,8 +3,9 @@ import dotenv from 'dotenv';
 import { setupSwagger } from './src/docs/swagger';
 import cors from 'cors';
 //
-import cors from 'cors';
+
 // Import routes
+import userRoutes from './src/routes/users.routes';
 import authRoutes from './src/routes/auth.route';
 import companyRoutes from './src/routes/company.route';
 import profileRoutes from './src/routes/profile.route';
