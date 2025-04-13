@@ -2,7 +2,7 @@ import express, { Express, Request, Response, NextFunction } from 'express';
 import dotenv from 'dotenv';
 import { setupSwagger } from './src/docs/swagger';
 //
-import cors from 'cors';  
+import cors from 'cors';
 // Import routes
 import userRoutes from './src/routes/users.routes'; // Adjust the path as needed
 import authRoutes from './src/routes/auth.route';
@@ -21,7 +21,6 @@ const server = http.createServer(apps);
 // Initialize WebSocket
 initializeWebSocket(server);
 
-
 // Initialize environment variables
 dotenv.config();
 
@@ -32,13 +31,14 @@ const app: Express = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-
-// Enable CORS for all routes		
+// Enable CORS for all routes
 // Add CORS middleware - PUT THIS BEFORE YOUR ROUTES
-app.use(cors({
-	origin: 'http://localhost:5173',  // Your React frontend URL - change if different
-	credentials: true
-  }));
+app.use(
+	cors({
+		origin: 'http://localhost:5173', // Your React frontend URL - change if different
+		credentials: true,
+	}),
+);
 
 // Setup Swagger documentation
 setupSwagger(app);

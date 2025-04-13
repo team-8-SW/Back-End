@@ -18,7 +18,7 @@ export async function seed(knex: Knex): Promise<void> {
 			console.error('No users found. Please seed users first.');
 			return;
 		}
-	const posts = [];
+		const posts = [];
 		for (let i = 0; i < 10; i++) {
 			const user = faker.helpers.arrayElement(users); // Randomly pick a user
 			const company = faker.helpers.arrayElement(companies); // Randomly pick a user
@@ -36,8 +36,8 @@ export async function seed(knex: Knex): Promise<void> {
 				created_at: faker.date.recent(),
 				edited_at: faker.date.recent(),
 				visibility: faker.helpers.arrayElement(['public', 'connections', 'private']),
-		});
-	}
+			});
+		}
 
 		await knex('posts').insert(posts);
 		console.log('Inserted posts into the posts table');

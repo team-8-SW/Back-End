@@ -12,16 +12,16 @@ export async function seed(knex: Knex): Promise<void> {
 			console.error('No users found. Please seed users first.');
 			return;
 		}
-	const blockedusers = [];
+		const blockedusers = [];
 		for (let i = 0; i < 10; i++) {
-            const user1 = faker.helpers.arrayElement(users); // Randomly pick a user
-            const user2 = faker.helpers.arrayElement(users); // Randomly pick a user
+			const user1 = faker.helpers.arrayElement(users); // Randomly pick a user
+			const user2 = faker.helpers.arrayElement(users); // Randomly pick a user
 			blockedusers.push({
-                id: uuidv4(),
-                user_id: user1.id,
-                blocked_user_id: user2.id,
-            });
-	}
+				id: uuidv4(),
+				user_id: user1.id,
+				blocked_user_id: user2.id,
+			});
+		}
 
 		await knex('blocked_users').insert(blockedusers);
 		console.log('Inserted blocked_users into the blocked_users table');
