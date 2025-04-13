@@ -1,9 +1,16 @@
 import express, { Express, Request, Response, NextFunction } from 'express';
 import dotenv from 'dotenv';
 import { setupSwagger } from './src/docs/swagger';
+import cors from 'cors';
 //
 // Import routes
-import userRoutes from './src/routes/users.routes'; // Adjust the path as needed
+import authRoutes from './src/routes/auth.route';
+import companyRoutes from './src/routes/company.route';
+import profileRoutes from './src/routes/profile.route';
+import followingRoutes from './src/routes/following.route';
+import healthRoutes from './src/routes/health.route';
+import notificationsRouter from './src/routes/notifications.route';
+import testRoutes from './src/routes/test.route';
 
 // Initialize environment variables
 dotenv.config();
@@ -12,6 +19,10 @@ dotenv.config();
 const app: Express = express();
 
 // Middleware
+app.use(cors({
+	origin: process.env.CORS_ORIGIN || 'http://localhost',
+	credentials: true
+}));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -20,11 +31,18 @@ setupSwagger(app);
 
 // Basic health check route
 app.get('/', (req: Request, res: Response) => {
-	res.send('API is running. Go to /api-docs for documentation');
+	res.send('API is running. Go to /api-docs for documentation.');
 });
 
 // API routes
 app.use('/api/users', userRoutes);
+app.use('/api/auth', authRoutes);
+app.use('/api/notifications', notificationsRouter);
+app.use('/api/company', companyRoutes);
+app.use('/api/profiles', profileRoutes);
+app.use('/api/following', followingRoutes);
+app.use('/health', healthRoutes);
+app.use('/api/test', testRoutes);
 
 // 404 handler
 app.use((req: Request, res: Response) => {
@@ -40,8 +58,25 @@ app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
 	});
 });
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+//di elfunctioin ely kanet bet print routes i commented it -noor
+//function printRoutes(stack: any[], prefix = '') {
+//	stack.forEach((layer) => {
+//		if (layer.route) {
+//			// This layer is a route
+//			//console.log(`${prefix}${layer.route.path}`);
+//		} else if (layer.name === 'router' && layer.handle.stack) {
+//			// This layer is a router, recursively print its routes
+//			//printRoutes(layer.handle.stack, prefix + (layer.regexp?.toString() || ''));
+//		}
+//	});
+//}
+
+//printRoutes(app._router.stack);
+
 // Start server
-const port = process.env.port || 3000;
+const port = process.env.PORT || 8000;
+
 app.listen(port, () => {
 	console.log(`Server running on port ${port}`);
 	console.log(`Swagger docs available at http://localhost:${port}/api-docs`);

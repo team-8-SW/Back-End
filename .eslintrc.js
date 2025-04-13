@@ -9,5 +9,6 @@ module.exports = {
 				format: ['camelCase'],
 			},
 		],
+		'@typescript-eslint/no-non-null-assertion': 'off',
 	},
 };
