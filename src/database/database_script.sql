@@ -259,12 +259,13 @@ CREATE TABLE job_applications (
 CREATE TABLE notifications (
     id UUID PRIMARY KEY,
     user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    type VARCHAR(50) NOT NULL CHECK (type IN ('like', 'comment', 'connection', 'message')),
+    type VARCHAR(50) NOT NULL CHECK (type IN ('like', 'comment', 'connection', 'message', 'tag')),
     content TEXT NOT NULL,
     is_read BOOLEAN NOT NULL DEFAULT FALSE,
     created_at TIMESTAMP NOT NULL DEFAULT NOW(),
     post_id UUID REFERENCES posts(id) ON DELETE CASCADE,
-    comment_id UUID REFERENCES comments(id) ON DELETE CASCADE
+    comment_id UUID REFERENCES comments(id) ON DELETE CASCADE,
+    action_userid UUID REFERENCES users(id) ON DELETE CASCADE --ely 3amel el haga ey galy bi sababha notification
 );
 
 CREATE TABLE user_privacy_settings (
@@ -276,6 +277,29 @@ CREATE TABLE user_privacy_settings (
     allow_messages_from_non_connections BOOLEAN NOT NULL DEFAULT FALSE,
     show_active_status BOOLEAN NOT NULL DEFAULT TRUE
 );
+CREATE TABLE post_mentions (
+    post_id UUID REFERENCES posts(id) ON DELETE CASCADE,
+    user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+    PRIMARY KEY (post_id, user_id)
+);
+CREATE TABLE comment_mentions (
+    comment_id UUID REFERENCES comments(id) ON DELETE CASCADE,
+    mentioned_user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+    PRIMARY KEY (comment_id, mentioned_user_id)
+);
+CREATE TABLE IF NOT EXISTS page_views (
+    id UUID PRIMARY KEY,
+    page_id UUID NOT NULL,  -- Can reference company_pages or users table
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    viewed_at TIMESTAMP NOT NULL DEFAULT NOW()
+);
+CREATE TABLE IF NOT EXISTS post_impressions (
+    id UUID PRIMARY KEY,
+    post_id UUID NOT NULL REFERENCES posts(id) ON DELETE CASCADE,
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    viewed_at TIMESTAMP NOT NULL DEFAULT NOW()
+);
+
 
 -- Indexes for new tables (skills, universities, user_skills, user_education)
 CREATE INDEX IF NOT EXISTS idx_skills_skill_name ON skills(skill_name);

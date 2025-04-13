@@ -4,16 +4,18 @@ import { newAuthMiddleware } from '../middleware/auth.middleware';
 import { upload } from '../middleware/multer';
 const router = express.Router();
 
-router.get('/me', newAuthMiddleware, postsController.getMyPosts); 
-router.get('/me/feed', newAuthMiddleware, postsController.getFeedPosts) 
-router.post('/me/newpost', newAuthMiddleware, postsController.createPost);
-router.post('/me/editpost', newAuthMiddleware, postsController.editPost);
-router.post('/me/like', newAuthMiddleware, postsController.likePost);
-router.post('/me/comment', newAuthMiddleware, postsController.commentPost);
-router.post('/me/save', newAuthMiddleware, postsController.savePost);
-router.post('/me/share', newAuthMiddleware, postsController.sharePost);
-router.post('/me/:post_id/media', newAuthMiddleware, upload.single('file'), postsController.addMediaToPost);
+router.get('/me', newAuthMiddleware, postsController.getMyPosts); //get user posts
+router.get('/me/feed', newAuthMiddleware, postsController.getFeedPosts); //get user feed posts 
+router.post('/me/newpost', newAuthMiddleware, postsController.createPost); //create new post
+router.patch('/me/editpost', newAuthMiddleware, postsController.editPost); //edit post
+router.post('/me/like', newAuthMiddleware, postsController.likePost); //like post
+router.post('/me/unlike', newAuthMiddleware, postsController.deletelike); //unlike post
+router.post('/me/comment', newAuthMiddleware, postsController.commentPost); //comment on post or comment
+router.post('/me/save', newAuthMiddleware, postsController.savePost); //save post
+router.post('/me/share', newAuthMiddleware, postsController.sharePost); //repost
+router.post('/me/:post_id/media', newAuthMiddleware, upload.single('file'), postsController.addMediaToPost); //add media to post
 router.get('/search', postsController.searchPost); //search by post content
-router.delete('/me/delete', newAuthMiddleware, postsController.deletePost); //lazem yekoun enta ely 3amel elpost //should we check reposts bardo??
-router.get('/me/postengagement', newAuthMiddleware, postsController.viewPostEngagement);
+router.delete('/me/delete', newAuthMiddleware, postsController.deletePost); //delete post //should we check reposts bardo?? elmafrood cascade by default hat delete it
+router.get('/me/postengagement', newAuthMiddleware, postsController.viewPostEngagement); //view post details as in like counts w kda
+router.post('/me/:tagged_user_id/taguser', newAuthMiddleware, postsController.tagUser); //tag user in post or comment
 export default router;

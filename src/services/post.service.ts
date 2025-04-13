@@ -83,8 +83,17 @@ export const getfeedposts = async (user_id: string): Promise<posts[]> => {
         const posts = await knexInstance('posts')
             .whereIn('user_id', userIdList) // Get posts where user_id is in the list
             .orderBy('created_at', 'desc'); // Order posts by created_at in descending order
-
-        return posts;
+        const postsIdList = posts.map((row) => row.id);
+        const liked = await knexInstance('likes')
+            .whereIn('post_id', postsIdList) // Get likes where post_id is in the list
+            .andWhere('user_id', user_id) // Get likes where user_id is the current user
+            .select('post_id'); // Select only the post_id of the liked posts
+        const likedposts = new Set(liked.map((like) => like.post_id)); // Create a Set of liked post IDs for quick lookup
+        const postsWithLikes = posts.map((post) => ({
+            ...post,
+            liked: likedposts.has(post.id), // Check if the post ID is in the likedPostIds set
+        }));
+        return postsWithLikes;
     } catch (error) {
         console.error(`Error fetching feed posts for user ${user_id}:`, error);
         throw new Error('Failed to fetch feed posts');
@@ -114,31 +123,37 @@ export const like = async (like: { post_id?: string; comment_id?: string; user_i
         //check like if it exists
         if (post_id) {
             // Ensure the post exists
-        const postExists = await knexInstance('posts')
-        .where({ id: post_id })
-        .first();
-    if (!postExists) {
-        throw new Error('Post not found');
-    }
-        const likeExists = await knexInstance('likes')
-                .where({ user_id, post_id })
+                const postExists = await knexInstance('posts')
+                .where({ id: post_id })
                 .first();
-            if (likeExists) {
-                throw new Error('already liked this post');
+            if (!postExists) {
+                throw new Error('Post not found');
             }
+            const likeExists = await knexInstance('likes')
+            .where({ user_id, post_id })
+            .first();
+            if (likeExists) {
+                await knexInstance('likes')
+                .where({ id: post_id, user_id: user_id }) // Match post_id and user_id
+                    .del(); // Delete the matching row(s)
+                return likeExists; // Return the deleted like
+             }
         } else if (comment_id) {
             // Ensure the comment exists
         const commentExists = await knexInstance('comments')
                 .where({ id: comment_id })
                 .first();
             if (!commentExists) {
-             throw new Error('Post not found');
+             throw new Error('comment not found');
             }
             const likeExists = await knexInstance('likes')
-                .where({ user_id, comment_id })
+                .where({ user_id: user_id, comment_id: comment_id })
                 .first();
             if (likeExists) {
-                throw new Error('already liked this comment');
+                await knexInstance('likes')
+                .where({ id: likeExists.id }) // Match comment_id and user_id
+                .del(); // Delete the matching row(s)
+                return likeExists; // Return the deleted like
             }
         }
        
@@ -180,7 +195,7 @@ export const like = async (like: { post_id?: string; comment_id?: string; user_i
                     type: 'like',
                     content: `Your post was liked by user ${postOwnername.user_name}`,
                     post_id,
-                });
+                }, user_id); //kda fil notification bab3at el postowner.user_id da el user name beta3 ely haygilo el notification, w bab3at elnotification w bab3at el id beta3 el user ely 3amal el like
             }
         return createdLike;
     } catch (error) {
@@ -189,6 +204,89 @@ export const like = async (like: { post_id?: string; comment_id?: string; user_i
     }
 };
 
+
+//tagUser
+
+export const tagUser = async (tag: { post_id?: string; comment_id?: string; user_id: string; tagged_user_id: string }): Promise<any> => {
+    try {
+        const { post_id, comment_id, user_id, tagged_user_id } = tag;
+
+        // Validate inputs
+        if (!user_id || !isUUID(user_id) || !tagged_user_id || !isUUID(tagged_user_id)) {
+            throw new Error('Invalid user_id');
+        }
+        if (post_id && !isUUID(post_id)) {
+            throw new Error('Invalid post_id');
+        }
+        if (comment_id && !isUUID(comment_id)) {
+            throw new Error('Invalid comment_id');
+        }
+        if (!post_id && !comment_id) {
+            throw new Error('Either post_id or comment_id must be provided');
+        }
+        //username
+        const actionuser_username = await knexInstance('users')
+        .where({ id: user_id })
+        .select('user_name')
+            .first();
+        
+        // make sure the tagged user exists
+         const tagged = await knexInstance('users')
+         .where({ id: tagged_user_id })
+         .select('*')
+         .first();
+         if (!tagged) {
+            throw new Error('Tagged user not found');
+        }
+        if (post_id) {
+            // Ensure the post exists
+            const postExists = await knexInstance('posts')
+                .where({ id: post_id, user_id })
+                .first();
+            if (postExists) { 
+                const [createdTag] = await knexInstance('post_mentions')
+                .insert({
+                    post_id: post_id,
+                    user_id: tagged_user_id,
+                })
+                .returning('*');
+            notifyUser(tagged_user_id, {
+                type: 'tag',
+                content: `You were tagged by user ${actionuser_username.user_name}`,
+                post_id,
+            }, user_id);
+            return createdTag;
+            } else{
+                throw new Error('Post not found or you are not the owner');
+            }
+        }
+        else if (comment_id) {
+            // Ensure the comment exists
+            const commentExists = await knexInstance('comments')
+                .where({ id: comment_id })
+                .first();
+            if (commentExists) {
+                const [createdTag] = await knexInstance('comment_mentions')
+                    .insert({
+                        comment_id: comment_id,
+                        mentioned_user_id: tagged_user_id,
+                    })
+                    .returning('*');
+                notifyUser(tagged_user_id, {
+                    type: 'tag',
+                    content: `You were tagged by user ${actionuser_username.user_name}`,
+                    comment_id,
+                }, user_id);
+                return createdTag;
+            } else {
+                throw new Error('comment not found');
+            }
+        }
+    } catch (error) {
+        console.error('Error tagging user', error);
+        throw new Error('Failed to tag');
+    }
+};
 
 export const commentpost = async (comment: { post_id: string; user_id: string; content: string;  parent_comment_id?:string }): Promise<any> => {
     try {
@@ -265,7 +363,7 @@ export const commentpost = async (comment: { post_id: string; user_id: string; c
                     content: `Your post was commented on by user ${postOwnername.user_name}`,
                     post_id,
                     comment_id: parent_comment_id,
-                });
+                }, user_id);
             }
         return createdComment;
     } catch (error) {
@@ -498,4 +596,38 @@ export const addMediaToPost = async (post_id: string, user_id: string, media_url
         .returning('*'); // Return the updated post
 
     return updatedPost;
+};
+//delete
+export const deletelike = async (del_like: { post_id: string; user_id: string; }): Promise<any> => {
+    try {
+        const { user_id, post_id} = del_like;
+
+        // Validate inputs
+        if (!user_id || !isUUID(user_id)) {
+            throw new Error('Invalid user_id');
+        }
+        if (post_id && !isUUID(post_id)) {
+            throw new Error('Invalid post_id');
+        }
+        if (!post_id) {
+            throw new Error('post_id must be provided');
+        }
+        // Ensure the like exists
+        //DELETE FROM likes
+        // WHERE post_id = '<post_id>' AND user_id = '<user_id>';
+        const likeExists = await knexInstance('likes')
+            .where({ user_id, post_id })
+            .first();
+        if (!likeExists) {
+            throw new Error('post not liked yet');
+        }
+        await knexInstance('likes')
+            .where({ post_id, user_id }) // Match post_id and user_id
+            .del(); // Delete the matching row(s)
+            
+        console.log(`like deleted successfully.`);
+    } catch (error) {
+        console.error('Error deleting like:', error);
+        throw new Error('Failed to delete like');
+    }
 };

@@ -100,6 +100,34 @@ export const likePost = async (req: Request, res: Response) => {
         res.status(500).json({ message: 'Failed to create like' });
     }
 };
+//deletelike
+export const deletelike = async (req: Request, res: Response) => {
+    try {
+        const user_id = (req as any).user?.user_id;
+        console.log('User ID in controller:', user_id);
+        if (!user_id) {
+            return res.status(400).json({ message: 'User ID is required' });
+        }
+        const { post_id } = req.body;
+        // Validate required fields
+        if (!post_id) {
+            return res.status(400).json({ message: 'postid is required' });
+        }
+        
+        // Call the service to create the post
+        const deleted = await postService.deletelike({
+            user_id,
+            post_id,
+        });
+        console.log('deleted like:', deleted);
+
+        res.status(200).json(deleted);
+    } catch (error) {
+        console.error('Error deleting like:', error);
+        res.status(500).json({ message: 'Failed to delete like'});
+    }
+};
+
 export const commentPost = async (req: Request, res: Response) => {
     try {
         const user_id = (req as any).user?.user_id; // Extract user_id from authenticated user
@@ -351,5 +379,31 @@ export const addMediaToPost = async (req: Request, res: Response) => {
     } catch (error) {
         console.error('Error adding media to post:', error);
         res.status(500).json({ message: 'Failed to add media to post' });
+    }
+};
+
+export const tagUser = async (req: Request, res: Response) => {
+    try {
+        const user_id = (req as any).user?.user_id; // Extract user_id from authenticated user
+        const { tagged_user_id } = req.params; // Extract post_id from URL parameters
+        if (!user_id) {
+            return res.status(400).json({ message: 'User ID is required' });
+        }
+        const { post_id, comment_id } = req.body;
+        // Validate required fields
+        if (!post_id && !comment_id) {
+            return res.status(400).json({ message: 'postid or commentid is required' });
+        }
+        // Call the service to create the post
+        const tag = await postService.tagUser({
+            user_id,
+            tagged_user_id,
+            post_id,
+            comment_id,
+        });
+        res.status(201).json(tag); // Return the created like
+    } catch (error) {
+        console.error('Error tagging user:', error);
+        res.status(500).json({ message: 'Failed to create tag' });
     }
 };

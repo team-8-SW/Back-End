@@ -28,7 +28,7 @@ export async function seed(knex: Knex): Promise<void> {
 		for (let i = 0; i < 20; i++) {
 			// Generate 20 notifications
 			const user = faker.helpers.arrayElement(users); // Randomly pick a user
-			const type = faker.helpers.arrayElement(['like', 'comment', 'connection', 'message']); // Random notification type
+			const type = faker.helpers.arrayElement(['like', 'comment', 'connection', 'message', 'tag']); // Random notification type
 			const content = generateNotificationContent(type); // Generate content based on type
 			const post = faker.helpers.arrayElement(posts); // Randomly pick a post
 			const comment = faker.helpers.arrayElement(comments); // Randomly pick a comment	
