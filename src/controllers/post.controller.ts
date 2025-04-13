@@ -124,7 +124,7 @@ export const deletelike = async (req: Request, res: Response) => {
 		});
 		console.log('deleted like:', deleted);
 
-		res.status(200).json(deleted);
+		res.status(200).json('deleted like successfully');
 	} catch (error) {
 		console.error('Error deleting like:', error);
 		res.status(500).json({ message: 'Failed to delete like' });
@@ -244,7 +244,7 @@ export const deletePost = async (req: Request, res: Response) => {
 		});
 		console.log('deleted post:', deleted);
 
-		res.status(200).json(deleted);
+		res.status(200).json('deleted');
 	} catch (error) {
 		console.error('Error deleting post:', error);
 		const errorMessage = error instanceof Error ? error.message : 'Unknown error';

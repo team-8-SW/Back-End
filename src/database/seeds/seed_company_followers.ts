@@ -5,7 +5,7 @@ import { faker } from '@faker-js/faker';
 export async function seed(knex: Knex): Promise<void> {
 	await knex('company_followers').del();
 
-	const followers = [];
+	const followers: { id: string; company_id: string; user_id: string; followed_at: Date }[] = [];
 	const users = await knex('users').select('id');
 	const companies = await knex('company_pages').select('id');
 

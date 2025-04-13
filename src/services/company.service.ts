@@ -61,7 +61,13 @@ export const postJob = async (
 
 	return job;
 };
-
+//getJobs
+export const getJobs = async (companyId: string) => {
+	const jobs= await knexInstance('job_listings')
+	    .select('*') // Select all columns
+		.where('company_id', companyId); // Filter by company_id
+	return jobs;
+};
 export const postUpdate = async (
 	companyId: string,
 	adminUserId: string,
