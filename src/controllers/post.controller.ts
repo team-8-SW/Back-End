@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/naming-convention */
 import { Request, Response } from 'express';
 import * as postService from '../services/post.service';
 import { v2 as cloudinary } from 'cloudinary';

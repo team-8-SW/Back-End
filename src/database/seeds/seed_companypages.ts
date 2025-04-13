@@ -12,14 +12,8 @@ export async function seed(knex: Knex): Promise<void> {
 			console.error('No users found. Please seed users first.');
 			return;
 		}
-<<<<<<< HEAD
 		const companies = [];
 
-||||||| 3606ded
-	const companies = [];
-=======
-		const companies = [];
->>>>>>> main
 		for (let i = 0; i < 10; i++) {
 			const user = faker.helpers.arrayElement(users);
 
