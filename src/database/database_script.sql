@@ -248,7 +248,7 @@ CREATE TABLE company_followers (
 CREATE TABLE job_applications (
     id UUID PRIMARY KEY,
     job_id UUID NOT NULL REFERENCES job_listings(id) ON DELETE CASCADE,
-    applicant_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    applicant_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,  ---user 
     resume_url VARCHAR(255),
     cover_letter TEXT,
     status VARCHAR(20) NOT NULL CHECK (status IN ('pending', 'viewed', 'rejected', 'accepted')),

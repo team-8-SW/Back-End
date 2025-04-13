@@ -102,19 +102,19 @@ export const removeFollower = async (companyId: string, userId: string) => {
 export const getJobApplications = async (companyId: string) => {
 	return await knexInstance('job_applications')
 		.select(
-			'jobapplications.id AS application_id',
-			'jobapplications.status',
-			'jobapplications.applied_at',
+			'job_applications.id AS application_id',
+			'job_applications.status',
+			'job_applications.applied_at',
 			'users.id AS user_id',
 			'users.first_name',
 			'users.last_name',
-			'joblistings.id AS job_id',
-			'joblistings.title AS job_title',
+			'job_listings.id AS job_id',
+			'job_listings.title AS job_title',
 		)
-		.join('users', 'jobapplications.applicant_id', '=', 'users.id')
-		.join('joblistings', 'jobapplications.job_id', '=', 'joblistings.id')
-		.where('joblistings.company_id', companyId)
-		.orderBy('jobapplications.applied_at', 'desc');
+		.join('users', 'job_applications.applicant_id', '=', 'users.id')
+		.join('job_listings', 'job_applications.job_id', '=', 'job_listings.id')
+		.where('job_listings.company_id', companyId)
+		.orderBy('job_applications.applied_at', 'desc');
 };
 
 export const getCompanyTotalFollowers = async (companyId: string) => {
