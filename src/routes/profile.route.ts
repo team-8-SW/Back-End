@@ -1,23 +1,12 @@
 import express from 'express';
 import * as profileController from '../controllers/profile.controller';
 import { authMiddleware2 } from '../middleware/auth.middleware';
-import multer from 'multer';
-
-const storage = multer.diskStorage({
-	destination: function (req, file, cb) {
-		cb(null, 'uploads/'); // Save files in 'uploads/' directory
-	},
-	filename: function (req, file, cb) {
-		cb(null, Date.now() + '-' + file.originalname); // to avoid having duplicate file names
-	},
-});
-
-const upload = multer({ storage });
+import { upload } from '../middleware/multer';
 
 const router = express.Router();
 //--------------------View Other user Profiles--------------------//
-// GET /api/profiles/:userId
-router.get('/:userId', profileController.getProfileById);
+// GET /api/profiles/me/:userId
+router.get('/me/:userId', authMiddleware2, profileController.getProfileById);
 
 //--------------------Profile Managment--------------------//
 // POST /api/profiles/me/profile-picture
@@ -50,7 +39,7 @@ router.delete('/me/resume', authMiddleware2, profileController.deleteResume);
 
 //--------------------Work Experience--------------------//
 //GET /api/profiles/me/experience
-router.get('/me/experience', authMiddleware2, profileController.getExperience);
+//router.get('/me/experience', authMiddleware2, profileController.getExperience);
 
 //POST /api/profiles/me/experience
 router.post('/me/experience', authMiddleware2, profileController.addExperience);
@@ -63,7 +52,7 @@ router.delete('/me/experience/:experienceId', authMiddleware2, profileController
 
 //--------------------Eductaion--------------------//
 //GET /api/profiles/me/education
-router.get('/me/education', authMiddleware2, profileController.getEducation);
+//router.get('/me/education', authMiddleware2, profileController.getEducation);
 
 //POST /api/profiles/me/education
 router.post('/me/education', authMiddleware2, profileController.addEducation);
@@ -76,7 +65,7 @@ router.delete('/me/education/:educationId', authMiddleware2, profileController.d
 
 //--------------------Certifications--------------------//
 //GET /api/profiles/me/certifications
-router.get('/me/certifications', authMiddleware2, profileController.getCertifications);
+//router.get('/me/certifications', authMiddleware2, profileController.getCertifications);
 
 //POST /api/profiles/me/certifications
 router.post('/me/certifications', authMiddleware2, profileController.addCertification);
@@ -97,7 +86,7 @@ router.delete(
 
 //--------------------Skills--------------------//
 //GET /api/profiles/me/skills
-router.get('/me/skills', authMiddleware2, profileController.getSkills);
+//router.get('/me/skills', authMiddleware2, profileController.getSkills);
 
 //POST /api/profiles/me/skills
 router.post('/me/skills', authMiddleware2, profileController.addSkill);
@@ -106,20 +95,24 @@ router.post('/me/skills', authMiddleware2, profileController.addSkill);
 router.delete('/me/skills/:skillId', authMiddleware2, profileController.deleteSkill);
 
 ///POST /api/profiles/users/:userId/skills/:skillId/endorse
-//router.post('/users/:userId/skills/:skillId/endorse', authMiddleware, profileController.endorseSkill);
+//router.post('/users/:userId/skills/:skillId/endorse', authMiddleware2, profileController.endorseSkill);
 
 //--------------------Profile Visibility--------------------//
 //GET /api/profiles/me/visibility
-router.get('/me/visibility', authMiddleware2, profileController.getProfileVisibility);
+//router.get('/me/visibility', authMiddleware2, profileController.getProfileVisibility);
 
 //PUT /api/profiles/me/visibility
 router.put('/me/visibility', authMiddleware2, profileController.updateProfileVisibility);
 
 //--------------------Create/Update new User--------------------//
 //POST /api/profiles/me
-router.post('/me', authMiddleware2, profileController.createUserProfile);
+//router.post('/me', authMiddleware2, profileController.createUserProfile);
 
 //PUT /api/profiles/me
 router.put('/me', authMiddleware2, profileController.updateUserProfile);
+
+//--------------------Get My Profile--------------------//
+//GET /api/profiles/
+router.get('/', authMiddleware2, profileController.getMyProfile);
 
 export default router;

@@ -2,6 +2,7 @@ import express, { Express, Request, Response, NextFunction } from 'express';
 import dotenv from 'dotenv';
 import { setupSwagger } from './src/docs/swagger';
 //
+import cors from 'cors';
 // Import routes
 import userRoutes from './src/routes/users.routes'; // Adjust the path as needed
 import authRoutes from './src/routes/auth.route';
@@ -11,7 +12,17 @@ import profileRoutes from './src/routes/profile.route';
 import followingRoutes from './src/routes/following.route';
 import jobRoutes from './src/routes/job.route';
 
+import postsRoutes from './src/routes/post.route';
 import notificationsRouter from './src/routes/notifications.route';
+import connectionRoutes from './src/routes/connection.route';
+import http from 'http';
+import { initializeWebSocket } from './websocket';
+const apps = express();
+const server = http.createServer(apps);
+
+// Initialize WebSocket
+initializeWebSocket(server);
+
 // Initialize environment variables
 dotenv.config();
 
@@ -21,6 +32,15 @@ const app: Express = express();
 // Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// Enable CORS for all routes
+// Add CORS middleware - PUT THIS BEFORE YOUR ROUTES
+app.use(
+	cors({
+		origin: 'http://localhost:5173', // Your React frontend URL - change if different
+		credentials: true,
+	}),
+);
 
 // Setup Swagger documentation
 setupSwagger(app);
@@ -39,6 +59,8 @@ app.use('/api/profiles', profileRoutes);
 app.use('/api/following', followingRoutes);
 app.use('/api/jobs', jobRoutes);
 
+app.use('/api/connections', connectionRoutes);
+app.use('/api/posts', postsRoutes);
 // 404 handler
 app.use((req: Request, res: Response) => {
 	res.status(404).json({ message: 'Resource not found' });
@@ -55,19 +77,20 @@ app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
 });
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function printRoutes(stack: any[], prefix = '') {
-	stack.forEach((layer) => {
-		if (layer.route) {
-			// This layer is a route
-			console.log(`${prefix}${layer.route.path}`);
-		} else if (layer.name === 'router' && layer.handle.stack) {
-			// This layer is a router, recursively print its routes
-			printRoutes(layer.handle.stack, prefix + (layer.regexp?.toString() || ''));
-		}
-	});
-}
+//di elfunctioin ely kanet bet print routes i commented it -noor
+//function printRoutes(stack: any[], prefix = '') {
+//	stack.forEach((layer) => {
+//		if (layer.route) {
+//			// This layer is a route
+//			//console.log(`${prefix}${layer.route.path}`);
+//		} else if (layer.name === 'router' && layer.handle.stack) {
+//			// This layer is a router, recursively print its routes
+//			//printRoutes(layer.handle.stack, prefix + (layer.regexp?.toString() || ''));
+//		}
+//	});
+//}
 
-printRoutes(app._router.stack);
+//printRoutes(app._router.stack);
 
 // Start server
 const port = process.env.port || 3000;

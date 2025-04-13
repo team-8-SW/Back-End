@@ -7,7 +7,7 @@ export async function seed(knex: Knex): Promise<void> {
 
 	const followers = [];
 	const users = await knex('users').select('id');
-	const companies = await knex('companypages').select('id');
+	const companies = await knex('company_pages').select('id');
 
 	for (let i = 0; i < 10; i++) {
 		const user = faker.helpers.arrayElement(users);

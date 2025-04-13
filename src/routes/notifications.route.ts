@@ -1,11 +1,10 @@
 import express from 'express';
 import * as notificationsController from '../controllers/notifications.controller';
-// import upload from '../middleware/upload.middleware';
+import { newAuthMiddleware } from '../middleware/auth.middleware';
 
 const router = express.Router();
 
-router.get('/:user_id', notificationsController.getAllNotifications); //neshouf law mehtaga me
-router.get('/unread-count/:user_id', notificationsController.getUnreadCount);
-router.put('/read/:id', notificationsController.markNotificationAsRead);
-
+router.get('/me', newAuthMiddleware, notificationsController.getAllNotifications); 
+router.get('/me/unread-count', newAuthMiddleware, notificationsController.getUnreadCount);
+router.put('/:id/markasread', notificationsController.markNotificationAsRead);
 export default router;

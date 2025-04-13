@@ -1,11 +1,9 @@
 import { Request, Response } from 'express';
 import * as followingService from '../services/following.service';
+import { profile } from 'console';
 
 export const getFollowing = async (req: Request, res: Response) => {
 	const userId = (req as any).user?.id;
-	if (!userId) {
-		return res.status(400).json({ error: 'User ID is required' });
-	}
 
 	try {
 		const following = await followingService.getFollowing(userId);
@@ -18,19 +16,17 @@ export const getFollowing = async (req: Request, res: Response) => {
 				firstName: fol.firstName,
 				lastName: fol.lastName,
 				headline: fol.headline,
+				profilePictureUrl: fol.profilePictureUrl,
 			})),
 		);
 	} catch (error) {
-		res.status(500).json({ error: 'Error fetching followering' });
+		const errorMessage = error instanceof Error ? error.message : String(error);
+		res.status(500).json({ error: 'Internal server error', details: errorMessage });
 	}
 };
 
 export const getFollowers = async (req: Request, res: Response) => {
 	const userId = (req as any).user?.id;
-
-	if (!userId) {
-		return res.status(400).json({ error: 'User ID is required' });
-	}
 
 	try {
 		const followers = await followingService.getFollowers(userId);
@@ -44,10 +40,12 @@ export const getFollowers = async (req: Request, res: Response) => {
 				firstName: fol.firstName,
 				lastName: fol.lastName,
 				headline: fol.headline,
+				profilePictureUrl: fol.profilePictureUrl,
 			})),
 		);
 	} catch (error) {
-		res.status(500).json({ error: 'Error fetching followers' });
+		const errorMessage = error instanceof Error ? error.message : String(error);
+		res.status(500).json({ error: 'Internal server error', details: errorMessage });
 	}
 };
 
@@ -55,8 +53,8 @@ export const followAUser = async (req: Request, res: Response) => {
 	const userId = (req as any).user?.id;
 	const followUserId = req.params.userId;
 
-	if (!userId) {
-		return res.status(400).json({ error: 'User ID is required' });
+	if (!followUserId) {
+		return res.status(400).json({ error: 'Follow User ID is required' });
 	}
 	if (userId === followUserId) {
 		return res.status(400).json({ error: 'You cannot follow yourself' });
@@ -70,7 +68,8 @@ export const followAUser = async (req: Request, res: Response) => {
 
 		res.status(201).json({ message: 'User followed successfully' });
 	} catch (error) {
-		res.status(500).json({ error: 'Error following a user' });
+		const errorMessage = error instanceof Error ? error.message : String(error);
+		res.status(500).json({ error: 'Internal server error', details: errorMessage });
 	}
 };
 
@@ -78,8 +77,8 @@ export const deleteFollow = async (req: Request, res: Response) => {
 	const userId = (req as any).user?.id;
 	const removedUserId = req.params.userId;
 
-	if (!userId) {
-		return res.status(400).json({ error: 'User ID is required' });
+	if (!removedUserId) {
+		return res.status(400).json({ error: 'Unfollow User ID is required' });
 	}
 	if (userId === removedUserId) {
 		return res.status(400).json({ error: 'You cannot unfollow yourself' });
@@ -92,6 +91,7 @@ export const deleteFollow = async (req: Request, res: Response) => {
 
 		res.status(201).json({ message: 'User unfollowed successfully' });
 	} catch (error) {
-		res.status(500).json({ error: 'Error unfollowing a user' });
+		const errorMessage = error instanceof Error ? error.message : String(error);
+		res.status(500).json({ error: 'Internal server error', details: errorMessage });
 	}
 };

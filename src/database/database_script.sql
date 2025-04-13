@@ -1,7 +1,6 @@
 BEGIN;
 
--- Users table
-CREATE TABLE IF NOT EXISTS users (
+CREATE TABLE users (
     id UUID PRIMARY KEY,
     user_name VARCHAR(100) NOT NULL UNIQUE,
     email VARCHAR(255) NOT NULL UNIQUE,
@@ -14,11 +13,22 @@ CREATE TABLE IF NOT EXISTS users (
     is_active BOOLEAN NOT NULL DEFAULT TRUE,
     reset_token VARCHAR(255),
     reset_token_expiry TIMESTAMP,
-    is_admin BOOLEAN DEFAULT FALSE
+    is_admin BOOLEAN DEFAULT FALSE,
+    google_id VARCHAR(255),
+    verification_token VARCHAR(255)
 );
 
--- UserProfiles table
-CREATE TABLE IF NOT EXISTS user_profiles (
+CREATE TABLE universities (
+    id UUID PRIMARY KEY,
+    university_name VARCHAR(255) NOT NULL UNIQUE
+);
+
+CREATE TABLE skills (
+    id UUID PRIMARY KEY,
+    skill_name VARCHAR(100) NOT NULL UNIQUE
+);
+
+CREATE TABLE user_profiles (
     id UUID PRIMARY KEY,
     user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     headline VARCHAR(255),
@@ -28,31 +38,29 @@ CREATE TABLE IF NOT EXISTS user_profiles (
     profile_picture_url VARCHAR(255),
     cover_photo_url VARCHAR(255),
     resume_url VARCHAR(255),
-    last_updated TIMESTAMP NOT NULL DEFAULT NOW(),
-    num_connections INTEGER DEFAULT 0
+    last_updated TIMESTAMP NOT NULL DEFAULT NOW()
 );
 
--- Skills table for a specific set of skills
-CREATE TABLE IF NOT EXISTS skills (
+CREATE TABLE work_experience (
     id UUID PRIMARY KEY,
-    skill_name VARCHAR(100) NOT NULL UNIQUE
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    company_name VARCHAR(255) NOT NULL,
+    position VARCHAR(255) NOT NULL,
+    start_date DATE NOT NULL,
+    end_date DATE,
+    current_job BOOLEAN NOT NULL DEFAULT FALSE,
+    description TEXT,
+    location VARCHAR(100)
 );
 
--- UserSkills table for M-N relationship between users and skills
-CREATE TABLE IF NOT EXISTS user_skills (
+CREATE TABLE user_skills (
+    id UUID PRIMARY KEY,
     user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     skill_id UUID NOT NULL REFERENCES skills(id) ON DELETE CASCADE,
-    PRIMARY KEY (user_id, skill_id)
+    UNIQUE(user_id, skill_id)
 );
 
--- Universities table for a specific set of universities
-CREATE TABLE IF NOT EXISTS universities (
-    id UUID PRIMARY KEY,
-    university_name VARCHAR(255) NOT NULL UNIQUE
-);
-
--- UserEducation table for M-N relationship between users and universities
-CREATE TABLE IF NOT EXISTS user_education (
+CREATE TABLE user_education (
     id UUID PRIMARY KEY,
     user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     university_id UUID NOT NULL REFERENCES universities(id) ON DELETE CASCADE,
@@ -65,21 +73,16 @@ CREATE TABLE IF NOT EXISTS user_education (
     grade VARCHAR(80)
 );
 
--- WorkExperience table
-CREATE TABLE IF NOT EXISTS work_experience (
+CREATE TABLE skill_contexts (
     id UUID PRIMARY KEY,
-    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    company_name VARCHAR(255) NOT NULL,
-    position VARCHAR(255) NOT NULL,
-    start_date DATE NOT NULL,
-    end_date DATE,
-    current_job BOOLEAN NOT NULL DEFAULT FALSE,
-    description TEXT,
-    location VARCHAR(100)
+    user_skill_id UUID NOT NULL REFERENCES user_skills(id) ON DELETE CASCADE,
+    education_id UUID REFERENCES user_education(id) ON DELETE CASCADE,
+    experience_id UUID REFERENCES work_experience(id) ON DELETE CASCADE,
+    created_at TIMESTAMP DEFAULT NOW(),
+    UNIQUE(user_skill_id, education_id, experience_id)
 );
 
--- Projects table
-CREATE TABLE IF NOT EXISTS projects (
+CREATE TABLE projects (
     id UUID PRIMARY KEY,
     user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     project_name VARCHAR(255) NOT NULL,
@@ -90,15 +93,13 @@ CREATE TABLE IF NOT EXISTS projects (
     description TEXT
 );
 
--- ProjectContributors table
-CREATE TABLE IF NOT EXISTS project_contributors (
+CREATE TABLE project_contributors (
     project_id UUID NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
     user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     PRIMARY KEY (project_id, user_id)
 );
 
--- Certifications table
-CREATE TABLE IF NOT EXISTS certifications (
+CREATE TABLE certifications (
     id UUID PRIMARY KEY,
     user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     name VARCHAR(255) NOT NULL,
@@ -108,8 +109,7 @@ CREATE TABLE IF NOT EXISTS certifications (
     credential_url VARCHAR(255)
 );
 
--- CompanyPages table
-CREATE TABLE IF NOT EXISTS company_pages (
+CREATE TABLE company_pages (
     id UUID PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
     description TEXT,
@@ -126,8 +126,7 @@ CREATE TABLE IF NOT EXISTS company_pages (
     follower_count INTEGER NOT NULL DEFAULT 0
 );
 
--- Connections table
-CREATE TABLE IF NOT EXISTS connections (
+CREATE TABLE connections (
     id UUID PRIMARY KEY,
     requester_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     receiver_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -135,23 +134,20 @@ CREATE TABLE IF NOT EXISTS connections (
     created_at TIMESTAMP NOT NULL DEFAULT NOW()
 );
 
--- Following table
-CREATE TABLE IF NOT EXISTS following (
+CREATE TABLE following (
     id UUID PRIMARY KEY,
     follower_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     followed_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     created_at TIMESTAMP NOT NULL DEFAULT NOW()
 );
 
--- BlockedUsers table
-CREATE TABLE IF NOT EXISTS blocked_users (
+CREATE TABLE blocked_users (
     id UUID PRIMARY KEY,
     user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     blocked_user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE
 );
 
--- Messages table
-CREATE TABLE IF NOT EXISTS messages (
+CREATE TABLE messages (
     id UUID PRIMARY KEY,
     sender_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     receiver_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -166,14 +162,14 @@ CREATE TABLE IF NOT EXISTS messages (
     is_typing BOOLEAN DEFAULT FALSE
 );
 
--- Posts table
-CREATE TABLE IF NOT EXISTS posts (
+CREATE TABLE posts (
     id UUID PRIMARY KEY,
     user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     company_id UUID REFERENCES company_pages(id) ON DELETE CASCADE,
     content TEXT,
     media_url VARCHAR(255),
     media_type VARCHAR(50),
+    link_url TEXT,
     like_count INTEGER NOT NULL DEFAULT 0,
     comment_count INTEGER NOT NULL DEFAULT 0,
     repost_count INTEGER NOT NULL DEFAULT 0,
@@ -181,20 +177,27 @@ CREATE TABLE IF NOT EXISTS posts (
     edited_at TIMESTAMP DEFAULT NOW(),
     visibility VARCHAR(20) NOT NULL CHECK (visibility IN ('public', 'connections', 'private'))
 );
+CREATE TABLE reposts (
+    id UUID PRIMARY KEY,
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    reposted_post_id UUID NOT NULL REFERENCES posts(id) ON DELETE CASCADE,
+    reposted_at TIMESTAMP DEFAULT now()
+);
 
--- Comments table
-CREATE TABLE IF NOT EXISTS comments (
+CREATE TABLE comments (
     id UUID PRIMARY KEY,
     post_id UUID NOT NULL REFERENCES posts(id) ON DELETE CASCADE,
     user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     content TEXT NOT NULL,
+    like_count INTEGER NOT NULL DEFAULT 0,
+    reply_count INTEGER NOT NULL DEFAULT 0,
     created_at TIMESTAMP NOT NULL DEFAULT NOW(),
     edited_at TIMESTAMP NOT NULL DEFAULT NOW(),
-    parent_comment_id UUID REFERENCES comments(id) ON DELETE CASCADE
+    parent_comment_id UUID REFERENCES comments(id) ON DELETE CASCADE,
+    CHECK ((post_id IS NOT NULL AND parent_comment_id IS NULL) OR (post_id IS NULL AND parent_comment_id IS NOT NULL))
 );
 
--- Likes table
-CREATE TABLE IF NOT EXISTS likes (
+CREATE TABLE likes (
     id UUID PRIMARY KEY,
     user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     post_id UUID REFERENCES posts(id) ON DELETE CASCADE,
@@ -203,50 +206,46 @@ CREATE TABLE IF NOT EXISTS likes (
     CHECK ((post_id IS NOT NULL AND comment_id IS NULL) OR (post_id IS NULL AND comment_id IS NOT NULL))
 );
 
--- SavedPosts table
-CREATE TABLE IF NOT EXISTS saved_posts (
-    id UUID PRIMARY KEY,
-    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    post_id UUID NOT NULL REFERENCES posts(id) ON DELETE CASCADE
-);
-
--- JobListings table
-CREATE TABLE IF NOT EXISTS job_listings (
+CREATE TABLE job_listings (
     id UUID PRIMARY KEY,
     user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     company_id UUID NOT NULL REFERENCES company_pages(id) ON DELETE CASCADE,
     company_name VARCHAR(255) NOT NULL,
     title VARCHAR(255) NOT NULL,
     description TEXT NOT NULL,
+    salary VARCHAR(255),
+    industry VARCHAR(255),
     location VARCHAR(100),
     employment_type VARCHAR(50) CHECK (employment_type IN ('full-time', 'part-time', 'contract')),
     workplace_type VARCHAR(50) CHECK (workplace_type IN ('On-site', 'Hybrid', 'Remote')),
     experience_level VARCHAR(50),
     posted_at TIMESTAMP NOT NULL DEFAULT NOW(),
-    expires_at TIMESTAMP);
-CREATE TABLE IF NOT EXISTS public.users
-(
-    id uuid NOT NULL,
-    user_name character varying(100) COLLATE pg_catalog."default" NOT NULL,
-    email character varying(255) COLLATE pg_catalog."default" NOT NULL,
-    password_hash character varying(255) COLLATE pg_catalog."default" NOT NULL,
-    first_name character varying(100) COLLATE pg_catalog."default" NOT NULL,
-    last_name character varying(100) COLLATE pg_catalog."default" NOT NULL,
-    email_verified boolean NOT NULL DEFAULT false,
-    is_premium boolean NOT NULL DEFAULT false,
-    premium_expiry timestamp without time zone,
-    is_active boolean NOT NULL DEFAULT true,
-    google_id character varying(255) COLLATE pg_catalog."default",
-    reset_token character varying(255) COLLATE pg_catalog."default",
-    reset_token_expiry timestamp without time zone,
-    isadmin boolean DEFAULT false,
-    CONSTRAINT users_pkey PRIMARY KEY (id),
-    CONSTRAINT users_email_key UNIQUE (email),
-    CONSTRAINT users_user_name_key UNIQUE (user_name)
+    expires_at TIMESTAMP
 );
 
--- JobApplications table
-CREATE TABLE IF NOT EXISTS jobapplications (
+CREATE TABLE saved_posts (
+    id UUID PRIMARY KEY,
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    post_id UUID NOT NULL REFERENCES posts(id) ON DELETE CASCADE
+);
+
+CREATE TABLE saved_jobs (
+    id UUID PRIMARY KEY,
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    job_id UUID NOT NULL REFERENCES job_listings(id) ON DELETE CASCADE,
+    saved_at TIMESTAMP DEFAULT now(),
+    UNIQUE(user_id, job_id) 
+);
+
+CREATE TABLE company_followers (
+    id UUID PRIMARY KEY,
+    company_id UUID NOT NULL REFERENCES company_pages(id) ON DELETE CASCADE,
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    followed_at TIMESTAMP DEFAULT now(),
+    UNIQUE(user_id, company_id) 
+);
+
+CREATE TABLE job_applications (
     id UUID PRIMARY KEY,
     job_id UUID NOT NULL REFERENCES job_listings(id) ON DELETE CASCADE,
     applicant_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -257,19 +256,19 @@ CREATE TABLE IF NOT EXISTS jobapplications (
     last_updated TIMESTAMP NOT NULL DEFAULT NOW()
 );
 
--- Notifications table
-CREATE TABLE IF NOT EXISTS notifications (
+CREATE TABLE notifications (
     id UUID PRIMARY KEY,
     user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    type VARCHAR(50) NOT NULL CHECK (type IN ('like', 'comment', 'connection', 'message')),
+    type VARCHAR(50) NOT NULL CHECK (type IN ('like', 'comment', 'connection', 'message', 'tag')),
     content TEXT NOT NULL,
     is_read BOOLEAN NOT NULL DEFAULT FALSE,
-    unseen_count INTEGER NOT NULL DEFAULT 0,
-    created_at TIMESTAMP NOT NULL DEFAULT NOW()
+    created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+    post_id UUID REFERENCES posts(id) ON DELETE CASCADE,
+    comment_id UUID REFERENCES comments(id) ON DELETE CASCADE,
+    action_userid UUID REFERENCES users(id) ON DELETE CASCADE --ely 3amel el haga ey galy bi sababha notification
 );
 
--- UserPrivacySettings table
-CREATE TABLE IF NOT EXISTS user_privacy_settings (
+CREATE TABLE user_privacy_settings (
     id UUID PRIMARY KEY,
     user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     profile_visibility VARCHAR(20) NOT NULL CHECK (profile_visibility IN ('public', 'connections', 'private')),
@@ -278,14 +277,36 @@ CREATE TABLE IF NOT EXISTS user_privacy_settings (
     allow_messages_from_non_connections BOOLEAN NOT NULL DEFAULT FALSE,
     show_active_status BOOLEAN NOT NULL DEFAULT TRUE
 );
+CREATE TABLE post_mentions (
+    post_id UUID REFERENCES posts(id) ON DELETE CASCADE,
+    user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+    PRIMARY KEY (post_id, user_id)
+);
+CREATE TABLE comment_mentions (
+    comment_id UUID REFERENCES comments(id) ON DELETE CASCADE,
+    mentioned_user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+    PRIMARY KEY (comment_id, mentioned_user_id)
+);
+CREATE TABLE IF NOT EXISTS page_views (
+    id UUID PRIMARY KEY,
+    page_id UUID NOT NULL,  -- Can reference company_pages or users table
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    viewed_at TIMESTAMP NOT NULL DEFAULT NOW()
+);
+CREATE TABLE IF NOT EXISTS post_impressions (
+    id UUID PRIMARY KEY,
+    post_id UUID NOT NULL REFERENCES posts(id) ON DELETE CASCADE,
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    viewed_at TIMESTAMP NOT NULL DEFAULT NOW()
+);
+
 
 -- Indexes for new tables (skills, universities, user_skills, user_education)
 CREATE INDEX IF NOT EXISTS idx_skills_skill_name ON skills(skill_name);
 CREATE INDEX IF NOT EXISTS idx_universities_university_name ON universities(university_name);
 CREATE INDEX IF NOT EXISTS idx_user_skills_user_id ON user_skills(user_id);
 CREATE INDEX IF NOT EXISTS idx_user_education_user_id ON user_education(user_id);
-
--- Indexes for existing tables
+CREATE INDEX IF NOT EXISTS idx_skill_contexts_user_skill_id ON skill_contexts(user_skill_id);
 CREATE INDEX IF NOT EXISTS idx_user_profiles_user_id ON user_profiles(user_id);
 CREATE INDEX IF NOT EXISTS idx_work_experience_user_id ON work_experience(user_id);
 CREATE INDEX IF NOT EXISTS idx_projects_user_id ON projects(user_id);
@@ -335,3 +356,4 @@ CREATE TABLE IF NOT EXISTS company_followers (
 );
 
 END;
+COMMIT;

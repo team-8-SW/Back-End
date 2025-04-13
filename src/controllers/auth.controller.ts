@@ -113,11 +113,16 @@ export const resendVerificationEmail = async (req: Request, res: Response) => {
 		await userModel.updateUser(user.id, { verification_token: token });
 
 		const verficationLink = `${process.env.FRONTEND_URL}/api/auth/verify-email?token=${token}`;
-		await sendEmail(
-			email,
-			'Resend: Verify your account',
-			`Click here to verify ${verficationLink}`,
-		);
+		const emailBody = `
+			<p>Hello ${user.firstName} ${user.lastName},</p>
+			<p>We noticed you haven't verified your email yet. Please click the link below to verify your account:</p>
+			<a href="${verficationLink}" target="_blank" style="color: blue; text-decoration: underline;">
+				Verify your account
+			</a>
+			<p>Best regards,</p>
+			<p>Career Hub</p>
+		`;
+		await sendEmail(email, 'Resend: Verify your account', emailBody, true);
 		res.status(200).json({ message: 'Verification email resent successfully!' });
 	} catch (error) {
 		res.status(500).json({ message: 'Internal Server Error' });

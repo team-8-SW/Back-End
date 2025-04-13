@@ -13,13 +13,25 @@ export async function seed(knex: Knex): Promise<void> {
 			console.error('No users found. Please seed users first.');
 			return;
 		}
+		const posts = await knex('posts').select('id');
+		if (posts.length === 0) {
+			console.error('No posts found. Please seed posts first.');
+			return;
+		}
+		const comments = await knex('comments').select('id');
+		if (comments.length === 0) {
+			console.error('No comments found. Please seed comments first.');
+			return;
+		}
 
 		const notifications = [];
 		for (let i = 0; i < 20; i++) {
 			// Generate 20 notifications
 			const user = faker.helpers.arrayElement(users); // Randomly pick a user
-			const type = faker.helpers.arrayElement(['like', 'comment', 'connection', 'message']); // Random notification type
+			const type = faker.helpers.arrayElement(['like', 'comment', 'connection', 'message', 'tag']); // Random notification type
 			const content = generateNotificationContent(type); // Generate content based on type
+			const post = faker.helpers.arrayElement(posts); // Randomly pick a post
+			const comment = faker.helpers.arrayElement(comments); // Randomly pick a comment	
 
 			notifications.push({
 				id: uuidv4(),
@@ -27,8 +39,9 @@ export async function seed(knex: Knex): Promise<void> {
 				type: type,
 				content: content,
 				is_read: faker.datatype.boolean(),
-				unseen_count: faker.datatype.boolean() ? 1 : 0,
 				created_at: faker.date.recent(),
+				post_id: post.id,
+				comment_id: comment.id,
 			});
 		}
 
