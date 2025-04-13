@@ -332,4 +332,6 @@ CREATE INDEX IF NOT EXISTS idx_job_applications_job_id ON job_applications(job_i
 CREATE INDEX IF NOT EXISTS idx_job_applications_applicant_id ON job_applications(applicant_id);
 CREATE INDEX IF NOT EXISTS idx_notifications_user_id ON notifications(user_id);
 CREATE INDEX IF NOT EXISTS idx_user_privacy_settings_user_id ON user_privacy_settings(user_id);
+
+END;
 COMMIT;
