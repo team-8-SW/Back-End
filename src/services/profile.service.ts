@@ -525,6 +525,15 @@ export const createUserProfile = async (userId: string, profileData: any) => {
 			industry: profileData.industry || null,
 			last_updated: knexInstance.fn.now(),
 		});
+		await knexInstance('user_privacy_settings').insert({
+			id: uuidv4(),
+			user_id: userId,
+			profile_visibility: 'public',
+			show_email: false,
+			allow_connection_requests: true,
+			allow_messages_from_non_connections: false,
+			show_active_status: true,
+		});
 
 		if (profileData.skills?.length) {
 			for (const skillName of profileData.skills) {
