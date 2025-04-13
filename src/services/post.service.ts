@@ -23,7 +23,6 @@ export const displayPosts = async (user_id: string): Promise<posts[]> => {
     }
 };
 
-
 export const createPost = async (post: {
     user_id: string; // Must be valid UUID
     content: string;
