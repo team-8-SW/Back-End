@@ -333,27 +333,5 @@ CREATE INDEX IF NOT EXISTS idx_job_applications_applicant_id ON job_applications
 CREATE INDEX IF NOT EXISTS idx_notifications_user_id ON notifications(user_id);
 CREATE INDEX IF NOT EXISTS idx_user_privacy_settings_user_id ON user_privacy_settings(user_id);
 
-ALTER TABLE joblistings
-ADD COLUMN industry VARCHAR(255);
-
-ALTER TABLE joblistings
-ADD COLUMN salary VARCHAR(255);
-
-CREATE TABLE IF NOT EXISTS public.saved_jobs (
-    id UUID PRIMARY KEY
-    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    job_id UUID NOT NULL REFERENCES joblistings(id) ON DELETE CASCADE,
-    saved_at TIMESTAMP DEFAULT now(),
-    UNIQUE(user_id, job_id) 
-);
-
-CREATE TABLE IF NOT EXISTS company_followers (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    company_id UUID NOT NULL REFERENCES company_pages(id) ON DELETE CASCADE,
-    followed_at TIMESTAMP NOT NULL DEFAULT NOW(),
-    UNIQUE(user_id, company_id)
-);
-
 END;
 COMMIT;

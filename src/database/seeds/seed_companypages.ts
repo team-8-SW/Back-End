@@ -13,7 +13,6 @@ export async function seed(knex: Knex): Promise<void> {
 			return;
 		}
 		const companies = [];
-		const users = await knex('users').select('id');
 
 		for (let i = 0; i < 10; i++) {
 			const user = faker.helpers.arrayElement(users);
