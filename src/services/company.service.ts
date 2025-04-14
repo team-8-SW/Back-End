@@ -281,3 +281,16 @@ export const getUpdateById = async (updateId: string) => {
 export const getAllUpdates = async () => {
 	return await knexInstance('company_updates').select('*');
 };
+
+export const updateLogo = async (companyId: string, logoURL: string) => {
+	const rowsUpdated = await knexInstance('company_pages')
+		.where({ id: companyId })
+		.update({ logo_url: logoURL });
+
+	if (rowsUpdated === 0) return null;
+
+	return knexInstance('company_pages')
+		.select('logo_url as logoURL')
+		.where({ id: companyId })
+		.first();
+};

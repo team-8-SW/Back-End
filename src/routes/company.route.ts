@@ -1,7 +1,7 @@
 import express from 'express';
 import * as companyController from '../controllers/company.controller';
-// import upload from '../middleware/upload.middleware';
 import { newAuthMiddleware } from '../middleware/auth.middleware';
+import { upload } from '../middleware/multer';
 
 const router = express.Router();
 
@@ -34,5 +34,11 @@ router.get(
 );
 router.post('/:company_id/view', newAuthMiddleware, companyController.logCompanyView);
 router.get('/:update_id/content', newAuthMiddleware, companyController.getDailyContentAnalytics);
+router.post(
+	'/:company_id/logo',
+	newAuthMiddleware,
+	upload.single('file'),
+	companyController.updateLogo,
+);
 
 export default router;

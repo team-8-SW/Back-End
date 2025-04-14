@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import * as companyService from '../services/company.service';
 import * as companyModel from '../models/company.model';
 import { v4 as uuidv4 } from 'uuid';
+import cloudinary from '../utils/cloudinary';
 
 export const getAllCompanies = async (req: Request, res: Response) => {
 	try {
@@ -300,4 +301,48 @@ export const getDailyContentAnalytics = async (req: Request, res: Response) => {
 	}
 };
 
+export const updateLogo = async (req: Request, res: Response) => {
+	// eslint-disable-next-line @typescript-eslint/naming-convention
+	const { company_id } = req.params;
+	// eslint-disable-next-line @typescript-eslint/naming-convention
+	const file = req.file;
 
+	if (!file) {
+		return res.status(400).json({ error: 'No file uploaded' });
+	}
+
+	const allowedMimeTypes = ['image/jpeg', 'image/png'];
+	if (!allowedMimeTypes.includes(file.mimetype)) {
+		return res.status(400).json({ error: 'Invalid file type. Only JPEG and PNG are allowed.' });
+	}
+
+	try {
+		const uploadToCloudinary = (): Promise<any> => {
+			return new Promise((resolve, reject) => {
+				const stream = cloudinary.uploader.upload_stream(
+					{
+						folder: 'linkedin-clone/cover-photos',
+						resource_type: 'image',
+						type: 'upload',
+					},
+					(error, result) => {
+						if (error) return reject(error);
+						resolve(result);
+					},
+				);
+				stream.end(file.buffer);
+			});
+		};
+
+		const result = await uploadToCloudinary();
+		const updatedProfile = await companyService.updateLogo(company_id, result.secure_url);
+
+		res.status(200).json({
+			message: 'logo updated successfully',
+			coverPhotoUrl: result.secure_url,
+		});
+	} catch (error) {
+		const errorMessage = error instanceof Error ? error.message : JSON.stringify(error);
+		res.status(500).json({ error: 'Internal server error', details: errorMessage });
+	}
+};
