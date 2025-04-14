@@ -292,6 +292,11 @@ export const getDailyContentAnalytics = async (req: Request, res: Response) => {
 		// eslint-disable-next-line @typescript-eslint/naming-convention
 		const admin_user_id = (req as any).user?.user_id;
 
+		const update = await companyService.getUpdateById(update_id);
+		if (!update || update.admin_user_id !== admin_user_id) {
+			return res.status(403).json({ message: 'Unauthorized action' });
+		}
+
 		const stats = await companyService.getContentAnalytics(update_id);
 
 		res.status(200).json(stats);
@@ -305,6 +310,12 @@ export const updateLogo = async (req: Request, res: Response) => {
 	// eslint-disable-next-line @typescript-eslint/naming-convention
 	const { company_id } = req.params;
 	// eslint-disable-next-line @typescript-eslint/naming-convention
+	const admin_user_id = (req as any).user?.user_id;
+	const company = await companyService.getCompanyById(company_id);
+	if (!company || company.admin_user_id !== admin_user_id) {
+		return res.status(403).json({ message: 'Unauthorized action' });
+	}
+
 	const file = req.file;
 
 	if (!file) {
@@ -339,7 +350,7 @@ export const updateLogo = async (req: Request, res: Response) => {
 
 		res.status(200).json({
 			message: 'logo updated successfully',
-			coverPhotoUrl: result.secure_url,
+			LogoPhotoUrl: result.secure_url,
 		});
 	} catch (error) {
 		const errorMessage = error instanceof Error ? error.message : JSON.stringify(error);

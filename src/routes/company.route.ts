@@ -35,7 +35,7 @@ router.get(
 router.post('/:company_id/view', newAuthMiddleware, companyController.logCompanyView);
 router.get('/:update_id/content', newAuthMiddleware, companyController.getDailyContentAnalytics);
 router.post(
-	'/:company_id/logo',
+	'/logo/:company_id',
 	newAuthMiddleware,
 	upload.single('file'),
 	companyController.updateLogo,

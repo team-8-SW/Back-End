@@ -23,6 +23,8 @@ import * as authController from '../controllers/auth.controller';
 import * as userModel from '../models/user.model';
 import { Request, Response } from 'express';
 
+console.error = jest.fn();
+
 jest.mock('../../src/models/user.model', () => ({
 	updateUser: jest.fn(),
 	getUserById: jest.fn(),
@@ -613,7 +615,8 @@ describe('POST /api/auth/resend-confirmation-email', () => {
 		expect(sendEmail).toHaveBeenCalledWith(
 			'test@example.com',
 			'Resend: Verify your account',
-			expect.stringContaining('Click here to verify'),
+			expect.stringContaining('href="http://localhost:3000/api/auth/verify-email?token='),
+			true,
 		);
 
 		expect(statusMock).toHaveBeenCalledWith(200);
