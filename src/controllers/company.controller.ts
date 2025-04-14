@@ -22,6 +22,27 @@ export const getCompanyById = async (req: Request, res: Response) => {
 	}
 };
 
+export const getAllCompaniesUpdates = async (req: Request, res: Response) => {
+	try {
+		const updates = await companyService.getAllUpdates();
+		res.status(200).json(updates);
+	} catch (error) {
+		console.error('Error getting all updates:', error);
+		res.status(500).json({ error: 'Internal server Error' });
+	}
+};
+
+export const getCompanyUpdateById = async (req: Request, res: Response) => {
+	try {
+		// eslint-disable-next-line @typescript-eslint/naming-convention
+		const { update_id } = req.params;
+		const update = await companyService.getUpdateById(update_id);
+		res.status(200).json(update);
+	} catch (error) {
+		res.status(500).json({ error: 'Internal server Error' });
+	}
+};
+
 export const createCompany = async (req: Request, res: Response) => {
 	try {
 		const companyData = req.body;
@@ -262,3 +283,21 @@ export const logCompanyView = async (req: Request, res: Response) => {
 		res.status(500).json({ error: 'Internal server error' });
 	}
 };
+
+export const getDailyContentAnalytics = async (req: Request, res: Response) => {
+	try {
+		// eslint-disable-next-line @typescript-eslint/naming-convention
+		const { update_id } = req.params;
+		// eslint-disable-next-line @typescript-eslint/naming-convention
+		const admin_user_id = (req as any).user?.user_id;
+
+		const stats = await companyService.getContentAnalytics(update_id);
+
+		res.status(200).json(stats);
+	} catch (err) {
+		console.error(err);
+		res.status(500).json({ error: 'Failed to fetch content analytics' });
+	}
+};
+
+

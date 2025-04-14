@@ -5,8 +5,11 @@ import { newAuthMiddleware } from '../middleware/auth.middleware';
 
 const router = express.Router();
 
+router.get('/updates', companyController.getAllCompaniesUpdates);
+
 router.get('/', companyController.getAllCompanies);
 router.get('/:id', companyController.getCompanyById);
+router.get('/:update_id/updates', companyController.getCompanyUpdateById);
 router.post('/', newAuthMiddleware, companyController.createCompany);
 router.put('/:id', newAuthMiddleware, companyController.updateCompany); //update company
 router.post('/job', newAuthMiddleware, companyController.postJob); //post a job
@@ -30,5 +33,6 @@ router.get(
 	companyController.getCompanyVisitorsAnalytics,
 );
 router.post('/:company_id/view', newAuthMiddleware, companyController.logCompanyView);
+router.get('/:update_id/content', newAuthMiddleware, companyController.getDailyContentAnalytics);
 
 export default router;

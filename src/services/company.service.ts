@@ -184,3 +184,100 @@ export const pageViewService = async (companyId: string, userId: string) => {
 
 	return { alreadyLogged: false };
 };
+
+export const getContentAnalytics = async (updateId: string) => {
+	const impressions = await knexInstance('company_update_impressions')
+		.select(knexInstance.raw('Date(created_at) as date'))
+		.count('* as impressions')
+		.where({ update_id: updateId })
+		.groupByRaw('DATE(created_at)');
+
+	const reactions = await knexInstance('company_update_reactions')
+		.select(knexInstance.raw('Date(created_at) as date'))
+		.count('* as reactions')
+		.where({ update_id: updateId })
+		.groupByRaw('DATE(created_at)');
+
+	const comments = await knexInstance('company_update_comments')
+		.select(knexInstance.raw('Date(created_at) as date'))
+		.count('* as comments')
+		.where({ update_id: updateId })
+		.groupByRaw('DATE(created_at)');
+
+	const reposts = await knexInstance('company_update_reposts')
+		.select(knexInstance.raw('Date(created_at) as date'))
+		.count('* as reposts')
+		.where({ original_update_id: updateId })
+		.groupByRaw('DATE(created_at)');
+
+	const dateMap: Record<string, any> = {};
+	const formatDate = (date: any) => {
+		if (!date) return null;
+		return new Date(date).toISOString().split('T')[0];
+	};
+
+	for (const row of impressions) {
+		const formattedDate = formatDate(String(row.date));
+		if (formattedDate) {
+			dateMap[formattedDate] = {
+				date: String(formattedDate),
+				impressions: Number(row.impressions),
+				reactions: 0,
+				comments: 0,
+				reposts: 0,
+			};
+		}
+	}
+
+	for (const row of reactions) {
+		const formattedDate = formatDate(String(row.date));
+		if (formattedDate) {
+			dateMap[formattedDate] ??= {
+				date: formattedDate,
+				impressions: 0,
+				reactions: 0,
+				comments: 0,
+				reposts: 0,
+			};
+			dateMap[formattedDate].reactions = Number(row.reactions);
+		}
+	}
+
+	for (const row of comments) {
+		const formattedDate = formatDate(String(row.date));
+		if (formattedDate) {
+			dateMap[formattedDate] ??= {
+				date: formattedDate,
+				impressions: 0,
+				reactions: 0,
+				comments: 0,
+				reposts: 0,
+			};
+			dateMap[formattedDate].comments = Number(row.comments);
+		}
+	}
+
+	for (const row of reposts) {
+		const formattedDate = formatDate(String(row.date));
+		if (formattedDate) {
+			dateMap[formattedDate] ??= {
+				date: formattedDate,
+				impressions: 0,
+				reactions: 0,
+				comments: 0,
+				reposts: 0,
+			};
+			dateMap[formattedDate].reposts = Number(row.reposts);
+		}
+	}
+
+	return Object.values(dateMap).sort((a, b) => a.date.localeCompare(b.date));
+};
+
+export const getUpdateById = async (updateId: string) => {
+	return await knexInstance('company_updates').where({ id: updateId }).first();
+};
+
+export const getAllUpdates = async () => {
+	return await knexInstance('company_updates').select('*');
+};
