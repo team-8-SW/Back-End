@@ -311,6 +311,36 @@ CREATE TABLE company_updates (
     FOREIGN KEY (admin_user_id) REFERENCES users(id),
     FOREIGN KEY (company_id) REFERENCES company_pages(id)
 );
+
+CREATE TABLE IF NOT EXISTS company_update_impressions (
+  id UUID PRIMARY KEY,
+  update_id UUID NOT NULL REFERENCES company_updates(id) ON DELETE CASCADE,
+  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  created_at TIMESTAMP DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS company_update_reactions (
+  id UUID PRIMARY KEY,
+  update_id UUID NOT NULL REFERENCES company_updates(id) ON DELETE CASCADE,
+  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  type TEXT NOT NULL, -- like, celebrate, etc.
+  created_at TIMESTAMP DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS company_update_comments (
+  id UUID PRIMARY KEY,
+  update_id UUID NOT NULL REFERENCES company_updates(id) ON DELETE CASCADE,
+  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  content TEXT NOT NULL,
+  created_at TIMESTAMP DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS company_update_reposts (
+  id UUID PRIMARY KEY,
+  original_update_id UUID NOT NULL REFERENCES company_updates(id) ON DELETE CASCADE,
+  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  created_at TIMESTAMP DEFAULT NOW()
+);
 -- Indexes for new tables (skills, universities, user_skills, user_education)
 CREATE INDEX IF NOT EXISTS idx_skills_skill_name ON skills(skill_name);
 CREATE INDEX IF NOT EXISTS idx_universities_university_name ON universities(university_name);

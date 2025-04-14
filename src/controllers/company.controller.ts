@@ -86,11 +86,14 @@ export const postJob = async (req: Request, res: Response) => {
 //getJobs
 export const getJobs = async (req: Request, res: Response) => {
 	try {
-		const company_id = req.body;
-		if (!company_id) return res.status(400).json({ message: 'Company ID is required' });
+		// eslint-disable-next-line @typescript-eslint/naming-convention
+		const company_id = req.params.id;
+		// eslint-disable-next-line @typescript-eslint/naming-convention
+		const admin_user_id = (req as any).user?.user_id;
+		if (!admin_user_id) return res.status(401).json({ message: 'Unauthorized' });
 
 		const jobs = await companyService.getJobs(company_id);
-		res.status(200).json(jobs);
+		res.status(200).json({ message: 'Job listings returned successfully', jobs });
 	} catch (error) {
 		console.error('Error getting jobs', error);
 		res.status(500).json({ error: 'Internal server error' });
@@ -210,6 +213,52 @@ export const getCompanyFollowersAnalytics = async (req: Request, res: Response) 
 		});
 	} catch (error) {
 		console.error('Error getting company analytics', error);
+		res.status(500).json({ error: 'Internal server error' });
+	}
+};
+
+export const getCompanyVisitorsAnalytics = async (req: Request, res: Response) => {
+	try {
+		// eslint-disable-next-line @typescript-eslint/naming-convention
+		const { company_id } = req.params;
+		// eslint-disable-next-line @typescript-eslint/naming-convention
+		const admin_user_id = (req as any).user?.user_id;
+
+		const company = await companyService.getCompanyById(company_id);
+		if (!company || company.admin_user_id !== admin_user_id) {
+			return res.status(403).json({ message: 'Unauthorized action' });
+		}
+
+		const totalViews = await companyService.getTotalPageViews(company_id);
+		const viewsPerDay = await companyService.getViewsPerDay(company_id);
+
+		res.status(200).json({ totalViews, viewsPerDay });
+	} catch (error) {
+		console.error('Error fetching analytics', error);
+		res.status(500).json({ error: 'Internal server error' });
+	}
+};
+
+export const logCompanyView = async (req: Request, res: Response) => {
+	try {
+		// eslint-disable-next-line @typescript-eslint/naming-convention
+		const { company_id } = req.params;
+		// eslint-disable-next-line @typescript-eslint/naming-convention
+		const admin_user_id = (req as any).user?.user_id;
+
+		const company = await companyService.getCompanyById(company_id);
+		if (!company || company.admin_user_id !== admin_user_id) {
+			return res.status(403).json({ message: 'Unauthorized action' });
+		}
+
+		const alreadyLogged = await companyService.pageViewService(company_id, admin_user_id);
+
+		if (alreadyLogged)
+			return res.status(200).json({ message: 'View already logged in the last 30 days' });
+
+		res.status(201).json({ message: 'Page view logged' });
+	} catch (error) {
+		console.error('Error logging view', error);
 		res.status(500).json({ error: 'Internal server error' });
 	}
 };

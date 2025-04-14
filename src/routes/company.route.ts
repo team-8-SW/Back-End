@@ -10,7 +10,7 @@ router.get('/:id', companyController.getCompanyById);
 router.post('/', newAuthMiddleware, companyController.createCompany);
 router.put('/:id', newAuthMiddleware, companyController.updateCompany); //update company
 router.post('/job', newAuthMiddleware, companyController.postJob); //post a job
-router.get('/getalljob', companyController.getJobs); //get all jobs
+router.get('/:id/getalljob', newAuthMiddleware, companyController.getJobs); //get all jobs
 router.post('/:id/update', newAuthMiddleware, companyController.postUpdate); //post an update
 router.get('/:id/followers-list', newAuthMiddleware, companyController.getCompanyFollowers); //getting followers list
 router.delete(
@@ -24,5 +24,11 @@ router.get(
 	newAuthMiddleware,
 	companyController.getCompanyFollowersAnalytics,
 );
+router.get(
+	'/:company_id/visitors',
+	newAuthMiddleware,
+	companyController.getCompanyVisitorsAnalytics,
+);
+router.post('/:company_id/view', newAuthMiddleware, companyController.logCompanyView);
 
 export default router;

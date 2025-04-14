@@ -12,7 +12,7 @@ export async function seed(knex: Knex): Promise<void> {
 			console.error('No users found. Please seed users first.');
 			return;
 		}
-	const companies = [];
+		const companies = [];
 		for (let i = 0; i < 10; i++) {
 			const user = faker.helpers.arrayElement(users); // Randomly pick a user
 			companies.push({
@@ -49,7 +49,7 @@ export async function seed(knex: Knex): Promise<void> {
 				cover_photo_url: faker.internet.url(),
 				follower_count: faker.datatype.number({ min: 0, max: 10000 }),
 			});
-	}
+		}
 
 		await knex('company_pages').insert(companies);
 		console.log('Inserted company_pages into the company_pages table');

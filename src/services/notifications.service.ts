@@ -20,7 +20,10 @@ export const getAllNotifications = async (user_id: string): Promise<Notification
 		throw new Error('Failed to fetch notifications');
 	}
 };
-export const markNotificationAsRead = async (id: string, user_id: string): Promise<notifications> => {
+export const markNotificationAsRead = async (
+	id: string,
+	user_id: string,
+): Promise<notifications> => {
 	try {
 		const [updatedNotification] = await knexInstance('notifications')
 			.where({ id, user_id })

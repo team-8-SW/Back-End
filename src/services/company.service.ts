@@ -63,8 +63,8 @@ export const postJob = async (
 };
 //getJobs
 export const getJobs = async (companyId: string) => {
-	const jobs= await knexInstance('job_listings')
-	    .select('*') // Select all columns
+	const jobs = await knexInstance('job_listings')
+		.select('*') // Select all columns
 		.where('company_id', companyId); // Filter by company_id
 	return jobs;
 };
@@ -147,4 +147,40 @@ export const getFollowersPerDay = async (companyId: string) => {
 			knexInstance.raw('COUNT(*) as count'),
 		)
 		.orderBy('date', 'asc');
+};
+
+export const getTotalPageViews = async (companyId: string) => {
+	return await knexInstance('page_views').where({ page_id: companyId }).count('* as total');
+};
+
+export const getViewsPerDay = async (companyId: string) => {
+	return await knexInstance('page_views')
+		.select(knexInstance.raw('DATE(viewed_at) as day'))
+		.count('* as views')
+		.where({ page_id: companyId })
+		.groupByRaw('DATE(viewed_at)')
+		.orderBy('day', 'asc');
+};
+
+export const pageViewService = async (companyId: string, userId: string) => {
+	const recentView = await knexInstance('page_views')
+		.where({
+			page_id: companyId,
+			user_id: userId,
+		})
+		.andWhere('viewed_at', '>', knexInstance.raw("NOW() - INTERVAL '30 days'"))
+		.first();
+
+	if (recentView) {
+		return { alreadyLogged: true };
+	}
+
+	await knexInstance('page_views').insert({
+		id: uuidv4(),
+		page_id: companyId,
+		user_id: userId,
+		viewed_at: new Date(),
+	});
+
+	return { alreadyLogged: false };
 };
