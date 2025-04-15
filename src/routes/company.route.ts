@@ -5,11 +5,10 @@ import { upload } from '../middleware/multer';
 
 const router = express.Router();
 
-router.get('/updates', companyController.getAllCompaniesUpdates);
-
-router.get('/', companyController.getAllCompanies);
-router.get('/:id', companyController.getCompanyById);
-router.get('/:update_id/updates', companyController.getCompanyUpdateById);
+router.get('/updates', companyController.getAllCompaniesUpdates); //remaining in postman
+router.get('/', companyController.getAllCompanies); //remaining in postman
+router.get('/:id', companyController.getCompanyById); //remaining in postman
+router.get('/:update_id/updates', companyController.getCompanyUpdateById); //remaining in postman
 router.post('/', newAuthMiddleware, companyController.createCompany);
 router.put('/:id', newAuthMiddleware, companyController.updateCompany); //update company
 router.post('/job', newAuthMiddleware, companyController.postJob); //post a job
@@ -20,7 +19,7 @@ router.delete(
 	'/:company_id/followers/:user_id',
 	newAuthMiddleware,
 	companyController.removeFollower,
-);
+); //remaining in postman
 router.get('/:company_id/applications', newAuthMiddleware, companyController.getJobApplications);
 router.get(
 	'/:company_id/followers-analytics',
