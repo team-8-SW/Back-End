@@ -14,6 +14,7 @@ jest.mock('../services/company.service', () => ({
 	updateCompany: jest.fn(),
 	postJob: jest.fn(),
 	postUpdate: jest.fn(),
+	getCompanyFollowers: jest.fn(),
 }));
 
 jest.mock('../config/db', () => ({
@@ -320,7 +321,7 @@ describe('postUpdate', () => {
 			'company123',
 			'admin123',
 			'New feature launch!',
-			'We are excited to announce our new feature...'
+			'We are excited to announce our new feature...',
 		);
 		expect(statusMock).toHaveBeenCalledWith(200);
 		expect(jsonMock).toHaveBeenCalledWith({
@@ -335,6 +336,61 @@ describe('postUpdate', () => {
 		await companyController.postUpdate(req as Request, res as Response);
 
 		expect(statusMock).toHaveBeenCalledWith(500);
+		expect(jsonMock).toHaveBeenCalledWith({ error: 'Internal server error' });
+	});
+});
+
+describe('Manage company followers', () => {
+	let req: Partial<CustomRequest>;
+	let res: Partial<Response>;
+	let statusMock: jest.Mock;
+	let jsonMock: jest.Mock;
+
+	beforeEach(() => {
+		statusMock = jest.fn().mockReturnThis();
+		jsonMock = jest.fn();
+
+		req = {
+			params: { id: 'user123' },
+			user: { user_id: 'admin123' },
+		} as Partial<CustomRequest>;
+
+		res = {
+			status: statusMock,
+			json: jsonMock,
+		};
+	});
+
+	it('should return 403 if user is not authorized', async () => {
+		(companyService.getCompanyById as jest.Mock).mockResolvedValue({
+			admin_user_id: 'otherUser',
+		});
+
+		await companyController.getCompanyFollowers(req as Request, res as Response);
+
+		expect(statusMock).toHaveBeenLastCalledWith(403);
+		expect(jsonMock).toHaveBeenCalledWith({ message: 'Access denied' });
+	});
+
+	it('should return 200 when successfully getting followers list', async () => {
+		const mockCompany = { admin_user_id: 'admin123' };
+		const mockFollowers = [{ id: 'user1' }, { id: 'user2' }];
+
+		(companyService.getCompanyById as jest.Mock).mockResolvedValue(mockCompany);
+		(companyService.getCompanyFollowers as jest.Mock).mockResolvedValue(mockFollowers);
+
+		await companyController.getCompanyFollowers(req as Request, res as Response);
+
+		expect(statusMock).toHaveBeenLastCalledWith(200);
+		expect(jsonMock).toHaveBeenCalledWith(mockFollowers);
+	});
+
+	it('should return 500 with there is database error', async () => {
+		(companyService.getCompanyById as jest.Mock).mockRejectedValue(new Error('DB error'));
+
+		await companyController.getCompanyFollowers(req as Request, res as Response);
+
+		expect(statusMock).toHaveBeenLastCalledWith(500);
 		expect(jsonMock).toHaveBeenCalledWith({ error: 'Internal server error' });
 	});
 });
