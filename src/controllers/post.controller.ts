@@ -381,13 +381,11 @@ export const addMediaToPost = async (req: Request, res: Response) => {
 					link_url,
 					'link',
 				);
-
 				if (!updatedPost) {
 					return res
 						.status(404)
 						.json({ error: 'Post not found or you do not have permission to edit it' });
 				}
-
 				return res.status(200).json({
 					message: 'Link added to post successfully',
 					linkUrl: link_url,
