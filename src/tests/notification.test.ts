@@ -15,7 +15,7 @@ jest.mock('../config/db', () => ({
       delete: jest.fn(),
   },
 }));
-jest.mock('../services/post.service', () => ({
+jest.mock('../services/notifications.service', () => ({
   getAllNotifications: jest.fn(),
   getUnreadNotificationCount: jest.fn(),
   markNotificationAsRead: jest.fn()
