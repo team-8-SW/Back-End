@@ -116,6 +116,8 @@ export const searchUsers = async (
 					);
 				});
 		});
+		// Exclude the user sending the request
+			usersQuery.andWhere('users.id', '!=', userId);
 	}
 
 	// Apply search filter for name
