@@ -31,13 +31,7 @@ dotenv.config();
 // Create Express app
 const app: Express = express();
 
-// Middleware
-app.use(
-	cors({
-		origin: process.env.CORS_ORIGIN || 'http://localhost',
-		credentials: true,
-	}),
-);
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -45,7 +39,7 @@ app.use(express.urlencoded({ extended: true }));
 // Add CORS middleware - PUT THIS BEFORE YOUR ROUTES
 app.use(
 	cors({
-		origin: 'http://localhost:5173', // Your React frontend URL - change if different
+		origin: 'http://localhost:8000', // Your React frontend URL - change if different
 		credentials: true,
 	}),
 );
@@ -68,7 +62,6 @@ app.use('/api/following', followingRoutes);
 app.use('/api/jobs', jobRoutes);
 app.use('/health', healthRoutes);
 app.use('/api/test', testRoutes);
-
 app.use('/api/connections', connectionRoutes);
 app.use('/api/posts', postsRoutes);
 // 404 handler

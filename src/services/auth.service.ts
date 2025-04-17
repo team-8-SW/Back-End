@@ -99,7 +99,15 @@ export const registerService = async (
 			user_id: created.id,
 			last_updated: trx.fn.now(),
 		});
-
+		await knexInstance('user_privacy_settings').insert({
+			id: uuidv4(),
+			user_id: created.id,
+			profile_visibility: 'public',
+			show_email: false,
+			allow_connection_requests: true,
+			allow_messages_from_non_connections: false,
+			show_active_status: true,
+		});
 		await trx.commit();
 
 		return {
