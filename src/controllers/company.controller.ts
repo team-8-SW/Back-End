@@ -480,6 +480,7 @@ export const addComment = async (req: Request, res: Response) => {
 
 export const addRepost = async (req: Request, res: Response) => {
 	try {
+		// eslint-disable-next-line @typescript-eslint/naming-convention
 		const { update_id } = req.params;
 		const userId = (req as any).user?.user_id;
 
