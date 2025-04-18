@@ -19,6 +19,7 @@ dotenv.config();
 const app: Express = express();
 
 // Middleware
+<<<<<<< Updated upstream
 app.use(cors({
 	origin: process.env.CORS_ORIGIN || 'http://localhost',
 	credentials: true
@@ -26,6 +27,20 @@ app.use(cors({
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+=======
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+// Enable CORS for all routes
+// Add CORS middleware - PUT THIS BEFORE YOUR ROUTES
+app.use(
+	cors({
+		origin: ['http://localhost', 'http://localhost:8001', 'http://localhost:80'],
+		credentials: true,
+	}),
+);
+
+>>>>>>> Stashed changes
 // Setup Swagger documentation
 setupSwagger(app);
 
