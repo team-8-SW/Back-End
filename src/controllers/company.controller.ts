@@ -459,7 +459,7 @@ export const addReaction = async (req: Request, res: Response) => {
 export const addComment = async (req: Request, res: Response) => {
 	try {
 		const { update_id } = req.params;
-		const { content } = req.body; 
+		const { content } = req.body;
 		const user_id = (req as any).user?.user_id;
 
 		if (!content) {
@@ -490,7 +490,6 @@ export const addRepost = async (req: Request, res: Response) => {
 
 		if (!userId) {
 			return res.status(400).json({ error: 'Missing userId' });
-
 		}
 
 		const repost = await companyService.addRepost(update_id, userId);
