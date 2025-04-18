@@ -45,7 +45,7 @@ app.use(express.urlencoded({ extended: true }));
 // Add CORS middleware - PUT THIS BEFORE YOUR ROUTES
 app.use(
 	cors({
-		origin: 'http://localhost:5173', // Your React frontend URL - change if different
+		origin: 'http://localhost:8000', // Your React frontend URL - change if different
 		credentials: true,
 	}),
 );

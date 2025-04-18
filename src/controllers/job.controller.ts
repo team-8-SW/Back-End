@@ -8,7 +8,7 @@ export const getJobById = async (req: Request, res: Response) => {
 
 		if (!job) return res.status(400).json({ message: 'Job not found' });
 
-		res.status(200).json({ message: 'Job found successfully' });
+		res.status(200).json({ message: 'Job found successfully', job });
 	} catch (error) {
 		console.error('Error finding job', error);
 		res.status(500).json({ message: 'Internal Server Error' });

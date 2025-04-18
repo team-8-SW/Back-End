@@ -3,11 +3,11 @@ import * as jobModels from '../models/job.model';
 import { v4 as uuidv4 } from 'uuid';
 
 export const getJobById = async (id: string) => {
-	return await knexInstance('joblistings').where({ id }).select('*');
+	return await knexInstance('job_listings').where({ id }).select('*');
 };
 
 export const searchJob = async (keyword?: string, location?: string, industry?: string) => {
-	let query = knexInstance('joblistings').select('*');
+	let query = knexInstance('job_listings').select('*');
 
 	if (keyword)
 		query = query
@@ -27,7 +27,7 @@ export const filterJob = async (
 	minSalary?: number,
 	maxSalary?: number,
 ) => {
-	return knexInstance('joblistings')
+	return knexInstance('job_listings')
 		.where((query) => {
 			if (experienceLevel) query.where('experience_level', experienceLevel);
 			if (company) query.where('company_name', company);
@@ -54,7 +54,7 @@ export const applyForJob = async (
 	resumeUrl?: string,
 	coverLetter?: string,
 ) => {
-	return knexInstance('jobapplications')
+	return knexInstance('job_applications')
 		.insert({
 			id: uuidv4(),
 			job_id: jobId,
@@ -67,11 +67,11 @@ export const applyForJob = async (
 };
 
 export const getAppliedJob = async (userId: string, jobId: string) => {
-	return knexInstance('jobapplications').where({ job_id: jobId, applicant_id: userId }).first();
+	return knexInstance('job_applications').where({ job_id: jobId, applicant_id: userId }).first();
 };
 
 export const getApplicationStatus = async (userId: string, jobId: string) => {
-	return knexInstance('jobapplications')
+	return knexInstance('job_applications')
 		.select('status')
 		.where({ job_id: jobId, applicant_id: userId })
 		.first();

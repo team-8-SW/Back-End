@@ -18,6 +18,7 @@ export const createCompany = async (
 		id: uuidv4(),
 		created_at: new Date(),
 		follower_count: 0,
+		logo_url: data.logo_url,
 		...data,
 	};
 	await knexInstance('company_pages').insert(newCompany);
@@ -185,93 +186,70 @@ export const pageViewService = async (companyId: string, userId: string) => {
 	return { alreadyLogged: false };
 };
 
-export const getContentAnalytics = async (updateId: string) => {
-	const impressions = await knexInstance('company_update_impressions')
-		.select(knexInstance.raw('Date(created_at) as date'))
-		.count('* as impressions')
-		.where({ update_id: updateId })
-		.groupByRaw('DATE(created_at)');
+export const getCompanyContentAnalytics = async (companyId: string) => {
+	const updateIds = await knexInstance('company_updates')
+		.where({ company_id: companyId })
+		.pluck('id');
 
-	const reactions = await knexInstance('company_update_reactions')
-		.select(knexInstance.raw('Date(created_at) as date'))
-		.count('* as reactions')
-		.where({ update_id: updateId })
-		.groupByRaw('DATE(created_at)');
+	if (!updateIds.length) return [];
 
-	const comments = await knexInstance('company_update_comments')
-		.select(knexInstance.raw('Date(created_at) as date'))
-		.count('* as comments')
-		.where({ update_id: updateId })
-		.groupByRaw('DATE(created_at)');
-
-	const reposts = await knexInstance('company_update_reposts')
-		.select(knexInstance.raw('Date(created_at) as date'))
-		.count('* as reposts')
-		.where({ original_update_id: updateId })
-		.groupByRaw('DATE(created_at)');
-
-	const dateMap: Record<string, any> = {};
 	const formatDate = (date: any) => {
 		if (!date) return null;
 		return new Date(date).toISOString().split('T')[0];
 	};
 
-	for (const row of impressions) {
-		const formattedDate = formatDate(String(row.date));
-		if (formattedDate) {
-			dateMap[formattedDate] = {
-				date: String(formattedDate),
-				impressions: Number(row.impressions),
-				reactions: 0,
-				comments: 0,
-				reposts: 0,
-			};
-		}
-	}
+	const dateMap: Record<string, any> = {};
 
-	for (const row of reactions) {
-		const formattedDate = formatDate(String(row.date));
-		if (formattedDate) {
-			dateMap[formattedDate] ??= {
-				date: formattedDate,
-				impressions: 0,
-				reactions: 0,
-				comments: 0,
-				reposts: 0,
-			};
-			dateMap[formattedDate].reactions = Number(row.reactions);
-		}
-	}
+	const tables = [
+		{
+			name: 'company_update_impressions',
+			column: 'update_id',
+			alias: 'impressions',
+		},
+		{
+			name: 'company_update_reactions',
+			column: 'update_id',
+			alias: 'reactions',
+		},
+		{
+			name: 'company_update_comments',
+			column: 'update_id',
+			alias: 'comments',
+		},
+		{
+			name: 'company_update_reposts',
+			column: 'original_update_id',
+			alias: 'reposts',
+		},
+	];
 
-	for (const row of comments) {
-		const formattedDate = formatDate(String(row.date));
-		if (formattedDate) {
-			dateMap[formattedDate] ??= {
-				date: formattedDate,
-				impressions: 0,
-				reactions: 0,
-				comments: 0,
-				reposts: 0,
-			};
-			dateMap[formattedDate].comments = Number(row.comments);
-		}
-	}
+	for (const table of tables) {
+		const rows = await knexInstance(table.name)
+			.select(knexInstance.raw('DATE(created_at) as date'))
+			.count('* as count')
+			.whereIn(table.column, updateIds)
+			.groupByRaw('DATE(created_at)');
 
-	for (const row of reposts) {
-		const formattedDate = formatDate(String(row.date));
-		if (formattedDate) {
-			dateMap[formattedDate] ??= {
-				date: formattedDate,
-				impressions: 0,
-				reactions: 0,
-				comments: 0,
-				reposts: 0,
-			};
-			dateMap[formattedDate].reposts = Number(row.reposts);
+		for (const row of rows) {
+			const formattedDate = formatDate(String(row.date));
+			if (formattedDate) {
+				dateMap[formattedDate] ??= {
+					date: formattedDate,
+					impressions: 0,
+					reactions: 0,
+					comments: 0,
+					reposts: 0,
+				};
+				dateMap[formattedDate][table.alias] += Number(row.count);
+			}
 		}
 	}
 
 	return Object.values(dateMap).sort((a, b) => a.date.localeCompare(b.date));
+};
+
+export const getUpdateByCompanyId = async (companyId: string) => {
+	return await knexInstance('company_updates').where({ company_id: companyId }).first();
 };
 
 export const getUpdateById = async (updateId: string) => {
@@ -293,4 +271,73 @@ export const updateLogo = async (companyId: string, logoURL: string) => {
 		.select('logo_url as logoURL')
 		.where({ id: companyId })
 		.first();
+};
+
+export const insertLogo = async (companyId: string, logoURL: string) => {
+	await knexInstance('company_pages').insert({
+		id: companyId,
+		logo_url: logoURL,
+	});
+
+	return knexInstance('company_pages')
+		.select('logo_url as logoURL')
+		.where({ id: companyId })
+		.first();
+};
+
+export const addRepost = async (originalUpdateId: string, userId: string) => {
+	const [newRepost] = await knexInstance('company_update_reposts')
+		.insert({
+			id: uuidv4(),
+			original_update_id: originalUpdateId,
+			user_id: userId,
+		})
+		.returning('*');
+
+	return newRepost;
+};
+
+export const addReaction = async (updateId: string, userId: string, type: string): Promise<any> => {
+	const [newReaction] = await knexInstance('company_update_reactions')
+		.insert({
+			id: uuidv4(),
+			update_id: updateId,
+			user_id: userId,
+			type, // Add reaction type
+			created_at: new Date(),
+		})
+		.returning('*');
+
+	return newReaction;
+};
+
+export const addComment = async (
+	updateId: string,
+	userId: string,
+	content: string,
+): Promise<any> => {
+	const [newComment] = await knexInstance('company_update_comments')
+		.insert({
+			id: uuidv4(),
+			update_id: updateId,
+			user_id: userId,
+			content, // Add comment content
+			created_at: new Date(),
+		})
+		.returning('*');
+
+	return newComment;
+};
+
+export const addImpression = async (updateId: string, userId: string) => {
+	const [newImpression] = await knexInstance('company_update_impressions')
+		.insert({
+			id: uuidv4(),
+			update_id: updateId,
+			user_id: userId,
+			created_at: new Date(),
+		})
+		.returning('*');
+
+	return newImpression;
 };
