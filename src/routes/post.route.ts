@@ -3,12 +3,11 @@ import * as postsController from '../controllers/post.controller';
 import { newAuthMiddleware } from '../middleware/auth.middleware';
 import { upload } from '../middleware/multer';
 const router = express.Router();
-
-router.get('/me', newAuthMiddleware, postsController.getMyPosts); //get user posts
+router.get('/me', newAuthMiddleware, postsController.getMyPosts); //get user posts done
 router.get('/me/feed', newAuthMiddleware, postsController.getFeedPosts); //get user feed posts
 router.post('/me/newpost', newAuthMiddleware, postsController.createPost); //create new post
 router.patch('/me/editpost', newAuthMiddleware, postsController.editPost); //edit post
-router.post('/me/like', newAuthMiddleware, postsController.likePost); //like post
+router.post('/me/like', newAuthMiddleware, postsController.likePost); //like post or comment
 router.delete('/me/unlike', newAuthMiddleware, postsController.deletelike); //unlike post
 router.post('/me/comment', newAuthMiddleware, postsController.commentPost); //comment on post or comment
 router.post('/me/save', newAuthMiddleware, postsController.savePost); //save post
