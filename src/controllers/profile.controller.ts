@@ -1083,6 +1083,8 @@ export const getProfileById = async (req: Request, res: Response) => {
 		const skills = await profileService.getSkills(userId);
 		const followersCount = await profileService.getFollowersCount(userId);
 		const connectionsCount = await profileService.getConnectionsCount(userId);
+		const followigStatus = await profileService.getFollowingStatus(currentUserId, userId);
+		const connectionStatus = await profileService.getConnectionStatus(currentUserId, userId);
 
 		// Combine all data into a single response
 		res.json({
@@ -1094,6 +1096,8 @@ export const getProfileById = async (req: Request, res: Response) => {
 			skills,
 			followersCount,
 			connectionsCount,
+			followigStatus,
+			connectionStatus,
 		});
 	} catch (error) {
 		const errorMessage = error instanceof Error ? error.message : JSON.stringify(error);
