@@ -8,8 +8,8 @@ const router = express.Router();
 router.get('/updates', companyController.getAllCompaniesUpdates); //remaining in postman
 router.get('/', companyController.getAllCompanies); //remaining in postman
 router.get('/:id', companyController.getCompanyById); //remaining in postman
-router.get('/:update_id/updates', companyController.getCompanyUpdateById); //remaining in postman
-router.post('/', newAuthMiddleware, companyController.createCompany);
+router.get('/:company_id/updates', companyController.getUpdatesByCompanyId); //remaining in postman
+router.post('/', newAuthMiddleware, upload.single('file'), companyController.createCompany);
 router.put('/:id', newAuthMiddleware, companyController.updateCompany); //update company
 router.post('/job', newAuthMiddleware, companyController.postJob); //post a job
 router.get('/:id/getalljob', newAuthMiddleware, companyController.getJobs); //get all jobs
@@ -32,12 +32,16 @@ router.get(
 	companyController.getCompanyVisitorsAnalytics,
 );
 router.post('/:company_id/view', newAuthMiddleware, companyController.logCompanyView);
-router.get('/:update_id/content', newAuthMiddleware, companyController.getDailyContentAnalytics);
+router.get('/:company_id/content', newAuthMiddleware, companyController.getDailyContentAnalytics);
 router.post(
 	'/logo/:company_id',
 	newAuthMiddleware,
 	upload.single('file'),
 	companyController.updateLogo,
 );
+router.post('/:update_id/impressions', newAuthMiddleware, companyController.addImpression); // Add impression
+router.post('/:update_id/reactions', newAuthMiddleware, companyController.addReaction); // Add reaction
+router.post('/:update_id/comments', newAuthMiddleware, companyController.addComment); // Add comment
+router.post('/:update_id/reposts', newAuthMiddleware, companyController.addRepost); // Add repost
 
 export default router;

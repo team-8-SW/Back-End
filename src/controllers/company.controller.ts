@@ -33,11 +33,11 @@ export const getAllCompaniesUpdates = async (req: Request, res: Response) => {
 	}
 };
 
-export const getCompanyUpdateById = async (req: Request, res: Response) => {
+export const getUpdatesByCompanyId = async (req: Request, res: Response) => {
 	try {
 		// eslint-disable-next-line @typescript-eslint/naming-convention
-		const { update_id } = req.params;
-		const update = await companyService.getUpdateById(update_id);
+		const { company_id } = req.params;
+		const update = await companyService.getUpdateByCompanyId(company_id);
 		res.status(200).json(update);
 	} catch (error) {
 		res.status(500).json({ error: 'Internal server Error' });
@@ -47,11 +47,25 @@ export const getCompanyUpdateById = async (req: Request, res: Response) => {
 export const createCompany = async (req: Request, res: Response) => {
 	try {
 		const companyData = req.body;
+		if (!companyData.name) {
+			return res.status(400).json({ message: 'Company name is required' });
+		}
 		// eslint-disable-next-line @typescript-eslint/naming-convention
 		const admin_user_id = (req as any).user?.user_id;
 		if (!admin_user_id) return res.status(401).json({ message: 'Unauthorized' });
 
-		const newCompany = await companyService.createCompany({ ...companyData, admin_user_id });
+		// eslint-disable-next-line @typescript-eslint/naming-convention
+		let logo_url: string | undefined = undefined;
+
+		if (req.file) {
+			logo_url = await uploadLogoToCloudinary(req.file);
+		}
+
+		const newCompany = await companyService.createCompany({
+			...companyData,
+			admin_user_id,
+			logo_url,
+		});
 		res.status(200).json({ message: 'Company created successfully', company: newCompany });
 	} catch (error) {
 		console.error('Error creating company:', error);
@@ -288,16 +302,16 @@ export const logCompanyView = async (req: Request, res: Response) => {
 export const getDailyContentAnalytics = async (req: Request, res: Response) => {
 	try {
 		// eslint-disable-next-line @typescript-eslint/naming-convention
-		const { update_id } = req.params;
+		const { company_id } = req.params;
 		// eslint-disable-next-line @typescript-eslint/naming-convention
 		const admin_user_id = (req as any).user?.user_id;
 
-		const update = await companyService.getUpdateById(update_id);
-		if (!update || update.admin_user_id !== admin_user_id) {
+		const company = await companyService.getCompanyById(company_id);
+		if (!company || company.admin_user_id !== admin_user_id) {
 			return res.status(403).json({ message: 'Unauthorized action' });
 		}
 
-		const stats = await companyService.getContentAnalytics(update_id);
+		const stats = await companyService.getCompanyContentAnalytics(company_id);
 
 		res.status(200).json(stats);
 	} catch (err) {
@@ -354,6 +368,139 @@ export const updateLogo = async (req: Request, res: Response) => {
 		});
 	} catch (error) {
 		const errorMessage = error instanceof Error ? error.message : JSON.stringify(error);
+		res.status(500).json({ error: 'Internal server error', details: errorMessage });
+	}
+};
+
+export const uploadLogoToCloudinary = async (file: Express.Multer.File): Promise<string> => {
+	if (!file) {
+		throw new Error('No file uploaded');
+	}
+
+	const allowedMimeTypes = ['image/jpeg', 'image/png'];
+	if (!allowedMimeTypes.includes(file.mimetype)) {
+		throw new Error('Invalid file type. Only JPEG and PNG are allowed.');
+	}
+
+	return new Promise((resolve, reject) => {
+		const stream = cloudinary.uploader.upload_stream(
+			{
+				folder: 'linkedin-clone/company-logos',
+				resource_type: 'image',
+				type: 'upload',
+			},
+			(error, result) => {
+				if (error) return reject(error);
+				if (!result) return reject(new Error('No result from Cloudinary'));
+				resolve(result.secure_url);
+			},
+		);
+		stream.end(file.buffer);
+	});
+};
+
+export const addImpression = async (req: Request, res: Response) => {
+	try {
+		const { update_id } = req.params;
+		const user_id = (req as any).user?.user_id;
+
+		if (!update_id) {
+			return res.status(400).json({ message: 'Update ID is required' });
+		}
+
+		if (!user_id) {
+			return res.status(401).json({ message: 'Unauthorized' });
+		}
+
+		const impression = await companyService.addImpression(update_id, user_id);
+
+		res.status(201).json({
+			message: 'Impression added successfully',
+			impression,
+		});
+	} catch (error) {
+		console.error('Error adding impression:', error);
+
+		if (error instanceof Error) {
+			if (error.message === 'Update not found') {
+				return res.status(404).json({ message: 'Update not found' });
+			}
+			if (error.message === 'Impression already exists') {
+				return res.status(409).json({ message: 'Impression already exists' });
+			}
+		}
+
+		res.status(500).json({ error: 'Internal server error' });
+	}
+};
+
+export const addReaction = async (req: Request, res: Response) => {
+	try {
+		const { update_id } = req.params;
+		const { type } = req.body;
+		const user_id = (req as any).user?.user_id;
+
+		if (!type) {
+			return res.status(400).json({ error: 'Reaction type is required' });
+		}
+
+		// Call service to add reaction
+		const reaction = await companyService.addReaction(update_id, user_id, type);
+
+		res.status(201).json({
+			message: 'Reaction added successfully',
+			reaction,
+		});
+	} catch (error) {
+		res.status(500).json({ error: 'Internal server error' });
+	}
+};
+
+export const addComment = async (req: Request, res: Response) => {
+	try {
+		const { update_id } = req.params;
+		const { content } = req.body; 
+		const user_id = (req as any).user?.user_id;
+
+		if (!content) {
+			return res.status(400).json({ error: 'Content is required for comment' });
+		}
+
+		// Call service to add comment
+		const comment = await companyService.addComment(update_id, user_id, content);
+
+		res.status(201).json({
+			message: 'Comment added successfully',
+			comment,
+		});
+	} catch (error) {
+		res.status(500).json({ error: 'Internal server error' });
+	}
+};
+
+export const addRepost = async (req: Request, res: Response) => {
+	try {
+		const { update_id } = req.params;
+		const userId = (req as any).user?.user_id;
+
+		if (!update_id) {
+			return res.status(400).json({ error: 'Missing updateId' });
+		}
+
+		if (!userId) {
+			return res.status(400).json({ error: 'Missing userId' });
+
+		}
+
+		const repost = await companyService.addRepost(update_id, userId);
+
+		res.status(201).json({
+			message: 'Repost added successfully',
+			repost,
+		});
+	} catch (error) {
+		console.error('Error in addRepost:', error);
+		const errorMessage = error instanceof Error ? error.message : String(error);
 		res.status(500).json({ error: 'Internal server error', details: errorMessage });
 	}
 };
