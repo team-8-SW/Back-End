@@ -9,7 +9,7 @@ router.get('/me/feed', newAuthMiddleware, postsController.getFeedPosts); //get u
 router.post('/me/newpost', newAuthMiddleware, postsController.createPost); //create new post
 router.patch('/me/editpost', newAuthMiddleware, postsController.editPost); //edit post
 router.post('/me/like', newAuthMiddleware, postsController.likePost); //like post
-router.post('/me/unlike', newAuthMiddleware, postsController.deletelike); //unlike post
+router.delete('/me/unlike', newAuthMiddleware, postsController.deletelike); //unlike post
 router.post('/me/comment', newAuthMiddleware, postsController.commentPost); //comment on post or comment
 router.post('/me/save', newAuthMiddleware, postsController.savePost); //save post
 router.post('/me/share', newAuthMiddleware, postsController.sharePost); //repost

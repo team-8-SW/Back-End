@@ -701,3 +701,38 @@ export const areUsersConnected = async (userId1: string, userId2: string): Promi
 
 	return !!connection;
 };
+
+export const getFollowingStatus = async (userId: string, targetUserId: string) => {
+	const following = await knexInstance('following')
+		.where({ follower_id: userId, followed_id: targetUserId })
+		.first();
+
+	return !!following;
+};
+
+export const getConnectionStatus = async (userId: string, targetUserId: string) => {
+	const connection = await knexInstance('connections')
+		.where(function () {
+			this.where({ requester_id: userId, receiver_id: targetUserId }).orWhere({
+				requester_id: targetUserId,
+				receiver_id: userId,
+			});
+		})
+		.first();
+
+	if (connection) {
+		if (connection.status === 'accepted') {
+			return { status: 'connected' };
+		} else if (connection.status === 'pending') {
+			if (connection.requester_id === userId) {
+				return { status: 'pending' };
+			} else if (connection.requester_id === targetUserId) {
+				return { status: 'waiting', connectionId: connection.id };
+			}
+		} else if (connection.status === 'declined') {
+			return { status: 'no connection' };
+		}
+	}
+
+	return { status: 'no connection' };
+};
