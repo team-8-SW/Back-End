@@ -43,5 +43,11 @@ router.post('/:update_id/impressions', newAuthMiddleware, companyController.addI
 router.post('/:update_id/reactions', newAuthMiddleware, companyController.addReaction); // Add reaction
 router.post('/:update_id/comments', newAuthMiddleware, companyController.addComment); // Add comment
 router.post('/:update_id/reposts', newAuthMiddleware, companyController.addRepost); // Add repost
+router.post(
+	'/cover/:company_id',
+	newAuthMiddleware,
+	upload.single('file'),
+	companyController.updateCoverPhoto,
+); //add cover photo
 
 export default router;

@@ -344,3 +344,16 @@ export const addImpression = async (updateId: string, userId: string) => {
 
 	return newImpression;
 };
+
+export const updateCoverPhoto = async (companyId: string, coverPhotoURL: string) => {
+	const rowsUpdated = await knexInstance('company_pages')
+		.where({ id: companyId })
+		.update({ cover_photo_url: coverPhotoURL });
+
+	if (rowsUpdated === 0) return null;
+
+	return knexInstance('company_pages')
+		.select('cover_photo_url as coverPhotoURL')
+		.where({ id: companyId })
+		.first();
+};
