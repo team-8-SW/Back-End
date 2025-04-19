@@ -26,7 +26,6 @@ jest.mock('../services/company.service', () => ({
 	getTotalPageViews: jest.fn(),
 	getViewsPerDay: jest.fn(),
 	getUpdateById: jest.fn(),
-	getContentAnalytics: jest.fn(),
 	pageViewService: jest.fn(),
 }));
 
