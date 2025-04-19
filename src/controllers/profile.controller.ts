@@ -1072,7 +1072,7 @@ export const getProfileById = async (req: Request, res: Response) => {
 		let isPublic = false;
 		if (profileVisibility.visibility === 'public') {
 			isPublic = true;
-		} else if (profileVisibility.visibility === 'connections-only' && isConnected) {
+		} else if (profileVisibility.visibility === 'connections' && isConnected) {
 			isPublic = true;
 		}
 
