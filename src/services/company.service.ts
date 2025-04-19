@@ -344,3 +344,11 @@ export const addImpression = async (updateId: string, userId: string) => {
 
 	return newImpression;
 };
+
+export const getCommentCountByUpdateId = async (updateId: string): Promise<number> => {
+	const result = await knexInstance('company_update_comments')
+		.where({ update_id: updateId })
+		.count<{ count: string }>('id as count')
+		.first();
+	return Number(result?.count || 0);
+};

@@ -504,3 +504,23 @@ export const addRepost = async (req: Request, res: Response) => {
 		res.status(500).json({ error: 'Internal server error', details: errorMessage });
 	}
 };
+
+export const getCommentCount = async (req: Request, res: Response) => {
+	try {
+		const { update_id } = req.params;
+		const userId = (req as any).user?.user_id;
+		// if (!userId) {
+		// 	return res.status(401).json({ message: 'Unauthorized' });
+		// }
+
+		if (!update_id) {
+			return res.status(400).json({ message: 'Update ID is required' });
+		}
+
+		const count = await companyService.getCommentCountByUpdateId(update_id);
+		res.json({ update_id, commentCount: count });
+	} catch (err) {
+		console.error('Error fetching comment count:', err);
+		res.status(500).json({ message: 'Internal server error' });
+	}
+};
