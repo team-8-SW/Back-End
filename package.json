@@ -52,6 +52,7 @@
 		"pg-promise": "^11.11.0",
 		"psql": "^0.0.1",
 		"reflect-metadata": "^0.2.2",
+		"socket": "^0.14.134",
 		"swagger-jsdoc": "^6.2.8",
 		"swagger-ui-express": "^5.0.1",
 		"typeorm": "^0.3.21",

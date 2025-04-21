@@ -722,10 +722,10 @@ export const getConnectionStatus = async (userId: string, targetUserId: string) 
 
 	if (connection) {
 		if (connection.status === 'accepted') {
-			return { status: 'connected' };
+			return { status: 'connected', connectionId: connection.id };
 		} else if (connection.status === 'pending') {
 			if (connection.requester_id === userId) {
-				return { status: 'pending' };
+				return { status: 'pending', connectionId: connection.id };
 			} else if (connection.requester_id === targetUserId) {
 				return { status: 'waiting', connectionId: connection.id };
 			}

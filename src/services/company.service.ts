@@ -249,7 +249,10 @@ export const getCompanyContentAnalytics = async (companyId: string) => {
 };
 
 export const getUpdateByCompanyId = async (companyId: string) => {
-	return await knexInstance('company_updates').where({ company_id: companyId }).first();
+	return await knexInstance('company_updates')
+		.where({ company_id: companyId })
+		.select('*')
+		.orderBy('created_at', 'desc');
 };
 
 export const getUpdateById = async (updateId: string) => {
@@ -340,4 +343,17 @@ export const addImpression = async (updateId: string, userId: string) => {
 		.returning('*');
 
 	return newImpression;
+};
+
+export const updateCoverPhoto = async (companyId: string, coverPhotoURL: string) => {
+	const rowsUpdated = await knexInstance('company_pages')
+		.where({ id: companyId })
+		.update({ cover_photo_url: coverPhotoURL });
+
+	if (rowsUpdated === 0) return null;
+
+	return knexInstance('company_pages')
+		.select('cover_photo_url as coverPhotoURL')
+		.where({ id: companyId })
+		.first();
 };

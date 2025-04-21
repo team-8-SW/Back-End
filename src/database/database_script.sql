@@ -119,7 +119,7 @@ CREATE TABLE company_pages (
     website VARCHAR(255),
     size VARCHAR(20) NOT NULL CHECK (size IN ('0-1 employees', '2-10 employees', '11-50 employees', '51-200 employees', '201-500 employees', '501-1000 employees', '1001-5000 employees', '5001-10000 employees', '10000+ employees')),
     location VARCHAR(100),
-    admin_user_id UUID REFERENCES users(id),
+    admin_user_id UUID REFERENCES users(id) ON DELETE CASCADE
     created_at TIMESTAMP NOT NULL DEFAULT NOW(),
     about TEXT,
     cover_photo_url VARCHAR(255),
@@ -341,6 +341,18 @@ CREATE TABLE IF NOT EXISTS company_update_reposts (
   user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   created_at TIMESTAMP DEFAULT NOW()
 );
+
+-- First, drop the existing foreign key constraint
+ALTER TABLE company_pages
+DROP CONSTRAINT company_pages_admin_user_id_fkey;
+
+-- Then, add the new foreign key constraint with ON DELETE CASCADE
+ALTER TABLE company_pages
+ADD CONSTRAINT company_pages_admin_user_id_fkey
+FOREIGN KEY (admin_user_id)
+REFERENCES users(id)
+ON DELETE CASCADE;
+
 -- Indexes for new tables (skills, universities, user_skills, user_education)
 CREATE INDEX IF NOT EXISTS idx_skills_skill_name ON skills(skill_name);
 CREATE INDEX IF NOT EXISTS idx_universities_university_name ON universities(university_name);
