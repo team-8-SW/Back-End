@@ -200,7 +200,28 @@ export const viewPostEngagement = async (req: Request, res: Response) => {
 		res.status(500).json({ message: 'Failed to view post engagement' });
 	}
 };
-
+//getcomments
+export const getcomments = async (req: Request, res: Response) => {
+	try {
+		const user_id = (req as any).user?.user_id; // Extract user_id from authenticated user
+		if (!user_id) {
+			return res.status(400).json({ message: 'User ID is required' });
+		}
+		const { post_id } = req.body;
+		// Validate required fields
+		if (!post_id) {
+			return res.status(400).json({ message: 'postid is required' });
+		}
+		const comments = await postService.getallcomments({
+			user_id,
+			post_id,
+		});
+		res.status(201).json(comments);
+	} catch (error) {
+		console.error('Error viewing post comments:', error);
+		res.status(500).json({ message: 'Failed to view post comments' });
+	}
+};
 export const sharePost = async (req: Request, res: Response) => {
 	try {
 		const user_id = (req as any).user?.user_id; // Extract user_id from authenticated user

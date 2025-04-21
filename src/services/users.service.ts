@@ -1,4 +1,5 @@
 import { v4 as uuidv4 } from 'uuid'; // Import UUID generator
+import { validate as isUUID } from 'uuid';
 import { knexInstance } from '../config/db';
 
 //------------Block/Unblock users---------//
@@ -150,4 +151,17 @@ export const searchUsers = async (
 
 	const users = await usersQuery;
 	return users.length > 0 ? users : [];
+};
+
+export const ispremium = async (userId: string) => {
+    try {
+		const premium = await knexInstance('users')
+		.where({ id: userId })
+		.select('is_premium')
+		.first();
+		return premium;
+	} catch (error) {
+		console.error('Error viewing user is_premium status', error);
+		throw new Error('Failed to get is_premium status engagement');
+	}
 };
