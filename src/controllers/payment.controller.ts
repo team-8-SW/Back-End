@@ -1,9 +1,15 @@
 import { Request, Response } from 'express';
 import * as paymentsService from '../services/payment.service';
+import { ispremium } from '../services/users.service';
 
 //------------------------------------Make Payment------------------------------------//
 export const createPaymentIntent = async (req: Request, res: Response) => {
 	try {
+		const userId = (req as any).user?.id;
+		const isPremium = await ispremium(userId);
+		if (isPremium) {
+			return res.status(400).json({ message: 'User is already premium' });
+		}
 		const clientSecret = await paymentsService.createPaymentIntent();
 		res.status(200).json({ clientSecret });
 	} catch (error) {
@@ -31,6 +37,10 @@ export const cancelSubscription = async (req: Request, res: Response) => {
 	const userId = (req as any).user?.id;
 
 	try {
+		const isPremium = await ispremium(userId);
+		if (!isPremium) {
+			return res.status(400).json({ message: 'User is not premium' });
+		}
 		const result = await paymentsService.cancelSubscription(userId);
 		if (result === 'not found') {
 			return res.status(404).json({ message: 'User not found' });

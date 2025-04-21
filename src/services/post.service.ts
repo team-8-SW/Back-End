@@ -474,7 +474,7 @@ export const getallcomments = async (engagement: {
 		const comments = await knexInstance('comments')
 			.where({ post_id })
 			.select('*')
-			.orderBy('created_at', 'desc'); 
+			.orderBy('created_at', 'desc');
 		return comments;
 	} catch (error) {
 		console.error('Error viewing post comments:', error);

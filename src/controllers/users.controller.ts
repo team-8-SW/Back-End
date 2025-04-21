@@ -118,19 +118,19 @@ export const searchUsers = async (req: Request, res: Response) => {
 
 //ispremium
 export const ispremium = async (req: Request, res: Response) => {
-    try {
-        const user_id = (req as any).user?.user_id; // Extract user_id from authenticated user
-        if (!user_id) {
-            return res.status(400).json({ message: 'User ID is required' });
+	try {
+		const user_id = (req as any).user?.user_id; // Extract user_id from authenticated user
+		if (!user_id) {
+			return res.status(400).json({ message: 'User ID is required' });
 		}
-        // Query the database to get the is_premium field
-        const user = await usersService.ispremium(user_id);
-        if (!user) {
-            return res.status(404).json({ message: 'premium status not found' });
-        }
-        res.status(200).json(user);
-    } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : JSON.stringify(error);
-        res.status(500).json({ error: 'Internal server error', details: errorMessage });
-    }
+		// Query the database to get the is_premium field
+		const user = await usersService.ispremium(user_id);
+		if (!user) {
+			return res.status(404).json({ message: 'premium status not found' });
+		}
+		res.status(200).json(user);
+	} catch (error) {
+		const errorMessage = error instanceof Error ? error.message : JSON.stringify(error);
+		res.status(500).json({ error: 'Internal server error', details: errorMessage });
+	}
 };

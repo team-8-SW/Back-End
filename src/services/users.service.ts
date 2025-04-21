@@ -154,12 +154,12 @@ export const searchUsers = async (
 };
 
 export const ispremium = async (userId: string) => {
-    try {
+	try {
 		const premium = await knexInstance('users')
-		.where({ id: userId })
-		.select('is_premium')
-		.first();
-		return premium;
+			.where({ id: userId })
+			.select('is_premium')
+			.first();
+		return premium?.is_premium || false;
 	} catch (error) {
 		console.error('Error viewing user is_premium status', error);
 		throw new Error('Failed to get is_premium status engagement');
