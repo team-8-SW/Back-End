@@ -15,6 +15,7 @@ import healthRoutes from './src/routes/health.route';
 import postsRoutes from './src/routes/post.route';
 import notificationsRouter from './src/routes/notifications.route';
 import connectionRoutes from './src/routes/connection.route';
+import paymentRoutes from './src/routes/payment.route';
 import http from 'http';
 import { initializeWebSocket } from './websocket';
 const apps = express();
@@ -63,6 +64,7 @@ app.use('/health', healthRoutes);
 app.use('/api/test', testRoutes);
 app.use('/api/connections', connectionRoutes);
 app.use('/api/posts', postsRoutes);
+app.use('/api/payments', paymentRoutes);
 // 404 handler
 app.use((req: Request, res: Response) => {
 	res.status(404).json({ message: 'Resource not found' });

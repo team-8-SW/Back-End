@@ -53,6 +53,7 @@
 		"psql": "^0.0.1",
 		"reflect-metadata": "^0.2.2",
 		"socket": "^0.14.134",
+		"stripe": "^18.0.0",
 		"swagger-jsdoc": "^6.2.8",
 		"swagger-ui-express": "^5.0.1",
 		"typeorm": "^0.3.21",
