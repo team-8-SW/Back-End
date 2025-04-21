@@ -448,6 +448,39 @@ export const viewpostengagement = async (engagement: {
 		throw new Error('Failed to view post engagement');
 	}
 };
+//getallcomments
+export const getallcomments = async (engagement: {
+	post_id: string;
+	user_id: string;
+}): Promise<any> => {
+	try {
+		const { user_id, post_id } = engagement;
+
+		// Validate inputs
+		if (!user_id || !isUUID(user_id)) {
+			throw new Error('Invalid user_id');
+		}
+		if (post_id && !isUUID(post_id)) {
+			throw new Error('Invalid post_id');
+		}
+		if (!post_id) {
+			throw new Error('post_id must be provided');
+		}
+		// Ensure the post exists
+		const postExists = await knexInstance('posts').where({ id: post_id }).first();
+		if (!postExists) {
+			throw new Error('Post not found');
+		}
+		const comments = await knexInstance('comments')
+			.where({ post_id })
+			.select('*')
+			.orderBy('created_at', 'desc'); 
+		return comments;
+	} catch (error) {
+		console.error('Error viewing post comments:', error);
+		throw new Error('Failed to view post comments');
+	}
+};
 //share
 export const share = async (share: { post_id: string; user_id: string }): Promise<any> => {
 	try {
