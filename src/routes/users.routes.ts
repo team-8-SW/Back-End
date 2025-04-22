@@ -1,6 +1,6 @@
 import express, { Express, Request, Response } from 'express';
 import * as usersController from '../controllers/users.controller';
-import { authMiddleware2 } from '../middleware/auth.middleware';
+import { authMiddleware2, newAuthMiddleware } from '../middleware/auth.middleware';
 
 // function routes(app: Express) {}
 
@@ -157,5 +157,6 @@ router.get('/me/blocked', authMiddleware2, usersController.getBlockedUsers);
 //------------Search for users by name, company, or industry---------//
 //GET /api/users/me/search
 router.get('/me/search', authMiddleware2, usersController.searchUsers);
-
+//GET /api/users/me/ispremium
+router.get('/me/ispremium', newAuthMiddleware, usersController.ispremium);
 export default router;
