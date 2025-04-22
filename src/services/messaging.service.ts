@@ -1,10 +1,13 @@
 import { v4 as uuidv4 } from 'uuid';
 import cloudinary from '../utils/cloudinary';
 import { knexInstance as db } from '../config/db';
-
+import { areUsersConnected } from '../models/connection.model';
 /* ======================= Send private messages to connections =============================*/
 export const createTextMessage = async (senderId: string, receiverId: string, content: string) => {
-	const [message] = await db('messages')
+	//check if user is in my connections or not first
+	const connected = await areUsersConnected(senderId, receiverId);
+	if (connected) {
+		const [message] = await db('messages')
 		.insert({
 			id: uuidv4(),
 			sender_id: senderId,
@@ -12,8 +15,21 @@ export const createTextMessage = async (senderId: string, receiverId: string, co
 			content,
 			status: 'sent',
 		})
-		.returning(['id', 'content', 'sent_at']);
-	return message;
+			.returning(['id', 'content', 'sent_at']);
+			return message;
+	} else {//send a request
+		const [request] = await db('messages_requests')
+		.insert({
+			id: uuidv4(),
+			sender_id: senderId,
+			receiver_id: receiverId,
+			content,
+			status: 'sent',
+		})
+			.returning(['id', 'content', 'sent_at']);
+			return request;
+
+	}
 };
 
 /* ======================= Send media messages to connections =============================*/
@@ -196,4 +212,47 @@ export const getLastMessageReadStatus = async (userId1: string, userId2: string)
 		isRead: message.is_read,
 		timestamp: message.sent_at,
 	};
+};
+ //getAllRequests
+ export const getAllRequests = async (userId: string) => {
+	// 1. Get all messages where user is receiver
+	const rawMessages = await db('messages_requests')
+		.where('receiver_id', userId)
+		.select('id', 'sender_id', 'receiver_id', 'content', 'media_url', 'media_type', 'sent_at');
+
+	// 2. Extract unique conversation user IDs
+	const userMap = new Map<string, any>();
+
+	for (const msg of rawMessages) {
+		const otherUserId = msg.sender_id === userId ? msg.receiver_id : msg.sender_id;
+
+		if (!userMap.has(otherUserId)) {
+			userMap.set(otherUserId, msg); // first message we find (will replace below if newer)
+		}
+
+		// replace if newer
+		const existing = userMap.get(otherUserId);
+		if (new Date(msg.sent_at) > new Date(existing.sent_at)) {
+			userMap.set(otherUserId, msg);
+		}
+	}
+
+	const otherUserIds = Array.from(userMap.keys());
+
+	// 3. Fetch user info
+	const users = await db('users')
+		.select('id', 'first_name as firstName', 'last_name as lastName')
+		.whereIn('id', otherUserIds);
+
+	const userMapInfo = new Map(users.map((u) => [u.id, u]));
+
+	// 4. Format response
+	const requests = Array.from(userMap.entries()).map(([otherUserId, lastMsg]) => ({
+		id: `${userId}_${otherUserId}`,
+		participants: [userMapInfo.get(otherUserId)],
+		lastMessage: lastMsg.content || '', // could also append media_type
+		timestamp: lastMsg.sent_at,
+	}));
+
+	return requests;
 };

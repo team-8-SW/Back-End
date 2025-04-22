@@ -7,7 +7,7 @@ const db = knex({
 });
 
 export const isUserBlocked = async (senderId: string, receiverId: string): Promise<boolean> => {
-	const result = await db('blockedusers')
+	const result = await db('blocked_users')
 		.where({ user_id: receiverId, blocked_user_id: senderId })
 		.first();
 
