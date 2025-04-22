@@ -416,40 +416,38 @@ export const savepost = async (save: { post_id: string; user_id: string }): Prom
 	}
 };
 //report
-export const reportpost = async (save: { post_id: string; user_id: string; }): Promise<any> => {
-    try {
-        const { user_id, post_id} = save;
+export const reportpost = async (save: { post_id: string; user_id: string }): Promise<any> => {
+	try {
+		const { user_id, post_id } = save;
 
-        // Validate inputs
-        if (!user_id || !isUUID(user_id)) {
-            throw new Error('Invalid user_id');
-        }
-        if (post_id && !isUUID(post_id)) {
-            throw new Error('Invalid post_id');
-        }
-        if (!post_id) {
-            throw new Error('post_id must be provided');
-        }
-        // Ensure the post exists
-        const postExists = await knexInstance('posts')
-            .where({ id: post_id })
-            .first();
-        if (!postExists) {
-            throw new Error('Post not found');
-        }
-        const reportedId = uuidv4(); // Generate a unique ID for the comment
-        const [reportedpost] = await knexInstance('reported_posts')
-            .insert({
-                id: reportedId,
-                post_id: post_id,
-                user_id: user_id,
-            })
-            .returning('*');
-        return reportedpost;
-    } catch (error) {
-        console.error('Error reporting post:', error);
-        throw new Error('Failed to report post');
-    }
+		// Validate inputs
+		if (!user_id || !isUUID(user_id)) {
+			throw new Error('Invalid user_id');
+		}
+		if (post_id && !isUUID(post_id)) {
+			throw new Error('Invalid post_id');
+		}
+		if (!post_id) {
+			throw new Error('post_id must be provided');
+		}
+		// Ensure the post exists
+		const postExists = await knexInstance('posts').where({ id: post_id }).first();
+		if (!postExists) {
+			throw new Error('Post not found');
+		}
+		const reportedId = uuidv4(); // Generate a unique ID for the comment
+		const [reportedpost] = await knexInstance('reported_posts')
+			.insert({
+				id: reportedId,
+				post_id: post_id,
+				user_id: user_id,
+			})
+			.returning('*');
+		return reportedpost;
+	} catch (error) {
+		console.error('Error reporting post:', error);
+		throw new Error('Failed to report post');
+	}
 };
 
 //viewpostengagement

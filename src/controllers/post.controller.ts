@@ -179,26 +179,26 @@ export const savePost = async (req: Request, res: Response) => {
 };
 //report
 export const reportPost = async (req: Request, res: Response) => {
-    try {
-        const user_id = (req as any).user?.user_id; // Extract user_id from authenticated user
-        if (!user_id) {
-            return res.status(400).json({ message: 'User ID is required' });
-        }
-        const { post_id } = req.body;
-        // Validate required fields
-        if (!post_id) {
-            return res.status(400).json({ message: 'postid is required' });
-        }
-        // Call the service to create the row
-        const saved = await postService.reportpost({
-            user_id,
-            post_id,
-        });
-        res.status(201).json(saved); 
-    } catch (error) {
-        console.error('Error reporting post:', error);
-        res.status(500).json({ message: 'Failed to report post' });
-    }
+	try {
+		const user_id = (req as any).user?.user_id; // Extract user_id from authenticated user
+		if (!user_id) {
+			return res.status(400).json({ message: 'User ID is required' });
+		}
+		const { post_id } = req.body;
+		// Validate required fields
+		if (!post_id) {
+			return res.status(400).json({ message: 'postid is required' });
+		}
+		// Call the service to create the row
+		const saved = await postService.reportpost({
+			user_id,
+			post_id,
+		});
+		res.status(201).json(saved);
+	} catch (error) {
+		console.error('Error reporting post:', error);
+		res.status(500).json({ message: 'Failed to report post' });
+	}
 };
 
 //View post engagement (likes, comments, shares)
