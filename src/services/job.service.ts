@@ -76,3 +76,15 @@ export const getApplicationStatus = async (userId: string, jobId: string) => {
 		.where({ job_id: jobId, applicant_id: userId })
 		.first();
 };
+
+//------------------Helper functions------------------//
+export const checkJobApplicationLimit = async (userId: string): Promise<boolean> => {
+	const result = await knexInstance('job_applications')
+		.where({ applicant_id: userId })
+		.andWhereRaw("DATE_TRUNC('month', applied_at) = DATE_TRUNC('month', CURRENT_DATE)")
+		.count('id as count')
+		.first();
+
+	const count = result?.count ? Number(result.count) : 0;
+	return count >= 5;
+};

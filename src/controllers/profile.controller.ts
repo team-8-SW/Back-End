@@ -955,6 +955,7 @@ export const getMyProfile = async (req: Request, res: Response) => {
 		const skills = await profileService.getSkills(userId);
 		const followersCount = await profileService.getFollowersCount(userId);
 		const connectionsCount = await profileService.getConnectionsCount(userId);
+		const allowConnectionRequests = await profileService.getAllowConnectionRequests(userId);
 
 		// Combine all data into a single response
 		res.json({
@@ -966,6 +967,7 @@ export const getMyProfile = async (req: Request, res: Response) => {
 			skills,
 			followersCount,
 			connectionsCount,
+			allowConnectionRequests,
 		});
 	} catch (error) {
 		const errorMessage = error instanceof Error ? error.message : JSON.stringify(error);
@@ -1085,6 +1087,7 @@ export const getProfileById = async (req: Request, res: Response) => {
 		const connectionsCount = await profileService.getConnectionsCount(userId);
 		const followigStatus = await profileService.getFollowingStatus(currentUserId, userId);
 		const connectionStatus = await profileService.getConnectionStatus(currentUserId, userId);
+		const allowConnectionRequests = await profileService.getAllowConnectionRequests(userId);
 
 		// Combine all data into a single response
 		res.json({
@@ -1098,6 +1101,37 @@ export const getProfileById = async (req: Request, res: Response) => {
 			connectionsCount,
 			followigStatus,
 			connectionStatus,
+			allowConnectionRequests,
+		});
+	} catch (error) {
+		const errorMessage = error instanceof Error ? error.message : JSON.stringify(error);
+		res.status(500).json({ error: 'Internal server error', details: errorMessage });
+	}
+};
+
+//--------------------Change allowConnectionRequests settings--------------------//
+export const updateAllowConnectionRequests = async (req: Request, res: Response) => {
+	try {
+		const userId = (req as any).user?.id;
+
+		const { allowConnectionRequests } = req.body;
+
+		if (allowConnectionRequests === undefined) {
+			return res.status(400).json({ error: 'allowConnectionRequests is required' });
+		}
+
+		const updatedProfile = await profileService.updateAllowConnectionRequests(
+			userId,
+			allowConnectionRequests,
+		);
+
+		if (!updatedProfile) {
+			return res.status(404).json({ error: 'Profile not found' });
+		}
+
+		res.json({
+			message: 'Allow connection requests updated successfully',
+			profile: updatedProfile,
 		});
 	} catch (error) {
 		const errorMessage = error instanceof Error ? error.message : JSON.stringify(error);

@@ -736,3 +736,23 @@ export const getConnectionStatus = async (userId: string, targetUserId: string) 
 
 	return { status: 'no connection' };
 };
+
+//--------------------Change allowConnectionRequests settings--------------------//
+export const updateAllowConnectionRequests = async (userId: string, allow: boolean) => {
+	const rowsUpdated = await knexInstance('user_privacy_settings')
+		.where({ user_id: userId })
+		.update({ allow_connection_requests: allow })
+		.returning('*');
+
+	if (rowsUpdated.length === 0) return null;
+
+	return rowsUpdated[0];
+};
+export const getAllowConnectionRequests = async (userId: string) => {
+	const result = await knexInstance('user_privacy_settings')
+		.select('allow_connection_requests as allowConnectionRequests')
+		.where({ user_id: userId })
+		.first();
+
+	return result?.allow || false;
+};

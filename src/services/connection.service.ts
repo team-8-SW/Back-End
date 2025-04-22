@@ -231,3 +231,27 @@ export const getSentConnectionRequests = async (userId: string) => {
 
 	return { sentRequests, totalSentRequests };
 };
+//--------------------------Helper functions--------------------------//
+export const checkConnectionLimit = async (userId: string) => {
+	const connectionCount = await knexInstance('connections')
+		.where(function () {
+			this.where({ requester_id: userId });
+		})
+		.andWhere({ status: 'accepted' })
+		.count('* as count');
+
+	return parseInt(connectionCount[0].count.toString(), 10) >= 50;
+};
+
+export const getRequesterId = async (connectionId: string) => {
+	const connection = await knexInstance('connections')
+		.where({ id: connectionId })
+		.select('requester_id')
+		.first();
+
+	if (!connection) {
+		return null;
+	}
+
+	return connection.requester_id;
+};
