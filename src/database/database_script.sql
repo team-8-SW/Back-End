@@ -229,6 +229,12 @@ CREATE TABLE saved_posts (
     post_id UUID NOT NULL REFERENCES posts(id) ON DELETE CASCADE
 );
 
+CREATE TABLE reported_posts (
+    id UUID PRIMARY KEY,
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    post_id UUID NOT NULL REFERENCES posts(id) ON DELETE CASCADE
+);
+
 CREATE TABLE saved_jobs (
     id UUID PRIMARY KEY,
     user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
