@@ -13,6 +13,7 @@ import {
 	markConversationAsRead,
 	markConversationAsUnread,
 	getLastMessageReadStatus,
+	getAllRequests,
 } from '../services/messaging.service';
 
 /* ======================= Send private messages to connections =============================*/
@@ -29,12 +30,6 @@ export const sendTextMessage = async (req: AuthenticatedRequest, res: Response) 
 		if (blocked) {
 			return res.status(403).json({ message: 'You are blocked by this user.' });
 		}
-
-		const connected = await areUsersConnected(senderId, receiverId);
-		if (!connected) {
-			return res.status(403).json({ message: 'You are not connected to this user.' });
-		}
-
 		const message = await createTextMessage(senderId, receiverId, content);
 
 		return res.status(201).json({
@@ -252,4 +247,21 @@ export const getTypingIndicator = (req: AuthenticatedRequest, res: Response) => 
 
 	const typing = isUserTypingTo(otherUserId, me); // Are they typing *to me*
 	return res.status(200).json({ isTyping: typing });
+};
+//noor
+export const getRequests = async (req: AuthenticatedRequest, res: Response) => {
+	try {
+		const userId = req.user?.id;
+
+		if (!userId) {
+			return res.status(400).json({ message: 'Missing user ID' });
+		}
+
+		const conversations = await getAllRequests(userId);
+
+		return res.status(200).json(conversations);
+	} catch (err: any) {
+		console.error('Get conversations error:', err.message);
+		return res.status(500).json({ message: 'Internal server error' });
+	}
 };
