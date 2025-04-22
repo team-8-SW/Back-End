@@ -12,18 +12,18 @@ export async function seed(knex: Knex): Promise<void> {
 			console.error('No users found. Please seed users first.');
 			return;
 		}
-	const connections = [];
+		const connections = [];
 		for (let i = 0; i < 10; i++) {
-            const user1 = faker.helpers.arrayElement(users); // Randomly pick a user
-            const user2 = faker.helpers.arrayElement(users); // Randomly pick a user
+			const user1 = faker.helpers.arrayElement(users); // Randomly pick a user
+			const user2 = faker.helpers.arrayElement(users); // Randomly pick a user
 			connections.push({
-                id: uuidv4(),
-                requester_id: user1.id,
-                receiver_id: user2.id,
-                status: faker.helpers.arrayElement(['pending', 'accepted', 'declined']),
-                created_at: faker.date.recent(30)
+				id: uuidv4(),
+				requester_id: user1.id,
+				receiver_id: user2.id,
+				status: faker.helpers.arrayElement(['pending', 'accepted', 'declined']),
+				created_at: faker.date.recent(30),
 			});
-	}
+		}
 
 		await knex('connections').insert(connections);
 		console.log('Inserted connections into the connections table');

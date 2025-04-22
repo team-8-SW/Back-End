@@ -1,52 +1,37 @@
-import { v4 as uuidv4 } from 'uuid'; // Import UUID generator
+import { v4 as uuidv4 } from 'uuid';
 import { knexInstance } from '../config/db';
 
 export const getFollowing = async (userId: string) => {
-	if (!userId) {
-		throw new Error('User ID is required');
-	}
-
 	return await knexInstance('following')
-		.join('users', 'following.followed_id', 'users.id') // Get followed users' details
+		.join('users', 'following.followed_id', 'users.id')
 		.leftJoin('user_profiles', 'users.id', 'user_profiles.user_id')
 		.select(
-			'users.id',
+			'users.id as userId',
 			'users.first_name as firstName',
 			'users.last_name as lastName',
 			'user_profiles.headline',
+			'user_profiles.profile_picture_url as profilePictureUrl',
 		)
-		.where('following.follower_id', userId); // Get users the current user is following
+		.where('following.follower_id', userId);
 };
 
 export const getFollowers = async (userId: string) => {
-	if (!userId) {
-		throw new Error('User ID is required');
-	}
-
 	const followers = await knexInstance('following')
-		.join('users', 'following.follower_id', 'users.id') // Get follower details
-		.leftJoin('user_profiles', 'users.id', 'user_profiles.user_id') // Join to get headline
+		.join('users', 'following.follower_id', 'users.id')
+		.leftJoin('user_profiles', 'users.id', 'user_profiles.user_id')
 		.select(
-			'users.id',
+			'users.id as userId',
 			'users.first_name as firstName',
 			'users.last_name as lastName',
 			'user_profiles.headline',
+			'user_profiles.profile_picture_url as profilePictureUrl',
 		)
-		.where('following.followed_id', userId); // Get followers of this user
+		.where('following.followed_id', userId);
 
 	return followers;
 };
 
 export const followAUser = async (userId: string, followUserId: string) => {
-	if (!userId || !followUserId) {
-		throw new Error('Both User ID and Follow User ID are required');
-	}
-
-	// Prevent self-following
-	if (userId === followUserId) {
-		throw new Error('You cannot follow yourself');
-	}
-
 	// Check if already following
 	const existingFollow = await knexInstance('following')
 		.where({ follower_id: userId, followed_id: followUserId })
@@ -68,15 +53,6 @@ export const followAUser = async (userId: string, followUserId: string) => {
 };
 
 export const deleteFollow = async (userId: string, unfollowUserId: string) => {
-	if (!userId || !unfollowUserId) {
-		throw new Error('Both User ID and Unfollow User ID are required');
-	}
-
-	// Prevent self-unfollowing
-	if (userId === unfollowUserId) {
-		throw new Error('You cannot unfollow yourself');
-	}
-
 	const existingUnfollow = await knexInstance('following')
 		.where({ follower_id: userId, followed_id: unfollowUserId })
 		.first();

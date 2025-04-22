@@ -5,7 +5,6 @@ export async function up(knex: Knex): Promise<void> {
 	if (!exists) {
 		return knex.schema.createTable('posts', (table) => {
 			table.uuid('id').notNullable();
-			table.uuid('user_id').notNullable();
 			// Foreign keys
 			table
 				.uuid('user_id')

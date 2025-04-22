@@ -19,10 +19,6 @@ export const getProfileById = async (id: string) => {
 //--------------------Profile Picture--------------------//
 
 export const updateProfilePicture = async (userId: string, profilePictureUrl: string) => {
-	if (!userId) {
-		throw new Error('User ID is missing in updateProfilePicture function');
-	}
-
 	const rowsUpdated = await knexInstance('user_profiles')
 		.where({ user_id: userId })
 		.update({ profile_picture_url: profilePictureUrl });
@@ -36,10 +32,6 @@ export const updateProfilePicture = async (userId: string, profilePictureUrl: st
 };
 
 export const deleteProfilePicture = async (userId: string) => {
-	if (!userId) {
-		throw new Error('User ID is missing in deleteProfilePicture function');
-	}
-
 	const rowsUpdated = await knexInstance('user_profiles')
 		.where({ user_id: userId })
 		.update({ profile_picture_url: null });
@@ -55,10 +47,6 @@ export const deleteProfilePicture = async (userId: string) => {
 //--------------------Cover Photo--------------------//
 
 export const updateCoverPicture = async (userId: string, coverPhotoUrl: string) => {
-	if (!userId) {
-		throw new Error('User ID is missing in updateCoverPicture function');
-	}
-
 	const rowsUpdated = await knexInstance('user_profiles')
 		.where({ user_id: userId })
 		.update({ cover_photo_url: coverPhotoUrl });
@@ -72,10 +60,6 @@ export const updateCoverPicture = async (userId: string, coverPhotoUrl: string) 
 };
 
 export const deleteCoverPicture = async (userId: string) => {
-	if (!userId) {
-		throw new Error('User ID is missing in deleteCoverPicture function');
-	}
-
 	const rowsUpdated = await knexInstance('user_profiles')
 		.where({ user_id: userId })
 		.update({ cover_photo_url: null });
@@ -90,10 +74,6 @@ export const deleteCoverPicture = async (userId: string) => {
 
 //--------------------Resume--------------------//
 export const updateResume = async (userId: string, resumeUrl: string) => {
-	if (!userId) {
-		throw new Error('User ID is missing in updateResume function');
-	}
-
 	const rowsUpdated = await knexInstance('user_profiles')
 		.where({ user_id: userId })
 		.update({ resume_url: resumeUrl });
@@ -107,10 +87,6 @@ export const updateResume = async (userId: string, resumeUrl: string) => {
 };
 
 export const deleteResume = async (userId: string) => {
-	if (!userId) {
-		throw new Error('User ID is missing in deleteResume function');
-	}
-
 	const rowsUpdated = await knexInstance('user_profiles')
 		.where({ user_id: userId })
 		.update({ resume_url: null });
@@ -125,28 +101,44 @@ export const deleteResume = async (userId: string) => {
 
 //--------------------Experience--------------------//
 export const getExperience = async (userId: string) => {
-	if (!userId) {
-		throw new Error('User ID is missing in getExperience function');
-	}
-
-	return await knexInstance('work_experience')
+	const experiences = await knexInstance('work_experience')
+		.leftJoin('skill_contexts', 'work_experience.id', 'skill_contexts.experience_id')
+		.leftJoin('user_skills', 'skill_contexts.user_skill_id', 'user_skills.id')
+		.leftJoin('skills', 'user_skills.skill_id', 'skills.id')
+		.where('work_experience.user_id', userId)
 		.select(
-			'id',
-			'company_name as companyName',
-			'position',
-			'start_date as startDate',
-			'end_date as endDate',
-			'location',
-			'description',
+			'work_experience.id',
+			'work_experience.company_name as companyName',
+			'work_experience.position',
+			'work_experience.start_date as startDate',
+			'work_experience.end_date as endDate',
+			'work_experience.location',
+			'work_experience.description',
+			knexInstance.raw('ARRAY_AGG(skills.skill_name) as skills'), // Aggregate skills into an array
 		)
-		.where({ user_id: userId });
+		.groupBy(
+			'work_experience.id',
+			'work_experience.company_name',
+			'work_experience.position',
+			'work_experience.start_date',
+			'work_experience.end_date',
+			'work_experience.location',
+			'work_experience.description',
+		);
+
+	return experiences.map((exp) => ({
+		id: exp.id,
+		companyName: exp.companyName,
+		position: exp.position,
+		startDate: exp.startDate,
+		endDate: exp.endDate,
+		location: exp.location,
+		description: exp.description,
+		skills: exp.skills ? exp.skills.filter((skill: null) => skill !== null) : [], // Filter out null skills
+	}));
 };
 
 export const addExperience = async (userId: string, experience: any) => {
-	if (!userId) {
-		throw new Error('User ID is missing in addExperience function');
-	}
-
 	const [newExperience] = await knexInstance('work_experience')
 		.insert({ id: uuidv4(), user_id: userId, ...experience })
 		.returning('*');
@@ -155,49 +147,78 @@ export const addExperience = async (userId: string, experience: any) => {
 };
 
 export const updateExperience = async (userId: string, experienceId: string, experience: any) => {
-	if (!userId) {
-		throw new Error('User ID is missing in updateExperience function');
-	}
-
 	const rowsUpdated = await knexInstance('work_experience')
 		.where({ id: experienceId, user_id: userId })
-		.update(experience);
-
-	if (rowsUpdated === 0) return null;
-
-	return knexInstance('work_experience').where({ id: experienceId }).first();
-};
-
-export const deleteExperience = async (userId: string, experienceId: string) => {
-	if (!userId) {
-		throw new Error('User ID is missing in deleteExperience function');
-	}
-
-	const deletedExperience = await knexInstance('work_experience')
-		.where({ id: experienceId, user_id: userId })
-		.del()
+		.update({
+			company_name: experience.company_name,
+			position: experience.position,
+			start_date: experience.start_date,
+			end_date: experience.end_date,
+			current_job: experience.current_job,
+			description: experience.description,
+			location: experience.location,
+		})
 		.returning('*');
 
-	return deletedExperience;
-};
+	if (rowsUpdated.length === 0) return null;
 
+	return rowsUpdated[0];
+};
+export const getSkillsForExperience = async (experienceId: string) => {
+	return await knexInstance('skill_contexts')
+		.join('user_skills', 'skill_contexts.user_skill_id', 'user_skills.id')
+		.join('skills', 'user_skills.skill_id', 'skills.id')
+		.where('skill_contexts.experience_id', experienceId)
+		.select('skills.id', 'skills.skill_name as name');
+};
+export const deleteExperience = async (userId: string, experienceId: string) => {
+	// Start a transaction to ensure atomicity
+	return await knexInstance.transaction(async (trx) => {
+		// Delete all contexts for the experience in `skill_contexts`
+		await trx('skill_contexts').where({ experience_id: experienceId }).del();
+
+		// Delete the experience record
+		const [deletedExperience] = await trx('work_experience')
+			.where({ id: experienceId, user_id: userId })
+			.del()
+			.returning('*');
+
+		return deletedExperience;
+	});
+};
 //--------------------Eductaion--------------------//
 
 export const getEducation = async (userId: string) => {
-	if (!userId) {
-		throw new Error('User ID is missing in getEducation function');
-	}
-
-	return await knexInstance('user_education')
-		.join('universities', 'user_education.university_id', 'universities.id') // Join to get university name
+	const education = await knexInstance('user_education')
+		.join('universities', 'user_education.university_id', 'universities.id')
+		.leftJoin('skill_contexts', 'user_education.id', 'skill_contexts.education_id')
+		.leftJoin('user_skills', 'skill_contexts.user_skill_id', 'user_skills.id')
+		.leftJoin('skills', 'user_skills.skill_id', 'skills.id')
+		.where('user_education.user_id', userId)
 		.select(
 			'user_education.id',
 			'universities.university_name as universityName',
 			'user_education.degree',
 			'user_education.start_date as startDate',
 			'user_education.end_date as endDate',
+			knexInstance.raw('ARRAY_AGG(skills.skill_name) as skills'), // Aggregate skills into an array
 		)
-		.where({ 'user_education.user_id': userId });
+		.groupBy(
+			'user_education.id',
+			'universities.university_name',
+			'user_education.degree',
+			'user_education.start_date',
+			'user_education.end_date',
+		);
+
+	return education.map((edu) => ({
+		id: edu.id,
+		universityName: edu.universityName,
+		degree: edu.degree,
+		startDate: edu.startDate,
+		endDate: edu.endDate,
+		skills: edu.skills ? edu.skills.filter((skill: null) => skill !== null) : [], // Filter out null skills
+	}));
 };
 
 export const findUniversity = async (school: string) => {
@@ -210,10 +231,6 @@ export const findUniversity = async (school: string) => {
 };
 
 export const addEducation = async (userId: string, education: any) => {
-	if (!userId) {
-		throw new Error('User ID is missing in addEducation function');
-	}
-
 	const [newEducation] = await knexInstance('user_education')
 		.insert({ id: uuidv4(), user_id: userId, ...education })
 		.returning('*');
@@ -222,13 +239,15 @@ export const addEducation = async (userId: string, education: any) => {
 };
 
 export const updateEducation = async (userId: string, educationId: string, education: any) => {
-	if (!userId) {
-		throw new Error('User ID is missing in updateEducation function');
-	}
-
-	const university = await findUniversity(education.school);
+	let university = await findUniversity(education.school);
+	// if (!university) {
+	// 	throw new Error(`University '${education.school}' not found`);
+	// }
 	if (!university) {
-		throw new Error(`University '${education.school}' not found`);
+		const [newUniversity] = await knexInstance('universities')
+			.insert({ id: uuidv4(), university_name: education.school })
+			.returning('*');
+		university = newUniversity;
 	}
 
 	const updatedEducation = {
@@ -248,27 +267,32 @@ export const updateEducation = async (userId: string, educationId: string, educa
 
 	return rowsUpdated[0];
 };
-
-export const deleteEducation = async (userId: string, educationId: string) => {
-	if (!userId) {
-		throw new Error('User ID is missing in deleteEducation function');
-	}
-
-	const deletedEducation = await knexInstance('user_education')
-		.where({ id: educationId, user_id: userId })
-		.del()
-		.returning('*');
-
-	return deletedEducation;
+export const getSkillsForEducation = async (educationId: string) => {
+	return await knexInstance('skill_contexts')
+		.join('user_skills', 'skill_contexts.user_skill_id', 'user_skills.id')
+		.join('skills', 'user_skills.skill_id', 'skills.id')
+		.where('skill_contexts.education_id', educationId)
+		.select('skills.id', 'skills.skill_name as name');
 };
 
+export const deleteEducation = async (userId: string, educationId: string) => {
+	// Start a transaction to ensure atomicity
+	return await knexInstance.transaction(async (trx) => {
+		// Delete all contexts for the education in `skill_contexts`
+		await trx('skill_contexts').where({ education_id: educationId }).del();
+
+		// Delete the education record
+		const [deletedEducation] = await trx('user_education')
+			.where({ id: educationId, user_id: userId })
+			.del()
+			.returning('*');
+
+		return deletedEducation;
+	});
+};
 //--------------------Certifications--------------------//
 
 export const getCertifications = async (userId: string) => {
-	if (!userId) {
-		throw new Error('User ID is missing in getCertifications function');
-	}
-
 	return await knexInstance('certifications')
 		.select(
 			'id',
@@ -281,10 +305,6 @@ export const getCertifications = async (userId: string) => {
 };
 
 export const addCertification = async (userId: string, certification: any) => {
-	if (!userId) {
-		throw new Error('User ID is missing in addCertification function');
-	}
-
 	const newCertification = {
 		id: uuidv4(),
 		user_id: userId,
@@ -317,10 +337,6 @@ export const updateCertification = async (
 	certificationId: string,
 	certification: any,
 ) => {
-	if (!userId) {
-		throw new Error('User ID is missing in updateCertification function');
-	}
-
 	const updatedCertification = {
 		name: certification.name,
 		issuing_organization: certification.issuingOrganization,
@@ -340,10 +356,6 @@ export const updateCertification = async (
 };
 
 export const deleteCertification = async (userId: string, certificationId: string) => {
-	if (!userId) {
-		throw new Error('User ID is missing in deleteCertification function');
-	}
-
 	const [deletedCertification] = await knexInstance('certifications')
 		.where({ id: certificationId, user_id: userId })
 		.del()
@@ -354,30 +366,64 @@ export const deleteCertification = async (userId: string, certificationId: strin
 //--------------------Skills--------------------//
 
 export const getSkills = async (userId: string) => {
-	if (!userId) {
-		throw new Error('User ID is missing in getSkills function');
-	}
-
 	const skills = await knexInstance('user_skills')
 		.join('skills', 'user_skills.skill_id', 'skills.id')
-		.select('skills.id', 'skills.skill_name as name')
+		.leftJoin('skill_contexts', 'user_skills.id', 'skill_contexts.user_skill_id')
+		.leftJoin('user_education', 'skill_contexts.education_id', 'user_education.id')
+		.leftJoin('universities', 'user_education.university_id', 'universities.id')
+		.leftJoin('work_experience', 'skill_contexts.experience_id', 'work_experience.id')
+		.select(
+			'skills.id as skillId',
+			'skills.skill_name as skillName',
+			'universities.university_name as schoolName',
+			'work_experience.company_name as companyName',
+		)
 		.where('user_skills.user_id', userId);
 
-	return skills;
+	// Group skills by their contexts
+	const groupedSkills = skills.reduce((result, skill) => {
+		const existingSkill = result.find((s: { skillId: any }) => s.skillId === skill.skillId);
+
+		if (existingSkill) {
+			// Add the context to the existing skill
+			existingSkill.contexts.push({
+				schoolName: skill.schoolName || null,
+				companyName: skill.companyName || null,
+			});
+		} else {
+			// Add a new skill with its context
+			result.push({
+				skillId: skill.skillId,
+				skillName: skill.skillName,
+				contexts: [
+					{
+						schoolName: skill.schoolName || null,
+						companyName: skill.companyName || null,
+					},
+				],
+			});
+		}
+
+		return result;
+	}, []);
+
+	return groupedSkills;
 };
 
-export const addSkill = async (userId: string, skillName: string) => {
-	if (!userId) {
-		throw new Error('User ID is missing in addSkill function');
-	}
+export const addSkill = async (
+	userId: string,
+	skillName: string,
+	educationId?: string,
+	experienceId?: string,
+) => {
 	if (!skillName) {
 		throw new Error('Skill name is required');
 	}
 
-	// Check if skill already exists in `skills` table
+	// Check if the skill already exists in the `skills` table
 	let skill = await knexInstance('skills').select('id').where({ skill_name: skillName }).first();
 
-	// If skill does not exist, add it to `skills` table
+	// If the skill does not exist, add it to the `skills` table
 	if (!skill) {
 		const [newSkill] = await knexInstance('skills')
 			.insert({ id: uuidv4(), skill_name: skillName })
@@ -385,48 +431,71 @@ export const addSkill = async (userId: string, skillName: string) => {
 		skill = newSkill;
 	}
 
-	// Add skill to `user_skills` table if not already added
-	const existingSkill = await knexInstance('user_skills')
+	// Check if the skill is already linked to the user in `user_skills`
+	let userSkill = await knexInstance('user_skills')
 		.where({ user_id: userId, skill_id: skill.id })
 		.first();
 
-	if (existingSkill) {
-		throw new Error('Skill already added');
+	// If not, add it to `user_skills`
+	if (!userSkill) {
+		const [newUserSkill] = await knexInstance('user_skills')
+			.insert({ id: uuidv4(), user_id: userId, skill_id: skill.id })
+			.returning('*');
+		userSkill = newUserSkill;
 	}
 
-	await knexInstance('user_skills').insert({
-		user_id: userId,
-		skill_id: skill.id,
-	});
+	// Add the context (education or experience) to `skill_contexts`
+	const existingContext = await knexInstance('skill_contexts')
+		.where({
+			user_skill_id: userSkill.id,
+			education_id: educationId || null,
+			experience_id: experienceId || null,
+		})
+		.first();
+
+	if (!existingContext) {
+		await knexInstance('skill_contexts').insert({
+			id: uuidv4(),
+			user_skill_id: userSkill.id,
+			education_id: educationId || null,
+			experience_id: experienceId || null,
+		});
+	}
 
 	return { id: skill.id, name: skillName };
 };
 
 export const deleteSkill = async (userId: string, skillId: string) => {
-	if (!userId || !skillId) {
-		throw new Error('User ID and Skill ID are required');
+	if (!skillId) {
+		throw new Error('Skill ID is required');
 	}
 
-	// Check if skill exists in user_skills table
-	const skill = await knexInstance('user_skills')
+	// Check if the skill exists in the `user_skills` table for the given user
+	const userSkill = await knexInstance('user_skills')
 		.where({ user_id: userId, skill_id: skillId })
 		.first();
 
-	if (!skill) {
+	if (!userSkill) {
 		throw new Error('Skill not found for this user');
 	}
 
-	return await knexInstance('user_skills')
-		.where({ user_id: userId, skill_id: skillId })
-		.del()
-		.returning('*');
+	// Start a transaction to ensure atomicity
+	return await knexInstance.transaction(async (trx) => {
+		// Delete all contexts for the skill in `skill_contexts`
+		await trx('skill_contexts').where({ user_skill_id: userSkill.id }).del();
+
+		// Delete the skill from the `user_skills` table
+		const [deletedSkill] = await trx('user_skills')
+			.where({ id: userSkill.id })
+			.del()
+			.returning('*');
+
+		return deletedSkill;
+	});
 };
 
 //--------------------Profile Visibility--------------------//
 export const getProfileVisibility = async (userId: string) => {
-	if (!userId) {
-		throw new Error('User ID is missing in getProfileVisibility function');
-	}
 	return knexInstance('user_privacy_settings')
 		.select('profile_visibility as visibility')
 		.where({ user_id: userId })
@@ -434,10 +503,6 @@ export const getProfileVisibility = async (userId: string) => {
 };
 
 export const updateProfileVisibility = async (userId: string, visibility: string) => {
-	if (!userId) {
-		throw new Error('User ID is missing in updateProfileVisibility function');
-	}
-
 	const rowsUpdated = await knexInstance('user_privacy_settings')
 		.where({ user_id: userId })
 		.update({ profile_visibility: visibility })
@@ -450,10 +515,6 @@ export const updateProfileVisibility = async (userId: string, visibility: string
 //--------------------Create/Update new User--------------------//
 
 export const createUserProfile = async (userId: string, profileData: any) => {
-	if (!userId) {
-		throw new Error('User ID is required');
-	}
-
 	try {
 		await knexInstance('user_profiles').insert({
 			id: uuidv4(),
@@ -463,6 +524,15 @@ export const createUserProfile = async (userId: string, profileData: any) => {
 			location: profileData.location || null,
 			industry: profileData.industry || null,
 			last_updated: knexInstance.fn.now(),
+		});
+		await knexInstance('user_privacy_settings').insert({
+			id: uuidv4(),
+			user_id: userId,
+			profile_visibility: 'public',
+			show_email: false,
+			allow_connection_requests: true,
+			allow_messages_from_non_connections: false,
+			show_active_status: true,
 		});
 
 		if (profileData.skills?.length) {
@@ -532,10 +602,7 @@ export const createUserProfile = async (userId: string, profileData: any) => {
 };
 
 export const updateUserProfile = async (userId: string, profileData: any) => {
-	if (!userId) {
-		throw new Error('User ID is required');
-	}
-
+	// Update the `user_profiles` table
 	const updatedProfile = {
 		headline: profileData.headline || null,
 		bio: profileData.bio || null,
@@ -544,11 +611,128 @@ export const updateUserProfile = async (userId: string, profileData: any) => {
 		last_updated: knexInstance.fn.now(),
 	};
 
-	const rowsUpdated = await knexInstance('user_profiles')
+	const profileRowsUpdated = await knexInstance('user_profiles')
 		.where({ user_id: userId })
-		.update(updatedProfile)
-		.returning('*');
+		.update(updatedProfile);
 
-	if (rowsUpdated.length === 0) return null;
-	return rowsUpdated[0];
+	// Update the `users` table for firstName and lastName
+	const updatedUser = {
+		first_name: profileData.firstName || null,
+		last_name: profileData.lastName || null,
+	};
+
+	const userRowsUpdated = await knexInstance('users').where({ id: userId }).update(updatedUser);
+
+	if (profileRowsUpdated === 0 && userRowsUpdated === 0) return null;
+
+	// Return the updated profile
+	return await knexInstance('user_profiles')
+		.join('users', 'user_profiles.user_id', 'users.id')
+		.select(
+			'user_profiles.headline',
+			'user_profiles.location',
+			'user_profiles.profile_picture_url as profilePictureUrl',
+			'user_profiles.cover_photo_url as coverPhotoUrl',
+			'user_profiles.resume_url as resumeUrl',
+			'user_profiles.industry',
+			'user_profiles.bio',
+			'users.user_name as userName',
+			'users.first_name as firstName',
+			'users.last_name as lastName',
+			'users.is_premium',
+			'users.is_active',
+		)
+		.where('user_profiles.user_id', userId)
+		.first();
+};
+
+export const getUserProfile = async (userId: string) => {
+	return await knexInstance('user_profiles')
+		.join('users', 'user_profiles.user_id', 'users.id')
+		.select(
+			'user_profiles.headline',
+			'user_profiles.location',
+			'user_profiles.profile_picture_url as profilePictureUrl',
+			'user_profiles.cover_photo_url as coverPhotoUrl',
+			'user_profiles.resume_url as resumeUrl',
+			'user_profiles.industry',
+			'user_profiles.bio',
+			'users.user_name as userName',
+			'users.first_name as firstName',
+			'users.last_name as lastName',
+			'users.is_premium',
+			'users.is_active',
+		)
+		.where('user_profiles.user_id', userId)
+		.first();
+};
+
+export const getFollowersCount = async (userId: string) => {
+	const result = await knexInstance('following')
+		.where({ followed_id: userId })
+		.count('id as count')
+		.first();
+
+	return result?.count || 0;
+};
+
+export const getConnectionsCount = async (userId: string) => {
+	const result = await knexInstance('connections')
+		.where(function () {
+			this.where({ requester_id: userId }).orWhere({ receiver_id: userId });
+		})
+		.andWhere({ status: 'accepted' })
+		.count('id as count')
+		.first();
+
+	return result?.count || 0;
+};
+
+export const areUsersConnected = async (userId1: string, userId2: string): Promise<boolean> => {
+	const connection = await knexInstance('connections')
+		.where(function () {
+			this.where({ requester_id: userId1, receiver_id: userId2 }).orWhere({
+				requester_id: userId2,
+				receiver_id: userId1,
+			});
+		})
+		.andWhere({ status: 'accepted' })
+		.first();
+
+	return !!connection;
+};
+
+export const getFollowingStatus = async (userId: string, targetUserId: string) => {
+	const following = await knexInstance('following')
+		.where({ follower_id: userId, followed_id: targetUserId })
+		.first();
+
+	return !!following;
+};
+
+export const getConnectionStatus = async (userId: string, targetUserId: string) => {
+	const connection = await knexInstance('connections')
+		.where(function () {
+			this.where({ requester_id: userId, receiver_id: targetUserId }).orWhere({
+				requester_id: targetUserId,
+				receiver_id: userId,
+			});
+		})
+		.first();
+
+	if (connection) {
+		if (connection.status === 'accepted') {
+			return { status: 'connected', connectionId: connection.id };
+		} else if (connection.status === 'pending') {
+			if (connection.requester_id === userId) {
+				return { status: 'pending', connectionId: connection.id };
+			} else if (connection.requester_id === targetUserId) {
+				return { status: 'waiting', connectionId: connection.id };
+			}
+		} else if (connection.status === 'declined') {
+			return { status: 'no connection' };
+		}
+	}
+
+	return { status: 'no connection' };
 };

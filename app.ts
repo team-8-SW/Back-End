@@ -1,17 +1,21 @@
 import express, { Express, Request, Response, NextFunction } from 'express';
 import dotenv from 'dotenv';
 import { setupSwagger } from './src/docs/swagger';
+import cors from 'cors';
 //
-import cors from 'cors';  
+
 // Import routes
-import userRoutes from './src/routes/users.routes'; // Adjust the path as needed
+import userRoutes from './src/routes/users.routes';
 import authRoutes from './src/routes/auth.route';
-//import router from './src/routes/users.routes';
 import companyRoutes from './src/routes/company.route';
 import profileRoutes from './src/routes/profile.route';
 import followingRoutes from './src/routes/following.route';
+import jobRoutes from './src/routes/job.route';
+import healthRoutes from './src/routes/health.route';
 import postsRoutes from './src/routes/post.route';
 import notificationsRouter from './src/routes/notifications.route';
+import connectionRoutes from './src/routes/connection.route';
+import paymentRoutes from './src/routes/payment.route';
 import http from 'http';
 import { initializeWebSocket } from './websocket';
 const apps = express();
@@ -20,6 +24,7 @@ const server = http.createServer(apps);
 // Initialize WebSocket
 initializeWebSocket(server);
 
+import testRoutes from './src/routes/test.route';
 
 // Initialize environment variables
 dotenv.config();
@@ -27,24 +32,24 @@ dotenv.config();
 // Create Express app
 const app: Express = express();
 
-// Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-
-// Enable CORS for all routes		
+// Enable CORS for all routes
 // Add CORS middleware - PUT THIS BEFORE YOUR ROUTES
-app.use(cors({
-	origin: 'http://localhost:5173',  // Your React frontend URL - change if different
-	credentials: true
-  }));
+app.use(
+	cors({
+		origin: 'http://localhost:8000', // Your React frontend URL - change if different
+		credentials: true,
+	}),
+);
 
 // Setup Swagger documentation
 setupSwagger(app);
 
 // Basic health check route
 app.get('/', (req: Request, res: Response) => {
-	res.send('API is running. Go to /api-docs for documentation');
+	res.send('API is running. Go to /api-docs for documentation.');
 });
 
 // API routes
@@ -54,14 +59,18 @@ app.use('/api/notifications', notificationsRouter);
 app.use('/api/company', companyRoutes);
 app.use('/api/profiles', profileRoutes);
 app.use('/api/following', followingRoutes);
+app.use('/api/jobs', jobRoutes);
+app.use('/health', healthRoutes);
+app.use('/api/test', testRoutes);
+app.use('/api/connections', connectionRoutes);
 app.use('/api/posts', postsRoutes);
+app.use('/api/payments', paymentRoutes);
 // 404 handler
 app.use((req: Request, res: Response) => {
 	res.status(404).json({ message: 'Resource not found' });
 });
 
 // Global error handler
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
 	console.error(err.stack);
 	res.status(500).json({
@@ -87,7 +96,7 @@ app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
 //printRoutes(app._router.stack);
 
 // Start server
-const port = process.env.port || 3000;
+const port = process.env.PORT || 8000;
 
 app.listen(port, () => {
 	console.log(`Server running on port ${port}`);

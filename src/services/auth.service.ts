@@ -13,6 +13,7 @@ import {
 	User,
 } from '../models/user.model';
 import { sendResetEmail, sendEmail } from '../utils/email';
+import { knexInstance } from '../config/db';
 // import { verifyRecaptcha } from '../utils/recaptcha';
 
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
@@ -70,16 +71,58 @@ export const registerService = async (
 		verification_token: null,
 	};
 
-	const created = await createUser(newUser);
-	return {
-		id: created.id,
-		userName: created.userName,
-		email: created.email,
-		firstName: created.firstName,
-		lastName: created.lastName,
-		emailVerified: created.emailVerified,
-		verification_token: created.verification_token,
-	};
+	const trx = await knexInstance.transaction();
+
+	// const created = await createUser(newUser);
+
+	// await knexInstance('user_profiles').insert({
+	// 	id: uuidv4(),
+	// 	user_id: newUser.id,
+	// 	last_updated: knexInstance.fn.now(),
+	// });
+
+	// return {
+	// 	id: created.id,
+	// 	userName: created.userName,
+	// 	email: created.email,
+	// 	firstName: created.firstName,
+	// 	lastName: created.lastName,
+	// 	emailVerified: created.emailVerified,
+	// 	verification_token: created.verification_token,
+	// };
+
+	try {
+		const created = await createUser(newUser);
+
+		await trx('user_profiles').insert({
+			id: uuidv4(),
+			user_id: created.id,
+			last_updated: trx.fn.now(),
+		});
+		await knexInstance('user_privacy_settings').insert({
+			id: uuidv4(),
+			user_id: created.id,
+			profile_visibility: 'public',
+			show_email: false,
+			allow_connection_requests: true,
+			allow_messages_from_non_connections: false,
+			show_active_status: true,
+		});
+		await trx.commit();
+
+		return {
+			id: created.id,
+			userName: created.userName,
+			email: created.email,
+			firstName: created.firstName,
+			lastName: created.lastName,
+			emailVerified: created.emailVerified,
+			verification_token: created.verification_token,
+		};
+	} catch (error) {
+		await trx.rollback();
+		throw error;
+	}
 };
 
 export const forgotPasswordService = async (email: string): Promise<void> => {

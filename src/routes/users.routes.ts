@@ -1,4 +1,6 @@
 import express, { Express, Request, Response } from 'express';
+import * as usersController from '../controllers/users.controller';
+import { authMiddleware2, newAuthMiddleware } from '../middleware/auth.middleware';
 
 // function routes(app: Express) {}
 
@@ -142,4 +144,19 @@ router.post('/', (req: Request, res: Response) => {
 	res.status(201).json(newUser);
 });
 
+////------------Adam
+//------------Block/Unblock users---------//
+//POST /api/users/{userId}/block
+router.post('/:userId/block', authMiddleware2, usersController.blockUser);
+//POST /api/users/{userId}/unblock
+router.post('/:userId/unblock', authMiddleware2, usersController.unblockUser);
+//------------Get a list of blocked users---------//
+//GET /api/users/me/blocked
+router.get('/me/blocked', authMiddleware2, usersController.getBlockedUsers);
+
+//------------Search for users by name, company, or industry---------//
+//GET /api/users/me/search
+router.get('/me/search', authMiddleware2, usersController.searchUsers);
+//GET /api/users/me/ispremium
+router.get('/me/ispremium', newAuthMiddleware, usersController.ispremium);
 export default router;

@@ -119,7 +119,7 @@ CREATE TABLE company_pages (
     website VARCHAR(255),
     size VARCHAR(20) NOT NULL CHECK (size IN ('0-1 employees', '2-10 employees', '11-50 employees', '51-200 employees', '201-500 employees', '501-1000 employees', '1001-5000 employees', '5001-10000 employees', '10000+ employees')),
     location VARCHAR(100),
-    admin_user_id UUID REFERENCES users(id),
+    admin_user_id UUID REFERENCES users(id) ON DELETE CASCADE
     created_at TIMESTAMP NOT NULL DEFAULT NOW(),
     about TEXT,
     cover_photo_url VARCHAR(255),
@@ -254,7 +254,7 @@ CREATE TABLE company_followers (
 CREATE TABLE job_applications (
     id UUID PRIMARY KEY,
     job_id UUID NOT NULL REFERENCES job_listings(id) ON DELETE CASCADE,
-    applicant_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    applicant_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,  ---user 
     resume_url VARCHAR(255),
     cover_letter TEXT,
     status VARCHAR(20) NOT NULL CHECK (status IN ('pending', 'viewed', 'rejected', 'accepted')),
@@ -306,14 +306,65 @@ CREATE TABLE IF NOT EXISTS post_impressions (
     viewed_at TIMESTAMP NOT NULL DEFAULT NOW()
 );
 
+CREATE TABLE company_updates (
+    id UUID PRIMARY KEY,
+    admin_user_id UUID NOT NULL,
+    company_id UUID NOT NULL,
+    title VARCHAR(255),
+    content TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    
+    FOREIGN KEY (admin_user_id) REFERENCES users(id),
+    FOREIGN KEY (company_id) REFERENCES company_pages(id)
+);
+
+CREATE TABLE IF NOT EXISTS company_update_impressions (
+  id UUID PRIMARY KEY,
+  update_id UUID NOT NULL REFERENCES company_updates(id) ON DELETE CASCADE,
+  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  created_at TIMESTAMP DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS company_update_reactions (
+  id UUID PRIMARY KEY,
+  update_id UUID NOT NULL REFERENCES company_updates(id) ON DELETE CASCADE,
+  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  type TEXT NOT NULL, -- like, celebrate, etc.
+  created_at TIMESTAMP DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS company_update_comments (
+  id UUID PRIMARY KEY,
+  update_id UUID NOT NULL REFERENCES company_updates(id) ON DELETE CASCADE,
+  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  content TEXT NOT NULL,
+  created_at TIMESTAMP DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS company_update_reposts (
+  id UUID PRIMARY KEY,
+  original_update_id UUID NOT NULL REFERENCES company_updates(id) ON DELETE CASCADE,
+  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  created_at TIMESTAMP DEFAULT NOW()
+);
+
+-- First, drop the existing foreign key constraint
+ALTER TABLE company_pages
+DROP CONSTRAINT company_pages_admin_user_id_fkey;
+
+-- Then, add the new foreign key constraint with ON DELETE CASCADE
+ALTER TABLE company_pages
+ADD CONSTRAINT company_pages_admin_user_id_fkey
+FOREIGN KEY (admin_user_id)
+REFERENCES users(id)
+ON DELETE CASCADE;
 
 -- Indexes for new tables (skills, universities, user_skills, user_education)
 CREATE INDEX IF NOT EXISTS idx_skills_skill_name ON skills(skill_name);
 CREATE INDEX IF NOT EXISTS idx_universities_university_name ON universities(university_name);
 CREATE INDEX IF NOT EXISTS idx_user_skills_user_id ON user_skills(user_id);
 CREATE INDEX IF NOT EXISTS idx_user_education_user_id ON user_education(user_id);
-
--- Indexes for existing tables
+CREATE INDEX IF NOT EXISTS idx_skill_contexts_user_skill_id ON skill_contexts(user_skill_id);
 CREATE INDEX IF NOT EXISTS idx_user_profiles_user_id ON user_profiles(user_id);
 CREATE INDEX IF NOT EXISTS idx_work_experience_user_id ON work_experience(user_id);
 CREATE INDEX IF NOT EXISTS idx_projects_user_id ON projects(user_id);
@@ -339,4 +390,6 @@ CREATE INDEX IF NOT EXISTS idx_job_applications_job_id ON job_applications(job_i
 CREATE INDEX IF NOT EXISTS idx_job_applications_applicant_id ON job_applications(applicant_id);
 CREATE INDEX IF NOT EXISTS idx_notifications_user_id ON notifications(user_id);
 CREATE INDEX IF NOT EXISTS idx_user_privacy_settings_user_id ON user_privacy_settings(user_id);
+
+END;
 COMMIT;

@@ -12,17 +12,17 @@ export async function seed(knex: Knex): Promise<void> {
 			console.error('No users found. Please seed users first.');
 			return;
 		}
-	const following = [];
+		const following = [];
 		for (let i = 0; i < 10; i++) {
-            const user1 = faker.helpers.arrayElement(users); // Randomly pick a user
-            const user2 = faker.helpers.arrayElement(users); // Randomly pick a user
+			const user1 = faker.helpers.arrayElement(users); // Randomly pick a user
+			const user2 = faker.helpers.arrayElement(users); // Randomly pick a user
 			following.push({
-                id: uuidv4(),
-                follower_id: user1.id,
-                followed_id: user2.id,
-                created_at: faker.date.recent(30)
-            });
-	}
+				id: uuidv4(),
+				follower_id: user1.id,
+				followed_id: user2.id,
+				created_at: faker.date.recent(30),
+			});
+		}
 
 		await knex('following').insert(following);
 		console.log('Inserted following into the following table');
