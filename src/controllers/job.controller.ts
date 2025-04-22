@@ -15,6 +15,33 @@ export const getJobById = async (req: Request, res: Response) => {
 	}
 };
 
+export const getJobs = async (req: Request, res: Response) => {
+	try {
+		const jobs = await jobService.getAllJobs();
+		res.status(200).json({ message: 'Jobs found successfully', jobs });
+	} catch (error) {
+		console.error('Error finding jobs', error);
+		res.status(500).json({ message: 'Internal Server Error' });
+	}
+};
+
+export const getJobsByApplicant = async (req: Request, res: Response) => {
+	try {
+		// eslint-disable-next-line @typescript-eslint/naming-convention
+		const user_id = (req as any).user?.user_id;
+
+		if (!user_id) {
+			return res.status(401).json({ message: 'Unauthorized: No user found' });
+		}
+
+		const job = await jobService.getSavedJobsByApplicaintId(user_id);
+		res.status(200).json({ message: 'Saved Jobs found successfully', job });
+	} catch (error) {
+		console.error('Error finding job', error);
+		res.status(500).json({ message: 'Internal Server Error' });
+	}
+};
+
 export const searchJob = async (req: Request, res: Response) => {
 	try {
 		const { keyword, location, industry } = req.query;

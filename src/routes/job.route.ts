@@ -5,6 +5,8 @@ import { newAuthMiddleware } from '../middleware/auth.middleware';
 
 const router = express.Router();
 
+router.get('/', jobController.getJobs);
+router.get('/applicant', newAuthMiddleware, jobController.getJobsByApplicant);
 router.get('/search', jobController.searchJob);
 router.get('/filter', jobController.filterJob);
 router.post('/:id/save', newAuthMiddleware, jobController.saveJob);

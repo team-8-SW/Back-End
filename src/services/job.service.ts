@@ -6,6 +6,14 @@ export const getJobById = async (id: string) => {
 	return await knexInstance('job_listings').where({ id }).select('*');
 };
 
+export const getAllJobs = async () => {
+	return await knexInstance('job_listings').select('*');
+};
+
+export const getSavedJobsByApplicaintId = async (userId: string) => {
+	return await knexInstance('saved_jobs').where({ user_id: userId }).select('*');
+};
+
 export const searchJob = async (keyword?: string, location?: string, industry?: string) => {
 	let query = knexInstance('job_listings').select('*');
 
