@@ -14,6 +14,7 @@ import {
 	markConversationAsUnread,
 	getLastMessageReadStatus,
 	getAllRequests,
+	acceptthisRequest,
 } from '../services/messaging.service';
 
 /* ======================= Send private messages to connections =============================*/
@@ -32,16 +33,28 @@ export const sendTextMessage = async (req: AuthenticatedRequest, res: Response) 
 		}
 		const message = await createTextMessage(senderId, receiverId, content);
 
-		return res.status(201).json({
-			message: 'Message sent successfully',
-			content: message.content,
-		});
+		return res.status(201).json(message);
 	} catch (err) {
 		console.error(err);
 		return res.status(500).json({ message: 'Internal server error' });
 	}
 };
+//acceptRequest
+export const acceptRequest = async (req: AuthenticatedRequest, res: Response) => {
+	try {
+		const userId = req.user?.id;
+		const { request_id } = req.body;
 
+		if (!userId || !request_id) {
+			return res.status(400).json({ message: 'Missing request_id' });
+		}
+		const request = await acceptthisRequest(userId, request_id);
+		return res.status(201).json(request);
+	} catch (err) {
+		console.error(err);
+		return res.status(500).json({ message: 'Internal server error' });
+	}
+};
 /* ======================= Send media messages to connections =============================*/
 export const sendMediaMessage = async (req: AuthenticatedRequest, res: Response) => {
 	try {
