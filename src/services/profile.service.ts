@@ -754,5 +754,5 @@ export const getAllowConnectionRequests = async (userId: string) => {
 		.where({ user_id: userId })
 		.first();
 
-	return result?.allow || false;
+	return result?.allowConnectionRequests || false;
 };
