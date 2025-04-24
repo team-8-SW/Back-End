@@ -18,17 +18,17 @@ export const createTextMessage = async (senderId: string, receiverId: string, co
 			.returning(['id', 'content', 'sent_at']);
 			return message;
 	} else {//send a request
-		const [request] = await db('messages_requests')
+		const [request] = await db('messages')
 		.insert({
 			id: uuidv4(),
 			sender_id: senderId,
 			receiver_id: receiverId,
 			content,
-			status: 'pending',
+			status: 'sent',
+			is_request: true,
 		})
 			.returning("*");
 			return request;
-
 	}
 };
 // //acceptRequest -noor
