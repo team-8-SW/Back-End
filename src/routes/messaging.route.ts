@@ -12,7 +12,8 @@ import {
 	postTypingIndicator,
 	getTypingIndicator,
 	getRequests,
-	acceptRequest,
+	// acceptRequest,
+	// declineRequest,
 } from '../controllers/messaging.controller';
 import { authMiddleware } from '../middleware/auth.middleware';
 
@@ -57,6 +58,8 @@ router.get('/messages/typing-indicators', authMiddleware, getTypingIndicator);
 //noor
 // GET /api/messages/requests
 router.get('/messages/requests', authMiddleware, getRequests);
-// POST /api/messages/acceptRequest
-router.post('/messages/acceptRequest', authMiddleware, acceptRequest);
+// // POST /api/messages/acceptRequest
+// router.post('/messages/acceptRequest', authMiddleware, acceptRequest);
+// // POST /api/messages/rejectRequest
+// router.patch('/messages/declineRequest', authMiddleware, declineRequest);
 export default router;
