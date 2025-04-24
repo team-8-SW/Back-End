@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import * as connectionService from '../services/connection.service';
+import { ispremium } from '../services/users.service';
 
 //------------Send connection requests to other users---------//
 
@@ -12,6 +13,17 @@ export const sendConnectionRequest = async (req: Request, res: Response) => {
 			return res
 				.status(400)
 				.json({ message: 'You cannot send a connection request to yourself.' });
+		}
+
+		const isPremium = await ispremium(userId);
+
+		if (!isPremium) {
+			const overConnectionLimit = await connectionService.checkConnectionLimit(userId);
+			if (overConnectionLimit) {
+				return res
+					.status(403)
+					.json({ message: 'Connection limit reached. Upgrade to premium.' });
+			}
 		}
 
 		const connectionRequest = await connectionService.sendConnectionRequest(
@@ -62,6 +74,27 @@ export const acceptConnectionRequest = async (req: Request, res: Response) => {
 		if (!connectionId || connectionId.trim() === '') {
 			return res.status(400).json({ message: 'Connection ID is required.' });
 		}
+		// Check if the user can accept the connection request
+
+		const requesterId = await connectionService.getRequesterId(connectionId);
+
+		const isAcceptorPremium = await ispremium(userId);
+		const isRequesterPremium = await ispremium(requesterId);
+
+		const acceptorLimit = await connectionService.checkConnectionLimit(userId);
+		const requesterLimit = await connectionService.checkConnectionLimit(requesterId);
+
+		if (!isAcceptorPremium && acceptorLimit) {
+			return res
+				.status(403)
+				.json({ message: 'Connection limit reached. Upgrade to premium.' });
+		}
+		if (!isRequesterPremium && requesterLimit) {
+			return res.status(403).json({
+				message: 'The user who sent this request has reached their connection limit.',
+			});
+		}
+
 		const result = await connectionService.acceptConnectionRequest(userId, connectionId);
 
 		// Handle cases where the request cannot be accepted

@@ -115,4 +115,11 @@ router.put('/me', authMiddleware2, profileController.updateUserProfile);
 //GET /api/profiles/
 router.get('/', authMiddleware2, profileController.getMyProfile);
 
+//--------------------Change allowConnectionRequests settings--------------------//
+//PUT /api/profiles/me/allow-connection-requests
+router.put(
+	'/me/allow-connection-requests',
+	authMiddleware2,
+	profileController.updateAllowConnectionRequests,
+);
 export default router;

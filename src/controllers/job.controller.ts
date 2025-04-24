@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import * as jobService from '../services/job.service';
+import { ispremium } from '../services/users.service';
 
 export const getJobById = async (req: Request, res: Response) => {
 	try {
@@ -121,6 +122,17 @@ export const applyForJob = async (req: Request, res: Response) => {
 
 		const existingAppliedJob = await jobService.getAppliedJob(applicant_id, job_id);
 		if (existingAppliedJob) return res.status(409).json({ message: 'Job already applied' });
+
+		// Check if the user is premium
+		const isPremium = await ispremium(applicant_id);
+		if (!isPremium) {
+			const overApplicationLimit = await jobService.checkJobApplicationLimit(applicant_id);
+			if (overApplicationLimit) {
+				return res
+					.status(403)
+					.json({ message: 'Application limit reached. Upgrade to premium.' });
+			}
+		}
 
 		const appliedJob = await jobService.applyForJob(
 			applicant_id,
