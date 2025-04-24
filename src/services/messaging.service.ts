@@ -32,27 +32,38 @@ export const createTextMessage = async (senderId: string, receiverId: string, co
 		return request;
 	}
 };
-//acceptRequest -noor
-export const acceptthisRequest = async (userId: string, request_id: string) => {
-	const [request] = await db('messages_requests')
-		.where({ id: request_id, receiver_id: userId })
-		.update({ status: 'accepted' })
-		.returning('*');
-	if (!request) {
-		throw new Error('Message request not found or not authorized to accept.');
-	}
-	const [message] = await db('messages')
-		.insert({
-			id: uuidv4(),
-			sender_id: request.sender_id,
-			receiver_id: request.receiver_id,
-			content: request.content,
-			sent_at: request.sent_at,
-			status: 'sent',
-		})
-		.returning('*');
-	return message;
-};
+// //acceptRequest -noor
+// export const acceptthisRequest = async (userId: string, request_id: string) => {
+// 	const [request] = await db('messages_requests')
+// 		.where({ id: request_id, receiver_id: userId })
+// 		.update({ status: 'accepted' })
+// 		.returning("*");
+// 		if (!request) {
+// 			throw new Error('Message request not found or not authorized to accept.');
+// 		}
+// 	const [message] = await db('messages')
+// 		.insert({
+// 			id: uuidv4(),
+// 			sender_id: request.sender_id,
+// 			receiver_id: request.receiver_id,
+// 			content: request.content,
+// 			sent_at: request.sent_at,
+// 			status: 'sent',
+// 		})
+// 		.returning("*");
+// 	return message;
+// };
+// //rejectRequest -noor
+// export const declinethisRequest = async (userId: string, request_id: string) => {
+// 	const [request] = await db('messages_requests')
+// 		.where({ id: request_id, receiver_id: userId })
+// 		.update({ status: 'declined' })
+// 		.returning("*");
+// 		if (!request) {
+// 			throw new Error('Message request not found or not authorized to accept.');
+// 		}
+// 	return request;
+// };
 /* ======================= Send media messages to connections =============================*/
 export const createMediaMessage = async (
 	senderId: string,
@@ -112,7 +123,6 @@ export const createMediaMessage = async (
 			status: 'sent',
 		})
 		.returning(['id', 'media_url', 'media_type', 'sent_at']);
-
 	return message;
 };
 
@@ -188,7 +198,6 @@ export const getUnreadMessageCount = async (userId: string) => {
 		.where({ receiver_id: userId, is_read: false, is_deleted_by_receiver: false })
 		.count('id as count')
 		.first();
-
 	return Number((result as any)?.count || 0);
 };
 
