@@ -1,30 +1,42 @@
 const mockDb: any = jest.fn(() => mockDb);
 
+// Sample mock data
 const mockMessages = [
 	{
-		id: '1',
-		sender_id: '1',
-		receiver_id: '2',
-		content: 'Hey',
+		id: 'req-123',
+		sender_id: '2',
+		receiver_id: '1',
+		content: 'Let’s connect',
+		status: 'pending',
+		media_url: null,
+		media_type: null,
 		sent_at: new Date(),
 	},
 ];
 
 const mockUsers = [{ id: '2', firstName: 'Jane', lastName: 'Smith' }];
 
-mockDb.insert = jest.fn().mockReturnThis();
-mockDb.select = jest.fn().mockResolvedValue(mockMessages);
-mockDb.where = jest.fn().mockReturnThis();
-mockDb.orWhere = jest.fn().mockReturnThis();
-mockDb.andWhere = jest.fn().mockReturnThis();
-mockDb.update = jest.fn().mockReturnThis();
-mockDb.returning = jest.fn().mockReturnThis();
-mockDb.from = jest.fn().mockReturnThis();
-mockDb.join = jest.fn().mockReturnThis();
-mockDb.orderBy = jest.fn().mockReturnThis();
-mockDb.count = jest.fn().mockReturnValue({
-	first: jest.fn().mockResolvedValue({ count: '4' }),
-});
+// Define the deep chainable object for getAllRequests
+const chainable = {
+	where: jest.fn().mockReturnThis(),
+	andWhere: jest.fn().mockReturnThis(),
+	orWhere: jest.fn().mockReturnThis(),
+	select: jest.fn().mockResolvedValue(mockMessages),
+	insert: jest.fn().mockReturnThis(),
+	update: jest.fn().mockReturnThis(),
+	returning: jest.fn().mockReturnThis(),
+	from: jest.fn().mockReturnThis(),
+	join: jest.fn().mockReturnThis(),
+	orderBy: jest.fn().mockReturnThis(),
+	first: jest.fn().mockResolvedValue(true),
+	whereIn: jest.fn().mockResolvedValue(mockUsers),
+	count: jest.fn().mockReturnValue({
+		first: jest.fn().mockResolvedValue({ count: '4' }),
+	}),
+};
+
+// Assign all methods to mockDb
+Object.assign(mockDb, chainable);
 
 jest.mock('../config/db', () => ({
 	knexInstance: mockDb,
@@ -223,5 +235,43 @@ describe('Typing Status Utils', () => {
 		setUserTyping('3', '4', 1000);
 		setUserTyping('3', '4', 1000); // resets previous
 		expect(isUserTypingTo('3', '4')).toBe(true);
+	});
+});
+
+describe('getAllRequests', () => {
+	it('should return pending message requests for a user', async () => {
+		const pendingMessages = [
+			{
+				id: 'req-123',
+				sender_id: '2',
+				receiver_id: '1',
+				content: 'Let’s connect',
+				status: 'pending',
+				sent_at: new Date(),
+			},
+		];
+
+		const chain = {
+			where: jest.fn().mockReturnThis(),
+			andWhere: jest.fn().mockReturnThis(),
+			orderBy: jest.fn().mockResolvedValue(pendingMessages),
+		};
+
+		mockDb.select = jest.fn(() => chain); // return chain when select() is called
+
+		// Now mock the second db.select().whereIn(...) for participants
+		mockDb.select
+			.mockImplementationOnce(() => chain) // first for messages
+			.mockImplementationOnce(() => ({
+				whereIn: jest.fn().mockResolvedValue(mockUsers),
+			})); // second for users
+
+		const { getAllRequests } = messagingService;
+		const result = await getAllRequests('1');
+
+		expect(Array.isArray(result)).toBe(true);
+		expect(result.length).toBe(1);
+		expect(result[0].participants[0].firstName).toBe('Jane');
+		expect(result[0].lastMessage).toBe('Let’s connect');
 	});
 });

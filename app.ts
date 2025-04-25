@@ -1,15 +1,9 @@
 import express, { Express, Request, Response, NextFunction } from 'express';
 import dotenv from 'dotenv';
+import http from 'http';
+import { Server as SocketIOServer } from 'socket.io';
 import { setupSwagger } from './src/docs/swagger';
-
-// Import routes
-import userRoutes from './src/routes/users.routes';
-import authRoutes from './src/routes/auth.route';
-import companyRoutes from './src/routes/company.route';
-import profileRoutes from './src/routes/profile.route';
-import followingRoutes from './src/routes/following.route';
-import messagingRoutes from './src/routes/messaging.route';
-import notificationsRouter from './src/routes/notifications.route';
+import { registerSocketHandlers } from './src/sockets/index';
 
 // Initialize environment variables
 dotenv.config();
@@ -29,6 +23,15 @@ app.get('/', (req: Request, res: Response) => {
 	res.send('API is running. Go to /api-docs for documentation');
 });
 
+// Import routes
+import userRoutes from './src/routes/users.routes';
+import authRoutes from './src/routes/auth.route';
+import companyRoutes from './src/routes/company.route';
+import profileRoutes from './src/routes/profile.route';
+import followingRoutes from './src/routes/following.route';
+// import messagingRoutes from './src/routes/messaging.route';
+import notificationsRouter from './src/routes/notifications.route';
+
 // API routes
 app.use('/api/users', userRoutes);
 app.use('/api/auth', authRoutes);
@@ -36,7 +39,7 @@ app.use('/api/notifications', notificationsRouter);
 app.use('/api/company', companyRoutes);
 app.use('/api/profiles', profileRoutes);
 app.use('/api/following', followingRoutes);
-app.use('/api', messagingRoutes);
+// app.use('/api', messagingRoutes);
 
 // 404 handler
 app.use((req: Request, res: Response) => {
@@ -44,7 +47,6 @@ app.use((req: Request, res: Response) => {
 });
 
 // Global error handler
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
 	console.error(err.stack);
 	res.status(500).json({
@@ -53,6 +55,27 @@ app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
 	});
 });
 
+// ======================= SOCKET.IO SETUP =========================
+const port = process.env.PORT || 3000;
+
+// Create raw server
+const server = http.createServer(app);
+
+// Attach Socket.IO
+const io = new SocketIOServer(server, {
+	cors: {
+		origin: '*', // frontend URL
+	},
+});
+
+// Register all socket events
+registerSocketHandlers(io);
+
+// Start server
+server.listen(port, () => {
+	console.log(`Server running on port ${port}`);
+	console.log(`Swagger docs available at http://localhost:${port}/api-docs`);
+});
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 //di elfunctioin ely kanet bet print routes i commented it -noor
 //function printRoutes(stack: any[], prefix = '') {
@@ -70,11 +93,11 @@ app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
 //printRoutes(app._router.stack);
 
 // Start server
-const port = process.env.port || 3000;
+// const port = process.env.port || 3000;
 
-app.listen(port, () => {
-	console.log(`Server running on port ${port}`);
-	console.log(`Swagger docs available at http://localhost:${port}/api-docs`);
-});
+// app.listen(port, () => {
+// 	console.log(`Server running on port ${port}`);
+// 	console.log(`Swagger docs available at http://localhost:${port}/api-docs`);
+// });
 
 export default app;

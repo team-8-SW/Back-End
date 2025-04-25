@@ -2,33 +2,34 @@ import { v4 as uuidv4 } from 'uuid';
 import cloudinary from '../utils/cloudinary';
 import { knexInstance as db } from '../config/db';
 import { areUsersConnected } from '../models/connection.model';
+
 /* ======================= Send private messages to connections =============================*/
 export const createTextMessage = async (senderId: string, receiverId: string, content: string) => {
 	//check if user is in my connections or not first
 	const connected = await areUsersConnected(senderId, receiverId);
 	if (connected) {
 		const [message] = await db('messages')
-		.insert({
-			id: uuidv4(),
-			sender_id: senderId,
-			receiver_id: receiverId,
-			content,
-			status: 'sent',
-		})
-			.returning(['id', 'content', 'sent_at']);
-			return message;
-	} else {//send a request
-		const [request] = await db('messages_requests')
-		.insert({
-			id: uuidv4(),
-			sender_id: senderId,
-			receiver_id: receiverId,
-			content,
-			status: 'sent',
-		})
-			.returning(['id', 'content', 'sent_at']);
-			return request;
-
+			.insert({
+				id: uuidv4(),
+				sender_id: senderId,
+				receiver_id: receiverId,
+				content,
+				status: 'sent',
+			})
+			.returning(['id', 'content', 'sent_at', 'status']);
+		return message;
+	} else {
+		//send a request
+		const [request] = await db('messages')
+			.insert({
+				id: uuidv4(),
+				sender_id: senderId,
+				receiver_id: receiverId,
+				content,
+				status: 'pending',
+			})
+			.returning(['id', 'content', 'sent_at', 'status']);
+		return request;
 	}
 };
 
@@ -213,24 +214,21 @@ export const getLastMessageReadStatus = async (userId1: string, userId2: string)
 		timestamp: message.sent_at,
 	};
 };
- //getAllRequests
- export const getAllRequests = async (userId: string) => {
-	// 1. Get all messages where user is receiver
-	const rawMessages = await db('messages_requests')
+
+/*============================== Get All Requests ===============================*/
+export const getAllRequests = async (userId: string) => {
+	const rawMessages = await db('messages')
 		.where('receiver_id', userId)
+		.andWhere('status', 'pending')
 		.select('id', 'sender_id', 'receiver_id', 'content', 'media_url', 'media_type', 'sent_at');
 
-	// 2. Extract unique conversation user IDs
 	const userMap = new Map<string, any>();
 
 	for (const msg of rawMessages) {
-		const otherUserId = msg.sender_id === userId ? msg.receiver_id : msg.sender_id;
-
+		const otherUserId = msg.sender_id;
 		if (!userMap.has(otherUserId)) {
-			userMap.set(otherUserId, msg); // first message we find (will replace below if newer)
+			userMap.set(otherUserId, msg);
 		}
-
-		// replace if newer
 		const existing = userMap.get(otherUserId);
 		if (new Date(msg.sent_at) > new Date(existing.sent_at)) {
 			userMap.set(otherUserId, msg);
@@ -239,18 +237,16 @@ export const getLastMessageReadStatus = async (userId1: string, userId2: string)
 
 	const otherUserIds = Array.from(userMap.keys());
 
-	// 3. Fetch user info
 	const users = await db('users')
 		.select('id', 'first_name as firstName', 'last_name as lastName')
 		.whereIn('id', otherUserIds);
 
 	const userMapInfo = new Map(users.map((u) => [u.id, u]));
 
-	// 4. Format response
 	const requests = Array.from(userMap.entries()).map(([otherUserId, lastMsg]) => ({
-		id: `${userId}_${otherUserId}`,
+		id: lastMsg.id,
 		participants: [userMapInfo.get(otherUserId)],
-		lastMessage: lastMsg.content || '', // could also append media_type
+		lastMessage: lastMsg.content || '',
 		timestamp: lastMsg.sent_at,
 	}));
 
