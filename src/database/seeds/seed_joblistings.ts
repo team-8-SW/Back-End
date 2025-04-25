@@ -19,6 +19,9 @@ export async function seed(knex: Knex): Promise<void> {
 		experience_level: string;
 		posted_at: Date;
 		expires_at: Date;
+		status: string;
+		created_at: Date;
+
 	}
 	const joblistings: JobListing[] = [];
 	const users = await knex('users').select('id');
@@ -34,6 +37,7 @@ export async function seed(knex: Knex): Promise<void> {
 		//20 job listings
 		const company = companies[i % companies.length]; // Cycle through companies
 		const user = faker.helpers.arrayElement(users); // Randomly pick a user
+		const statuses = ['Pending', 'Approved', 'Flagged', 'Rejected'];
 		/* eslint-disable prettier/prettier */
 		joblistings.push({
 			id: uuidv4(), // Unique id for job listing
@@ -48,6 +52,8 @@ export async function seed(knex: Knex): Promise<void> {
 			experience_level: faker.helpers.arrayElement(experienceLevels), // Random experience level
 			posted_at: faker.date.recent(), // Generate a recent timestamp for the posting date
 			expires_at: faker.date.future(), // Generate a future timestamp for the expiration date
+			status: faker.helpers.arrayElement(statuses),
+			created_at: faker.date.recent(30)
 		});
 	}
 
