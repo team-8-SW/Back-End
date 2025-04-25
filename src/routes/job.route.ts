@@ -6,29 +6,23 @@ import { newAuthMiddleware } from '../middleware/auth.middleware';
 const router = express.Router();
 
 // 🔹 General Public Access
+// Static routes must come first
 router.get('/search', jobController.searchJob);
 router.get('/filter', jobController.filterJob);
-router.get('/', jobController.getJobs);
-router.get('/:id', jobController.getJobById);
-
-// 🔹 Employer Protected Routes
 router.get('/employer/jobs', newAuthMiddleware, jobController.getJobsByUserId);
-
-// 🔹 Applicant Protected Routes
 router.get('/applicant/jobs', newAuthMiddleware, jobController.getJobsByApplicant);
-
-// 🔹 Job Posting
 router.post('/post-job', newAuthMiddleware, jobController.postJob);
 
-// 🔹 Applications Related
+// Dynamic routes come last
 router.get('/:id/applications', jobController.getApplicationsByJobId);
 router.put('/:id/accept', jobController.acceptApplication);
 router.put('/:id/reject', jobController.rejectApplication);
-
-// 🔹 Save / Unsave / Apply / Status
 router.post('/:id/save', newAuthMiddleware, jobController.saveJob);
 router.delete('/:id/unsave', newAuthMiddleware, jobController.unSaveJob);
 router.post('/:id/apply', newAuthMiddleware, jobController.applyForJob);
 router.get('/:id/status', newAuthMiddleware, jobController.getStatus);
+
+// LAST: get job by id
+router.get('/:id', jobController.getJobById);
 
 export default router;
