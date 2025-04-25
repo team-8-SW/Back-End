@@ -32,22 +32,22 @@
 // 		}
 // 		const message = await createTextMessage(senderId, receiverId, content);
 
-// 		return res.status(201).json({
-// 			message: 'Message sent successfully',
-// 			content: message.content,
-// 		});
-// 	} catch (err) {
-// 		console.error(err);
-// 		return res.status(500).json({ message: 'Internal server error' });
-// 	}
-// };
+		return res.status(201).json({
+			message: 'Message sent successfully',
+			content: message.content,
+		});
+	} catch (err) {
+		console.error(err);
+		return res.status(500).json({ message: 'Internal server error' });
+	}
+};
 
-// /* ======================= Send media messages to connections =============================*/
-// export const sendMediaMessage = async (req: AuthenticatedRequest, res: Response) => {
-// 	try {
-// 		const senderId = req.user?.id;
-// 		const receiverId = req.body.receiverId;
-// 		const file = req.file;
+/* ======================= Send media messages to connections =============================*/
+export const sendMediaMessage = async (req: AuthenticatedRequest, res: Response) => {
+	try {
+		const senderId = req.user?.id;
+		const receiverId = req.body.receiverId;
+		const file = req.file;
 
 // 		console.log('senderId:', senderId);
 // 		console.log('receiverId:', receiverId);

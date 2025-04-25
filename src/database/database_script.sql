@@ -162,25 +162,10 @@ CREATE TABLE IF NOT EXISTS messages (
     sent_at TIMESTAMP NOT NULL DEFAULT NOW(),
     is_deleted_by_sender BOOLEAN NOT NULL DEFAULT FALSE,
     is_deleted_by_receiver BOOLEAN NOT NULL DEFAULT FALSE,
+    is_request BOOLEAN NOT NULL DEFAULT FALSE,
     status VARCHAR(20) NOT NULL DEFAULT 'sent' CHECK (status IN ('sent', 'delivered', 'read')),
     is_typing BOOLEAN DEFAULT FALSE
 );
-
-CREATE TABLE IF NOT EXISTS messages_requests (
-    id UUID PRIMARY KEY,
-    sender_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    receiver_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    content TEXT NOT NULL,
-    media_url VARCHAR(255),
-    media_type VARCHAR(20) CHECK (media_type IN ('image', 'video', 'document')),
-    is_read BOOLEAN NOT NULL DEFAULT FALSE,
-    sent_at TIMESTAMP NOT NULL DEFAULT NOW(),
-    is_deleted_by_sender BOOLEAN NOT NULL DEFAULT FALSE,
-    is_deleted_by_receiver BOOLEAN NOT NULL DEFAULT FALSE,
-    status VARCHAR(20) NOT NULL DEFAULT 'sent' CHECK (status IN ('sent', 'delivered', 'read')),
-    is_typing BOOLEAN DEFAULT FALSE
-);
-
 -- Posts table
 CREATE TABLE IF NOT EXISTS posts (
     id UUID PRIMARY KEY,
