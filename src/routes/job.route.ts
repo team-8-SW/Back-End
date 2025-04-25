@@ -22,7 +22,7 @@ router.put('/:id/reject', jobController.rejectApplication);
 router.post('/:id/save', newAuthMiddleware, jobController.saveJob);
 router.delete('/:id/unsave', newAuthMiddleware, jobController.unSaveJob);
 router.post('/:id/apply', newAuthMiddleware, jobController.applyForJob);
-router.get('/:id/status', newAuthMiddleware, jobController.getStatus);
+router.get('/status', newAuthMiddleware, jobController.getStatus);
 
 // LAST: get job by id
 router.get('/:id', jobController.getJobById);

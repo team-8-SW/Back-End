@@ -304,13 +304,12 @@ export const getStatus = async (req: Request, res: Response) => {
 		// eslint-disable-next-line @typescript-eslint/naming-convention
 		const applicant_id = (req as any).user?.user_id;
 		// eslint-disable-next-line @typescript-eslint/naming-convention
-		const job_id = req.params.id;
 
 		if (!applicant_id) {
 			return res.status(401).json({ message: 'Unauthorized: No user found' });
 		}
 
-		const application = await jobService.getApplicationStatus(applicant_id, job_id);
+		const application = await jobService.getApplicationStatus(applicant_id);
 
 		if (!application)
 			return res.status(404).json({ message: 'No application found for this job' });
