@@ -18,11 +18,13 @@ import connectionRoutes from './src/routes/connection.route';
 import paymentRoutes from './src/routes/payment.route';
 import http from 'http';
 import { initializeWebSocket } from './websocket';
+import { Server as SocketIOServer } from 'socket.io';
+import { registerSocketHandlers } from './src/sockets/index';
 const apps = express();
-const server = http.createServer(apps);
+const server1 = http.createServer(apps);
 
 // Initialize WebSocket
-initializeWebSocket(server);
+initializeWebSocket(server1);
 
 import testRoutes from './src/routes/test.route';
 
@@ -95,12 +97,32 @@ app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
 
 //printRoutes(app._router.stack);
 
-// Start server
-const port = process.env.PORT || 8000;
+// // Start server
+// const port1 = process.env.PORT || 8000;
 
-app.listen(port, () => {
+// app.listen(port1, () => {
+// 	console.log(`Server running on port ${port1}`);
+// 	console.log(`Swagger docs available at http://localhost:${port1}/api-docs`);
+// });
+// ======================= SOCKET.IO SETUP =========================
+const port = process.env.PORT || 3000;
+
+// Create raw server
+const server = http.createServer(app);
+
+// Attach Socket.IO
+const io = new SocketIOServer(server, {
+	cors: {
+		origin: '*', // frontend URL
+	},
+});
+
+// Register all socket events
+registerSocketHandlers(io);
+
+// Start server
+server.listen(port, () => {
 	console.log(`Server running on port ${port}`);
 	console.log(`Swagger docs available at http://localhost:${port}/api-docs`);
 });
-
 export default app;

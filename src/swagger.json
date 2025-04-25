@@ -3877,7 +3877,7 @@
 							"schema": {
 								"type": "object",
 								"properties": {
-									"recipientId": {
+									"receiverId": {
 										"type": "string"
 									},
 									"content": {
@@ -3919,10 +3919,10 @@
 							"schema": {
 								"type": "object",
 								"properties": {
-									"recipientId": {
+									"receiverId": {
 										"type": "string"
 									},
-									"file": {
+									"media": {
 										"type": "string",
 										"format": "binary"
 									}
@@ -3984,18 +3984,20 @@
 				}
 			}
 		},
-		"/api/conversations/{conversationId}/read": {
+		"/api/conversations/{userId}/read": {
 			"put": {
-				"tags": ["Messages"],
-				"summary": "Mark an Entire Conversation as Read",
-				"description": "Marks all messages in a conversation as read.",
+				"tags": ["Conversations"],
+				"summary": "Mark a Conversation as Read",
+				"description": "Marks all messages from the given user as read for the logged-in user.",
 				"parameters": [
 					{
+						"name": "userId",
 						"in": "path",
-						"name": "conversationId",
 						"required": true,
+						"description": "The ID of the other user in the conversation",
 						"schema": {
-							"type": "string"
+						  "type": "string",
+						  "format": "uuid"
 						}
 					}
 				],
@@ -4010,6 +4012,9 @@
 										"message": {
 											"type": "string"
 										}
+									},
+									"example": {
+										"message": "Conversation marked as read"
 									}
 								}
 							}
@@ -4018,6 +4023,88 @@
 				}
 			}
 		},
+		"/api/conversations/{userId}/unread": {
+			"put": {
+				"tags": ["Conversations"],
+				"summary": "Mark a Conversation as Unread",
+				"description": "Marks all messages from the given user as unread for the logged-in user.",
+				"parameters": [
+				{
+					"name": "userId",
+					"in": "path",
+					"required": true,
+					"description": "The ID of the other user in the conversation",
+					"schema": {
+					"type": "string",
+					"format": "uuid"
+					}
+				}
+				],
+				"responses": {
+				"200": {
+					"description": "Conversation marked as unread successfully",
+					"content": {
+					"application/json": {
+						"schema": {
+						"type": "object",
+						"properties": {
+							"message": {
+							"type": "string"
+							}
+						},
+						"example": {
+							"message": "Conversation marked as unread"
+						}
+						}
+					}
+					}
+				}
+				}
+			}
+			},
+			"/api/conversations/{userId}/read-status": {
+				"get": {
+					"tags": ["Conversations"],
+					"summary": "Get Read Status of Last Message",
+					"description": "Returns whether the last message between the logged-in user and the specified user has been read.",
+					"parameters": [
+					{
+						"name": "userId",
+						"in": "path",
+						"required": true,
+						"description": "The ID of the other user in the conversation",
+						"schema": {
+						"type": "string",
+						"format": "uuid"
+						}
+					}
+					],
+					"responses": {
+					"200": {
+						"description": "Read status retrieved successfully",
+						"content": {
+						"application/json": {
+							"schema": {
+							"type": "object",
+							"properties": {
+								"lastMessageId": { "type": "string" },
+								"senderId": { "type": "string" },
+								"isRead": { "type": "boolean" },
+								"timestamp": { "type": "string", "format": "date-time" }
+							},
+							"example": {
+								"lastMessageId": "cb1a57b3-f8c3-4f26-aeef-5a92439c489b",
+								"senderId": "af833eb2-d9bb-4696-a221-b6fb1f0ef1f7",
+								"isRead": true,
+								"timestamp": "2025-04-01T17:40:00Z"
+							}
+							}
+						}
+						}
+					}
+					}
+				}
+				},
 		"/api/messages/{messageId}": {
 			"delete": {
 				"tags": ["Messages"],
@@ -6163,30 +6250,88 @@
 			}
 		},
 		"/api/messages/typing-indicators": {
-			"get": {
-				"summary": "Retrieve typing indicators",
-				"description": "Returns whether a user is currently typing in a conversation.",
+			"post": {
 				"tags": ["Messaging"],
-				"responses": {
-					"200": {
-						"description": "Typing indicator status retrieved successfully",
-						"content": {
-							"application/json": {
-								"schema": {
-									"type": "object",
-									"properties": {
-										"isTyping": {
-											"type": "boolean",
-											"example": true
-										}
-									}
-								}
-							}
+				"summary": "Send Typing Indicator",
+				"description": "Marks the user as currently typing a message to another user.",
+				"requestBody": {
+				"required": true,
+				"content": {
+					"application/json": {
+					"schema": {
+						"type": "object",
+						"properties": {
+						"receiverId": {
+							"type": "string",
+							"format": "uuid"
+						}
+						},
+						"required": ["receiverId"],
+						"example": {
+						"receiverId": "af833eb2-d9bb-4696-a221-b6fb1f0ef1f7"
 						}
 					}
+					}
+				}
+				},
+				"responses": {
+				"200": {
+					"description": "Typing status recorded",
+					"content": {
+					"application/json": {
+						"schema": {
+						"type": "object",
+						"properties": {
+							"message": {
+							"type": "string"
+							}
+						},
+						"example": {
+							"message": "Typing status recorded"
+						}
+						}
+					}
+					}
+				}
+				}
+			},
+			"get": {
+				"tags": ["Messaging"],
+				"summary": "Check Typing Indicator",
+				"description": "Checks if the specified user is currently typing a message to the logged-in user.",
+				"parameters": [
+				{
+					"name": "userId",
+					"in": "query",
+					"required": true,
+					"schema": {
+					"type": "string",
+					"format": "uuid"
+					},
+					"description": "ID of the user to check typing status for"
+				}
+				],
+				"responses": {
+				"200": {
+					"description": "Typing indicator status retrieved successfully",
+					"content": {
+					"application/json": {
+						"schema": {
+						"type": "object",
+						"properties": {
+							"isTyping": {
+							"type": "boolean",
+							"example": true
+							}
+						}
+						}
+					}
+					}
+				}
 				}
 			}
-		},
+			},
+
 		"/api/jobs/filter": {
 			"get": {
 				"tags": ["Jobs"],

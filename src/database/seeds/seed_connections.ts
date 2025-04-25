@@ -3,31 +3,40 @@ import { v4 as uuidv4 } from 'uuid';
 import { faker } from '@faker-js/faker';
 
 export async function seed(knex: Knex): Promise<void> {
-	console.log('seeding connections');
+	console.log('Seeding connections...');
+
 	try {
 		await knex('connections').del();
-		console.log('Existing connections deleted');
+		console.log('Deleted existing connections');
+
 		const users = await knex('users').select('id');
-		if (users.length === 0) {
-			console.error('No users found. Please seed users first.');
+		const connections = [];
+
+		if (users.length < 2) {
+			console.warn('Not enough users to create connections.');
 			return;
 		}
-		const connections = [];
+
+		// Create 10 random connections
 		for (let i = 0; i < 10; i++) {
-			const user1 = faker.helpers.arrayElement(users); // Randomly pick a user
-			const user2 = faker.helpers.arrayElement(users); // Randomly pick a user
+			const requester = faker.helpers.arrayElement(users).id;
+			let receiver = faker.helpers.arrayElement(users).id;
+
+			// Ensure requester and receiver are not the same
+			while (receiver === requester) {
+				receiver = faker.helpers.arrayElement(users).id;
+			}
+
 			connections.push({
 				id: uuidv4(),
-				requester_id: user1.id,
-				receiver_id: user2.id,
-				status: faker.helpers.arrayElement(['pending', 'accepted', 'declined']),
-				created_at: faker.date.recent(30),
+				requester_id: requester,
+				receiver_id: receiver,
+				status: faker.helpers.arrayElement(['accepted', 'pending', 'declined']),
+				created_at: faker.date.recent(),
 			});
 		}
 
 		await knex('connections').insert(connections);
-		console.log('Inserted connections into the connections table');
-
 		console.log('Connections seeded successfully!');
 	} catch (error) {
 		console.error('Error seeding connections:', error);

@@ -158,11 +158,12 @@ CREATE TABLE messages (
     sent_at TIMESTAMP NOT NULL DEFAULT NOW(),
     is_deleted_by_sender BOOLEAN NOT NULL DEFAULT FALSE,
     is_deleted_by_receiver BOOLEAN NOT NULL DEFAULT FALSE,
+    is_request BOOLEAN NOT NULL DEFAULT FALSE,
     status VARCHAR(20) NOT NULL DEFAULT 'sent' CHECK (status IN ('sent', 'delivered', 'read')),
     is_typing BOOLEAN DEFAULT FALSE
 );
-
-CREATE TABLE posts (
+-- Posts table
+CREATE TABLE IF NOT EXISTS posts (
     id UUID PRIMARY KEY,
     user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     company_id UUID REFERENCES company_pages(id) ON DELETE CASCADE,
