@@ -43,21 +43,39 @@ export const getJobsByApplicant = async (req: Request, res: Response) => {
 	}
 };
 
-export const getJobsByApplicantId = async (req: Request, res: Response) => {
-	try {
-		// eslint-disable-next-line @typescript-eslint/naming-convention
-		const applicant_id = (req as any).user?.user_id;
+export const getApplicationsByApplicantId = async (req: Request, res: Response) => {
+    try {
+        const applicant_id = (req as any).user?.user_id;
 
-		if (!applicant_id) {
-			return res.status(401).json({ message: 'Unauthorized: No user found' });
-		}
+        if (!applicant_id) {
+            return res.status(401).json({ message: 'Unauthorized: No user found' });
+        }
 
-		const job = await jobService.getAppliedJobsByApplicaintId(applicant_id);
-		res.status(200).json({ message: 'applied Jobs found successfully', job });
-	} catch (error) {
-		console.error('Error finding job', error);
-		res.status(500).json({ message: 'Internal Server Error' });
-	}
+        const applications = await jobService.getAppliedJobsByApplicaintId(applicant_id);
+        
+        // Log for debugging
+        console.log('Applicant ID:', applicant_id);
+        console.log('Found applications:', applications);
+
+        // Check if applications exist and have data
+        if (!applications || applications.length === 0) {
+            return res.status(404).json({
+                message: 'No job applications found for this user',
+                applicant_id
+            });
+        }
+
+        // Return successful response with applications
+        return res.status(200).json({
+            message: 'Applications found successfully',
+            count: applications.length,
+            applications
+        });
+
+    } catch (error) {
+        console.error('Error finding applications:', error);
+        return res.status(500).json({ message: 'Internal Server Error' });
+    }
 };
 
 export const getJobsByUserId = async (req: Request, res: Response) => {
@@ -263,6 +281,7 @@ export const applyForJob = async (req: Request, res: Response) => {
 
 		const job = await jobService.applyForJob(
 			job_id,
+			applicant_id,
 			first_name,
 			last_name,
 			phone_number,
@@ -271,7 +290,6 @@ export const applyForJob = async (req: Request, res: Response) => {
 			address,
 			resume_url,
 			cover_letter,
-			applicant_id,
 		);
 
 		res.status(200).json({ message: 'Job applied successfully', job });

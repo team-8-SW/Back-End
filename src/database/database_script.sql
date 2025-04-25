@@ -370,6 +370,9 @@ ALTER TABLE job_listings
 ALTER COLUMN company_id DROP NOT NULL,
 ALTER COLUMN company_name DROP NOT NULL;
 
+ALTER TABLE job_applications 
+ALTER COLUMN applicant_id SET NOT NULL;
+
 
 
 -- Indexes for new tables (skills, universities, user_skills, user_education)
