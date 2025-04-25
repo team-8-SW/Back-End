@@ -20,12 +20,11 @@ export const getSavedJobsByApplicaintId = async (userId: string) => {
 
 export const getAppliedJobsByApplicaintId = async (applicantId: string) => {
 	const applications = await knexInstance('job_applications')
-        .select('*')
-        .where('applicant_id', applicantId)
+		.select('*')
+		.where('applicant_id', applicantId)
 		.orderBy('applied_at', 'desc');
-	
-		return applications;
 
+	return applications;
 };
 
 export const getApplicationsByJobId = async (jobId: string) => {

@@ -13,6 +13,18 @@ export const getAllCompanies = async (req: Request, res: Response) => {
 	}
 };
 
+export const getAllCompaniesByUserId = async (req: Request, res: Response) => {
+	try {
+		const admin_user_id = (req as any).user?.user_id;
+		if (!admin_user_id) return res.status(401).json({ message: 'Unauthorized' });
+
+		const companies = await companyService.getAllCompaniesByUserId(admin_user_id);
+		res.json(companies);
+	} catch (error) {
+		res.status(500).json({ error: 'Internal server Error' });
+	}
+};
+
 export const getCompanyById = async (req: Request, res: Response) => {
 	try {
 		const { id } = req.params;

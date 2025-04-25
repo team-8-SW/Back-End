@@ -6558,208 +6558,217 @@
 				}
 			}
 		},
-			"/api/admin/jobs": {
-			  "get": {
+		"/api/admin/jobs": {
+			"get": {
 				"tags": ["Admin"],
 				"summary": "Get All Job Listings",
 				"description": "Retrieves all job listings on the platform for administrative review.",
 				"responses": {
-				  "200": {
-					"description": "Job listings retrieved successfully",
-					"content": {
-					  "application/json": {
-						"schema": {
-						  "type": "array",
-						  "items": {
-							"type": "object",
-							"properties": {
-							  "jobId": { "type": "string" },
-							  "title": { "type": "string" },
-							  "company": { "type": "string" },
-							  "status": { "type": "string", "enum": ["Pending", "Approved", "Rejected", "Flagged"] },
-							  "createdAt": { "type": "string", "format": "date-time" }
+					"200": {
+						"description": "Job listings retrieved successfully",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "array",
+									"items": {
+										"type": "object",
+										"properties": {
+											"jobId": { "type": "string" },
+											"title": { "type": "string" },
+											"company": { "type": "string" },
+											"status": {
+												"type": "string",
+												"enum": [
+													"Pending",
+													"Approved",
+													"Rejected",
+													"Flagged"
+												]
+											},
+											"createdAt": { "type": "string", "format": "date-time" }
+										}
+									}
+								}
 							}
-						  }
 						}
-					  }
 					}
-				  }
 				}
-			  }
-			},
-		  
-			"/api/admin/jobs/flagged": {
-			  "get": {
+			}
+		},
+
+		"/api/admin/jobs/flagged": {
+			"get": {
 				"tags": ["Admin"],
 				"summary": "Get Flagged Job Listings",
 				"description": "Retrieves all job listings that have been flagged by users.",
 				"responses": {
-				  "200": {
-					"description": "Flagged job listings retrieved successfully",
-					"content": {
-					  "application/json": {
-						"schema": {
-						  "type": "array",
-						  "items": {
-							"$ref": "#/components/schemas/Job"
-						  }
+					"200": {
+						"description": "Flagged job listings retrieved successfully",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "array",
+									"items": {
+										"$ref": "#/components/schemas/Job"
+									}
+								}
+							}
 						}
-					  }
 					}
-				  }
 				}
-			  }
-			},
-		  
-			"/api/admin/jobs/{jobId}": {
-			  "delete": {
+			}
+		},
+
+		"/api/admin/jobs/{jobId}": {
+			"delete": {
 				"tags": ["Admin"],
 				"summary": "Delete Job Listing",
 				"description": "Deletes a job listing permanently.",
 				"parameters": [
-				  {
-					"in": "path",
-					"name": "jobId",
-					"required": true,
-					"schema": {
-					  "type": "string"
+					{
+						"in": "path",
+						"name": "jobId",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
 					}
-				  }
 				],
 				"responses": {
-				  "200": {
-					"description": "Job deleted successfully",
-					"content": {
-					  "application/json": {
-						"schema": {
-						  "type": "object",
-						  "properties": {
-							"message": { "type": "string" }
-						  }
+					"200": {
+						"description": "Job deleted successfully",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "object",
+									"properties": {
+										"message": { "type": "string" }
+									}
+								}
+							}
 						}
-					  }
 					}
-				  }
 				}
-			  }
-			},
-		  
-			"/api/admin/analytics/overview": {
-			  "get": {
+			}
+		},
+
+		"/api/admin/analytics/overview": {
+			"get": {
 				"tags": ["Admin"],
 				"summary": "Get Overview Analytics",
 				"description": "Returns platform-wide analytics overview based on selected time range.",
 				"parameters": [
-				  {
-					"in": "query",
-					"name": "range",
-					"schema": {
-					  "type": "string",
-					  "enum": ["daily", "weekly", "monthly"]
-					},
-					"required": true,
-					"description": "Time range for the overview (e.g., weekly)"
-				  }
+					{
+						"in": "query",
+						"name": "range",
+						"schema": {
+							"type": "string",
+							"enum": ["daily", "weekly", "monthly"]
+						},
+						"required": true,
+						"description": "Time range for the overview (e.g., weekly)"
+					}
 				],
 				"responses": {
-				  "200": {
-					"description": "Overview analytics data retrieved",
-					"content": {
-					  "application/json": {
-						"schema": {
-						  "type": "object",
-						  "properties": {
-							"newUsers": { "type": "integer" },
-							"newJobs": { "type": "integer" },
-							"reportsFiled": { "type": "integer" }
-						  }
+					"200": {
+						"description": "Overview analytics data retrieved",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "object",
+									"properties": {
+										"newUsers": { "type": "integer" },
+										"newJobs": { "type": "integer" },
+										"reportsFiled": { "type": "integer" }
+									}
+								}
+							}
 						}
-					  }
 					}
-				  }
 				}
-			  }
-			},
-		  
-			"/api/admin/analytics/most-reported": {
-			  "get": {
+			}
+		},
+
+		"/api/admin/analytics/most-reported": {
+			"get": {
 				"tags": ["Admin"],
 				"summary": "Get Most Reported Content",
 				"description": "Returns content with the highest number of user reports.",
 				"responses": {
-				  "200": {
-					"description": "Most reported content retrieved successfully",
-					"content": {
-					  "application/json": {
-						"schema": {
-						  "type": "array",
-						  "items": {
-							"type": "object",
-							"properties": {
-							  "contentId": { "type": "string" },
-							  "type": { "type": "string", "enum": ["post", "comment"] },
-							  "reportCount": { "type": "integer" }
+					"200": {
+						"description": "Most reported content retrieved successfully",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "array",
+									"items": {
+										"type": "object",
+										"properties": {
+											"contentId": { "type": "string" },
+											"type": {
+												"type": "string",
+												"enum": ["post", "comment"]
+											},
+											"reportCount": { "type": "integer" }
+										}
+									}
+								}
 							}
-						  }
-						}
-					  }
-					}
-				  }
-				}
-			  }
-			},
-		  
-		"/api/admin/jobs/{jobId}/status": {
-		"put": {
-			"tags": ["Admin"],
-			"summary": "Approve or Reject Job Listing",
-			"description": "Updates the status of a job listing. Admin-only access.",
-			"parameters": [
-			{
-				"name": "jobId",
-				"in": "path",
-				"required": true,
-				"schema": {
-				"type": "string"
-				}
-			}
-			],
-			"requestBody": {
-			"required": true,
-			"content": {
-				"application/json": {
-				"schema": {
-					"type": "object",
-					"properties": {
-					"status": {
-						"type": "string",
-						"enum": ["Approved", "Rejected"]
-					}
-					}
-				}
-				}
-			}
-			},
-			"responses": {
-			"200": {
-				"description": "Job status updated successfully",
-				"content": {
-				"application/json": {
-					"schema": {
-					"type": "object",
-					"properties": {
-						"message": {
-						"type": "string"
 						}
 					}
-					}
-				}
 				}
 			}
-			}
-		}
-		}
+		},
 
-		  
+		"/api/admin/jobs/{jobId}/status": {
+			"put": {
+				"tags": ["Admin"],
+				"summary": "Approve or Reject Job Listing",
+				"description": "Updates the status of a job listing. Admin-only access.",
+				"parameters": [
+					{
+						"name": "jobId",
+						"in": "path",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"type": "object",
+								"properties": {
+									"status": {
+										"type": "string",
+										"enum": ["Approved", "Rejected"]
+									}
+								}
+							}
+						}
+					}
+				},
+				"responses": {
+					"200": {
+						"description": "Job status updated successfully",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "object",
+									"properties": {
+										"message": {
+											"type": "string"
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
 	}
 }

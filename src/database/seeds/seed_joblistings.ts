@@ -21,7 +21,6 @@ export async function seed(knex: Knex): Promise<void> {
 		expires_at: Date;
 		status: string;
 		created_at: Date;
-
 	}
 	const joblistings: JobListing[] = [];
 	const users = await knex('users').select('id');
@@ -53,7 +52,7 @@ export async function seed(knex: Knex): Promise<void> {
 			posted_at: faker.date.recent(), // Generate a recent timestamp for the posting date
 			expires_at: faker.date.future(), // Generate a future timestamp for the expiration date
 			status: faker.helpers.arrayElement(statuses),
-			created_at: faker.date.recent(30)
+			created_at: faker.date.recent(30),
 		});
 	}
 

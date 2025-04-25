@@ -44,38 +44,37 @@ export const getJobsByApplicant = async (req: Request, res: Response) => {
 };
 
 export const getApplicationsByApplicantId = async (req: Request, res: Response) => {
-    try {
-        const applicant_id = (req as any).user?.user_id;
+	try {
+		const applicant_id = (req as any).user?.user_id;
 
-        if (!applicant_id) {
-            return res.status(401).json({ message: 'Unauthorized: No user found' });
-        }
+		if (!applicant_id) {
+			return res.status(401).json({ message: 'Unauthorized: No user found' });
+		}
 
-        const applications = await jobService.getAppliedJobsByApplicaintId(applicant_id);
-        
-        // Log for debugging
-        console.log('Applicant ID:', applicant_id);
-        console.log('Found applications:', applications);
+		const applications = await jobService.getAppliedJobsByApplicaintId(applicant_id);
 
-        // Check if applications exist and have data
-        if (!applications || applications.length === 0) {
-            return res.status(404).json({
-                message: 'No job applications found for this user',
-                applicant_id
-            });
-        }
+		// Log for debugging
+		console.log('Applicant ID:', applicant_id);
+		console.log('Found applications:', applications);
 
-        // Return successful response with applications
-        return res.status(200).json({
-            message: 'Applications found successfully',
-            count: applications.length,
-            applications
-        });
+		// Check if applications exist and have data
+		if (!applications || applications.length === 0) {
+			return res.status(404).json({
+				message: 'No job applications found for this user',
+				applicant_id,
+			});
+		}
 
-    } catch (error) {
-        console.error('Error finding applications:', error);
-        return res.status(500).json({ message: 'Internal Server Error' });
-    }
+		// Return successful response with applications
+		return res.status(200).json({
+			message: 'Applications found successfully',
+			count: applications.length,
+			applications,
+		});
+	} catch (error) {
+		console.error('Error finding applications:', error);
+		return res.status(500).json({ message: 'Internal Server Error' });
+	}
 };
 
 export const getJobsByUserId = async (req: Request, res: Response) => {
