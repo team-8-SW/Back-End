@@ -46,13 +46,13 @@ export const getJobsByApplicant = async (req: Request, res: Response) => {
 export const getJobsByApplicantId = async (req: Request, res: Response) => {
 	try {
 		// eslint-disable-next-line @typescript-eslint/naming-convention
-		const user_id = (req as any).user?.user_id;
+		const applicant_id = (req as any).user?.user_id;
 
-		if (!user_id) {
+		if (!applicant_id) {
 			return res.status(401).json({ message: 'Unauthorized: No user found' });
 		}
 
-		const job = await jobService.getAppliedJobsByApplicaintId(user_id);
+		const job = await jobService.getAppliedJobsByApplicaintId(applicant_id);
 		res.status(200).json({ message: 'Saved Jobs found successfully', job });
 	} catch (error) {
 		console.error('Error finding job', error);
