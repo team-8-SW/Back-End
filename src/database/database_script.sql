@@ -254,7 +254,13 @@ CREATE TABLE company_followers (
 CREATE TABLE job_applications (
     id UUID PRIMARY KEY,
     job_id UUID NOT NULL REFERENCES job_listings(id) ON DELETE CASCADE,
-    applicant_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,  ---user 
+    applicant_id UUID REFERENCES users(id) ON DELETE CASCADE, 
+    first_name VARCHAR(100) NOT NULL,
+    last_name VARCHAR(100) NOT NULL,
+    phone_number VARCHAR(20) NOT NULL,
+    email VARCHAR(255) NOT NULL,
+    country VARCHAR(100) NOT NULL,
+    address TEXT,
     resume_url VARCHAR(255),
     cover_letter TEXT,
     status VARCHAR(20) NOT NULL CHECK (status IN ('pending', 'viewed', 'rejected', 'accepted')),
@@ -358,6 +364,12 @@ ADD CONSTRAINT company_pages_admin_user_id_fkey
 FOREIGN KEY (admin_user_id)
 REFERENCES users(id)
 ON DELETE CASCADE;
+
+ALTER TABLE job_listings
+ALTER COLUMN company_id DROP NOT NULL,
+ALTER COLUMN company_name DROP NOT NULL;
+
+
 
 -- Indexes for new tables (skills, universities, user_skills, user_education)
 CREATE INDEX IF NOT EXISTS idx_skills_skill_name ON skills(skill_name);

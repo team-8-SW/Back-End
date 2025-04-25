@@ -6,12 +6,20 @@ export const getJobById = async (id: string) => {
 	return await knexInstance('job_listings').where({ id }).select('*');
 };
 
+export const getJobsByUserId = async (userId: string) => {
+	return await knexInstance('job_listings').where({ user_id: userId }).select('*');
+};
+
 export const getAllJobs = async () => {
 	return await knexInstance('job_listings').select('*');
 };
 
 export const getSavedJobsByApplicaintId = async (userId: string) => {
 	return await knexInstance('saved_jobs').where({ user_id: userId }).select('*');
+};
+
+export const getApplicationsByJobId = async (jobId: string) => {
+	return await knexInstance('job_applications').where({ job_id: jobId }).select('*');
 };
 
 export const searchJob = async (keyword?: string, location?: string, industry?: string) => {
@@ -51,25 +59,56 @@ export const saveJob = async (userId: string, jobId: string) => {
 		.returning('*');
 };
 
+export const unSaveJob = async (userId: string, jobId: string) => {
+	return knexInstance('saved_jobs').where({ user_id: userId, job_id: jobId }).delete();
+};
+
+export const postJob = async (userId: string, jobData: Partial<jobModels.job>) => {
+	const job = {
+		id: uuidv4(),
+		company_id: null,
+		user_id: userId,
+		company_name: null,
+		...jobData,
+	};
+
+	await knexInstance('job_listings').insert(job);
+
+	return job;
+};
+
 export const getSavedJob = async (userId: string, jobId: string) => {
 	return knexInstance('saved_jobs').where({ user_id: userId, job_id: jobId }).first();
 };
 
 export const applyForJob = async (
-	userId: string,
 	jobId: string,
-	status: string,
-	resumeUrl?: string,
+	firstName: string,
+	lastName: string,
+	phoneNumber: string,
+	email: string,
+	country: string,
+	address: string,
+	applicantId: string,
+	resumeUrl: string,
 	coverLetter?: string,
 ) => {
-	return knexInstance('job_applications')
+	const appliedJob = await knexInstance('job_applications')
 		.insert({
 			id: uuidv4(),
 			job_id: jobId,
-			applicant_id: userId,
+			applicant_id: applicantId,
+			first_name: firstName,
+			last_name: lastName,
+			phone_number: phoneNumber,
+			email: email,
+			country: country,
+			address: address,
 			resume_url: resumeUrl,
 			cover_letter: coverLetter,
 			status: 'pending',
+			applied_at: knexInstance.fn.now(),
+			last_updated: knexInstance.fn.now(),
 		})
 		.returning('*');
 };

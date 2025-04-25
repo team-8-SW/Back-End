@@ -43,6 +43,36 @@ export const getJobsByApplicant = async (req: Request, res: Response) => {
 	}
 };
 
+export const getJobsByUserId = async (req: Request, res: Response) => {
+	try {
+		// eslint-disable-next-line @typescript-eslint/naming-convention
+		const user_id = (req as any).user?.user_id;
+
+		if (!user_id) {
+			return res.status(401).json({ message: 'Unauthorized: No user found' });
+		}
+
+		const job = await jobService.getJobsByUserId(user_id);
+		res.status(200).json({ message: 'Jobs found successfully', job });
+	} catch (error) {
+		console.error('Error finding jobs', error);
+		res.status(500).json({ message: 'Internal Server Error' });
+	}
+};
+
+export const getApplicationsByJobId = async (req: Request, res: Response) => {
+	try {
+		// eslint-disable-next-line @typescript-eslint/naming-convention
+		const { job_id } = req.params;
+
+		const applications = await jobService.getApplicationsByJobId(job_id);
+		res.status(200).json({ message: 'Applications retreived successfully', applications });
+	} catch (error) {
+		console.error('Error retreiving applications', error);
+		res.status(500).json({ message: 'Internal Server Error' });
+	}
+};
+
 export const searchJob = async (req: Request, res: Response) => {
 	try {
 		const { keyword, location, industry } = req.query;
@@ -102,28 +132,82 @@ export const saveJob = async (req: Request, res: Response) => {
 
 		res.status(200).json({ message: 'Job saved successfully' });
 	} catch (error) {
-		console.error('Error filtering job', error);
+		console.error('Error saving job', error);
 		res.status(500).json({ message: 'Internal Server Error' });
 	}
 };
 
+export const unSaveJob = async (req: Request, res: Response) => {
+	try {
+		// eslint-disable-next-line @typescript-eslint/naming-convention
+		const job_id = req.params.id;
+		// eslint-disable-next-line @typescript-eslint/naming-convention
+		const user_id = (req as any).user?.user_id;
+
+		if (!user_id) {
+			return res.status(401).json({ message: 'Unauthorized: No user found' });
+		}
+
+		const unSavedJob = await jobService.unSaveJob(user_id, job_id);
+
+		res.status(200).json({ message: 'Job unsaved successfully' });
+	} catch (error) {
+		console.error('Error unsaving job', error);
+		res.status(500).json({ message: 'Internal Server Error' });
+	}
+};
+
+export const postJob = async (req: Request, res: Response) => {
+	try {
+		const job = req.body;
+		// eslint-disable-next-line @typescript-eslint/naming-convention
+		const user_id = (req as any).user?.user_id;
+
+		const newJob = await jobService.postJob(user_id, job);
+
+		res.status(200).json({ message: 'Job listed succesfully', job: newJob });
+	} catch (error) {
+		console.error('Error listing job', error);
+		res.status(500).json({ error: 'Internal server error' });
+	}
+};
 export const applyForJob = async (req: Request, res: Response) => {
 	try {
 		// eslint-disable-next-line @typescript-eslint/naming-convention
 		const applicant_id = (req as any).user?.user_id;
 		// eslint-disable-next-line @typescript-eslint/naming-convention
 		const job_id = req.params.id;
-		// eslint-disable-next-line @typescript-eslint/naming-convention
-		const { resume_url, cover_letter } = req.body;
+
+		const {
+			// eslint-disable-next-line @typescript-eslint/naming-convention
+			first_name,
+			// eslint-disable-next-line @typescript-eslint/naming-convention
+			last_name,
+			// eslint-disable-next-line @typescript-eslint/naming-convention
+			phone_number,
+			email,
+			country,
+			address,
+			// eslint-disable-next-line @typescript-eslint/naming-convention
+			resume_url,
+			// eslint-disable-next-line @typescript-eslint/naming-convention
+			cover_letter,
+		} = req.body;
 
 		if (!applicant_id) {
 			return res.status(401).json({ message: 'Unauthorized: No user found' });
 		}
 
-		const existingAppliedJob = await jobService.getAppliedJob(applicant_id, job_id);
-		if (existingAppliedJob) return res.status(409).json({ message: 'Job already applied' });
+		// // Validate required fields
+		// if (!first_name || !last_name || !phone_number || !email || !country || !resume_url) {
+		// 	return res.status(400).json({ message: 'Missing required application fields' });
+		// }
 
-		// Check if the user is premium
+		const existingAppliedJob = await jobService.getAppliedJob(applicant_id, job_id);
+		if (existingAppliedJob) {
+			return res.status(409).json({ message: 'Job already applied' });
+		}
+
 		const isPremium = await ispremium(applicant_id);
 		if (!isPremium) {
 			const overApplicationLimit = await jobService.checkJobApplicationLimit(applicant_id);
@@ -134,17 +218,22 @@ export const applyForJob = async (req: Request, res: Response) => {
 			}
 		}
 
-		const appliedJob = await jobService.applyForJob(
-			applicant_id,
+		const job = await jobService.applyForJob(
 			job_id,
+			first_name,
+			last_name,
+			phone_number,
+			email,
+			country,
+			address,
 			resume_url,
 			cover_letter,
+			applicant_id,
 		);
-		if (!appliedJob) return res.status(404).json({ message: 'Job id is required' });
 
-		res.status(200).json({ message: 'Job applied successfully', job: appliedJob });
+		res.status(200).json({ message: 'Job applied successfully', job });
 	} catch (error) {
-		console.error('Error filtering job', error);
+		console.error('Error applying for job:', error);
 		res.status(500).json({ message: 'Internal Server Error' });
 	}
 };
