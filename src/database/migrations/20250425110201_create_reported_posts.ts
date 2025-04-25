@@ -13,6 +13,3 @@ export async function up(knex: Knex): Promise<void> {
 export async function down(knex: Knex): Promise<void> {
 	await knex.schema.dropTableIfExists('reported_posts');
 }
-await knex.schema.alterTable('reported_posts', (table) => {
-	table.boolean('resolved').defaultTo(false);
-});
