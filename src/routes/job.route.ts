@@ -5,6 +5,9 @@ import { newAuthMiddleware } from '../middleware/auth.middleware';
 
 const router = express.Router();
 
+router.get('/', jobController.getJobs);
+router.get('/:id', jobController.getJobById);
+
 router.get('/employer', newAuthMiddleware, jobController.getJobsByUserId);
 router.get('/applicant', newAuthMiddleware, jobController.getJobsByApplicant);
 router.get('/search', jobController.searchJob);
@@ -20,7 +23,5 @@ router.get('/:id/status', newAuthMiddleware, jobController.getStatus);
 router.put('/:id/accept', jobController.acceptApplication);
 router.put('/:id/reject', jobController.rejectApplication);
 
-router.get('/:id', jobController.getJobById);
-router.get('/', jobController.getJobs);
 
 export default router;
