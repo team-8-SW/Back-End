@@ -255,7 +255,7 @@ CREATE TABLE company_followers (
 CREATE TABLE job_applications (
     id UUID PRIMARY KEY,
     job_id UUID NOT NULL REFERENCES job_listings(id) ON DELETE CASCADE,
-    applicant_id UUID REFERENCES users(id) ON DELETE CASCADE, 
+    applicant_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     first_name VARCHAR(100) NOT NULL,
     last_name VARCHAR(100) NOT NULL,
     phone_number VARCHAR(20) NOT NULL,
@@ -370,8 +370,7 @@ ALTER TABLE job_listings
 ALTER COLUMN company_id DROP NOT NULL,
 ALTER COLUMN company_name DROP NOT NULL;
 
-ALTER TABLE job_applications 
-ALTER COLUMN applicant_id SET NOT NULL;
+
 
 
 
