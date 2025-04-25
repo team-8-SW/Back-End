@@ -1,7 +1,5 @@
 import express, { Express, Request, Response, NextFunction } from 'express';
 import dotenv from 'dotenv';
-import http from 'http';
-import { Server as SocketIOServer } from 'socket.io';
 import { setupSwagger } from './src/docs/swagger';
 import cors from 'cors';
 //
@@ -20,14 +18,15 @@ import connectionRoutes from './src/routes/connection.route';
 import paymentRoutes from './src/routes/payment.route';
 import http from 'http';
 import { initializeWebSocket } from './websocket';
+import { Server as SocketIOServer } from 'socket.io';
+import { registerSocketHandlers } from './src/sockets/index';
 const apps = express();
-const server = http.createServer(apps);
+const server1 = http.createServer(apps);
 
 // Initialize WebSocket
-initializeWebSocket(server);
+initializeWebSocket(server1);
 
 import testRoutes from './src/routes/test.route';
-import { registerSocketHandlers } from './src/sockets/index';
 
 // Initialize environment variables
 dotenv.config();
@@ -54,15 +53,6 @@ setupSwagger(app);
 app.get('/', (req: Request, res: Response) => {
 	res.send('API is running. Go to /api-docs for documentation.');
 });
-
-// Import routes
-import userRoutes from './src/routes/users.routes';
-import authRoutes from './src/routes/auth.route';
-import companyRoutes from './src/routes/company.route';
-import profileRoutes from './src/routes/profile.route';
-import followingRoutes from './src/routes/following.route';
-// import messagingRoutes from './src/routes/messaging.route';
-import notificationsRouter from './src/routes/notifications.route';
 
 // API routes
 app.use('/api/users', userRoutes);
@@ -91,6 +81,29 @@ app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
 	});
 });
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+//di elfunctioin ely kanet bet print routes i commented it -noor
+//function printRoutes(stack: any[], prefix = '') {
+//	stack.forEach((layer) => {
+//		if (layer.route) {
+//			// This layer is a route
+//			//console.log(`${prefix}${layer.route.path}`);
+//		} else if (layer.name === 'router' && layer.handle.stack) {
+//			// This layer is a router, recursively print its routes
+//			//printRoutes(layer.handle.stack, prefix + (layer.regexp?.toString() || ''));
+//		}
+//	});
+//}
+
+//printRoutes(app._router.stack);
+
+// // Start server
+// const port1 = process.env.PORT || 8000;
+
+// app.listen(port1, () => {
+// 	console.log(`Server running on port ${port1}`);
+// 	console.log(`Swagger docs available at http://localhost:${port1}/api-docs`);
+// });
 // ======================= SOCKET.IO SETUP =========================
 const port = process.env.PORT || 3000;
 
@@ -112,28 +125,4 @@ server.listen(port, () => {
 	console.log(`Server running on port ${port}`);
 	console.log(`Swagger docs available at http://localhost:${port}/api-docs`);
 });
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-//di elfunctioin ely kanet bet print routes i commented it -noor
-//function printRoutes(stack: any[], prefix = '') {
-//	stack.forEach((layer) => {
-//		if (layer.route) {
-//			// This layer is a route
-//			//console.log(`${prefix}${layer.route.path}`);
-//		} else if (layer.name === 'router' && layer.handle.stack) {
-//			// This layer is a router, recursively print its routes
-//			//printRoutes(layer.handle.stack, prefix + (layer.regexp?.toString() || ''));
-//		}
-//	});
-//}
-
-//printRoutes(app._router.stack);
-
-// Start server
-// const port = process.env.port || 3000;
-
-// app.listen(port, () => {
-// 	console.log(`Server running on port ${port}`);
-// 	console.log(`Swagger docs available at http://localhost:${port}/api-docs`);
-// });
-
 export default app;
