@@ -53,7 +53,7 @@ export const getJobsByApplicantId = async (req: Request, res: Response) => {
 		}
 
 		const job = await jobService.getAppliedJobsByApplicaintId(applicant_id);
-		res.status(200).json({ message: 'Saved Jobs found successfully', job });
+		res.status(200).json({ message: 'applied Jobs found successfully', job });
 	} catch (error) {
 		console.error('Error finding job', error);
 		res.status(500).json({ message: 'Internal Server Error' });
