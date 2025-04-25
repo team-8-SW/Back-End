@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
+import { knexInstance as db } from '../config/db';
 
 export interface AuthenticatedRequest extends Request {
 	user?: { id: string; email: string };
@@ -67,5 +68,24 @@ export const newAuthMiddleware = (req: Request, res: Response, next: NextFunctio
 	} catch (error) {
 		console.error('Error decoding token:', error);
 		return res.status(401).json({ message: 'Invalid token' });
+	}
+};
+export const isAdmin = async (req: Request, res: Response, next: NextFunction) => {
+	try {
+		const userId = (req as any).user?.id || (req as any).user?.user_id;
+		if (!userId) {
+			return res.status(403).json({ message: 'Forbidden: No user ID' });
+		}
+
+		const user = await db('users').select('is_admin').where({ id: userId }).first();
+
+		if (!user || !user.is_admin) {
+			return res.status(403).json({ message: 'Forbidden: Admins only' });
+		}
+
+		next();
+	} catch (err) {
+		console.error('isAdmin middleware error:', err);
+		res.status(500).json({ message: 'Internal server error' });
 	}
 };
