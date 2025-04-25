@@ -12,6 +12,7 @@ router.get('/filter', jobController.filterJob);
 router.get('/', jobController.getJobs);
 router.get('/employer/jobs', newAuthMiddleware, jobController.getJobsByUserId);
 router.get('/applicant/jobs', newAuthMiddleware, jobController.getJobsByApplicant);
+router.get('/applicantions/jobs', newAuthMiddleware, jobController.getJobsByApplicantId);
 router.post('/post-job', newAuthMiddleware, jobController.postJob);
 
 // Dynamic routes come last
