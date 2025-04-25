@@ -135,3 +135,23 @@ export const checkJobApplicationLimit = async (userId: string): Promise<boolean>
 	const count = result?.count ? Number(result.count) : 0;
 	return count >= 5;
 };
+
+export const acceptApplication = async (applicationId: string) => {
+	await knexInstance('job_applications')
+		.where({ id: applicationId })
+		.update({
+			status: 'accepted',
+			last_updated: knexInstance.fn.now(),
+		})
+		.returning('*');
+};
+
+export const rejectApplication = async (applicationId: string) => {
+	await knexInstance('job_applications')
+		.where({ id: applicationId })
+		.update({
+			status: 'rejected',
+			last_updated: knexInstance.fn.now(),
+		})
+		.returning('*');
+};

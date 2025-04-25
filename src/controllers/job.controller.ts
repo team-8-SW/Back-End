@@ -73,6 +73,32 @@ export const getApplicationsByJobId = async (req: Request, res: Response) => {
 	}
 };
 
+export const acceptApplication = async (req: Request, res: Response) => {
+	try {
+		const { id } = req.params;
+		if (!id) return res.status(401).json({ message: 'Application id is required' });
+
+		await jobService.acceptApplication(id);
+		res.status(200).json({ message: 'Applications accepted successfully' });
+	} catch (error) {
+		console.error('Error accepting applications', error);
+		res.status(500).json({ message: 'Internal Server Error' });
+	}
+};
+
+export const rejectApplication = async (req: Request, res: Response) => {
+	try {
+		const { id } = req.params;
+		if (!id) return res.status(401).json({ message: 'Application id is required' });
+
+		await jobService.rejectApplication(id);
+		res.status(200).json({ message: 'Applications rejected successfully' });
+	} catch (error) {
+		console.error('Error rejectinf applications', error);
+		res.status(500).json({ message: 'Internal Server Error' });
+	}
+};
+
 export const searchJob = async (req: Request, res: Response) => {
 	try {
 		const { keyword, location, industry } = req.query;

@@ -17,9 +17,10 @@ router.post('/:id/save', newAuthMiddleware, jobController.saveJob);
 router.delete('/:id/unsave', newAuthMiddleware, jobController.unSaveJob);
 router.post('/:id/apply', newAuthMiddleware, jobController.applyForJob);
 router.get('/:id/status', newAuthMiddleware, jobController.getStatus);
+router.put('/:id/accept', jobController.acceptApplication);
+router.put('/:id/reject', jobController.rejectApplication);
 
 router.get('/:id', jobController.getJobById);
 router.get('/', jobController.getJobs);
-
 
 export default router;
