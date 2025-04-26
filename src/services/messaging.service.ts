@@ -213,7 +213,6 @@ export const getAllConversationsForUser = async (userId: string) => {
             'first_name as firstName',
             'last_name as lastName',
             'user_name',
-            'profile_picture'
         )
         .whereIn('id', otherUserIds);
 
