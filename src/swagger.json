@@ -4373,7 +4373,10 @@
 								"properties": {
 									"email": {
 										"type": "string"
-									}
+									},
+									"platform": {
+										"type": "string",
+										"enum": ["web", "mobile"]									}
 								}
 							}
 						}
