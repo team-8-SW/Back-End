@@ -11,6 +11,7 @@ import {
 	resetPasswordRequestService,
 	updatePasswordService,
 	socialLoginGoogleService,
+	registerwithoutcaptchaService,
 } from '../services/auth.service';
 import { AuthenticatedRequest } from '../middleware/auth.middleware';
 // import { verifyRecaptcha } from '../utils/recaptcha';
@@ -91,7 +92,69 @@ export const register = async (req: Request, res: Response) => {
 		return res.status(500).json({ message: error.message || 'User registration failed' });
 	}
 };
+//for cross
+//registerwithtoutcaptcha
+export const registerwithtoutcaptcha = async (req: Request, res: Response) => {
+	try {
+		const {
+			userName,
+			email,
+			password,
+			firstName,
+			lastName,
+			emailVerified,
+			// eslint-disable-next-line @typescript-eslint/naming-convention
+			verification_token,
+		} = req.body;
 
+		// Verify reCAPTCHA before registering the user
+		// const isRecaptchaValid = await verifyRecaptcha(recaptchaToken);
+		// if (!isRecaptchaValid) {
+		// 	return res.status(400).json({ message: 'reCAPTCHA verification failed' });
+		// }
+
+		// Now correctly pass six arguments to registerService
+		const newUser = await registerwithoutcaptchaService(
+			userName,
+			email,
+			password,
+			firstName,
+			lastName,
+			emailVerified,
+			verification_token,
+		);
+
+		// Register the user (Fix: use `password_hash`)
+		// const oldUser = await userModel.findUserByEmail(email); //dev2
+		// if (oldUser) {
+		// 	return res.json({ message: 'Email already in use' }); //dev2
+		// }
+
+		const token = jwt.sign({ userId: newUser.id }, process.env.JWT_SECRET!, {
+			expiresIn: '1h',
+		});
+		await userModel.updateUser(newUser.id, { verification_token: token });
+		const finalUser = await userModel.getUserById(newUser.id);
+		const verficationLink = `${process.env.FRONTEND_URL}/api/auth/verify-email?token=${token}`;
+		const emailBody = `
+			<p>Hello ${firstName} ${lastName},</p>
+			<p>Thank you for registering! Please click the link below to verify your account:</p>
+			<a href="${verficationLink}" target="_blank" style="color: blue; text-decoration: underline;">
+				Verify your account
+			</a>
+			<p>Best regards,</p>
+			<p>Career Hub</p>
+		`;
+		await sendEmail(email, 'Verify your account', emailBody, true); //dev2
+		console.log('Generated token:', token);
+		return res.status(201).json({
+			message: 'User registered successfully check your email for verification',
+			user: newUser,
+		});
+	} catch (error: any) {
+		return res.status(500).json({ message: error.message || 'User registration failed' });
+	}
+};
 export const resendVerificationEmail = async (req: Request, res: Response) => {
 	try {
 		const { email } = req.body;
