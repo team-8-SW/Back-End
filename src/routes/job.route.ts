@@ -18,7 +18,7 @@ router.get('/applicant/jobs', newAuthMiddleware, jobController.getJobsByApplican
 router.get('/applicantions/jobs', newAuthMiddleware, jobController.getApplicationsByApplicantId);
 router.post('/post-job', newAuthMiddleware, jobController.postJob);
 // Dynamic routes come last
-router.get('/:id/applications', jobController.getApplicationsByJobId);
+router.get('/:job_id/applications', jobController.getApplicationsByJobId);
 router.get('/:job_id/logo', jobController.fetchCompanyLogo);
 router.post(
 	'/:id/resume',
