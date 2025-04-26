@@ -340,7 +340,7 @@ export const fetchCompanyLogo = async (req: Request, res: Response) => {
 };
 
 export const uploadResume = async (req: Request, res: Response) => {
-	const userId = (req as any).user?.id;
+	const jobId = req.params.id;
 	const file = req.file;
 
 	if (!file) {
@@ -353,7 +353,7 @@ export const uploadResume = async (req: Request, res: Response) => {
 	}
 
 	try {
-		// Upload the resume to Cloudinary
+		// Upload to Cloudinary
 		const uploadToCloudinary = (): Promise<any> => {
 			return new Promise((resolve, reject) => {
 				const stream = cloudinary.uploader.upload_stream(
@@ -374,11 +374,10 @@ export const uploadResume = async (req: Request, res: Response) => {
 
 		const result = await uploadToCloudinary();
 
-		// Update the resume URL in the database
-		const updatedProfile = await jobService.uploadResume(userId, result.secure_url);
+		const updatedProfile = await jobService.uploadResume(jobId, result.secure_url);
 
 		if (!updatedProfile) {
-			return res.status(404).json({ error: 'User not found' });
+			return res.status(404).json({ error: 'Job application not found' });
 		}
 
 		res.status(200).json({
@@ -386,7 +385,7 @@ export const uploadResume = async (req: Request, res: Response) => {
 			resumeUrl: result.secure_url,
 		});
 	} catch (error) {
-		console.error('Error updating resume:', error); // Log the error for debugging
+		console.error('Error updating resume:', error);
 		const errorMessage = error instanceof Error ? error.message : String(error);
 		res.status(500).json({ error: 'Internal server error', details: errorMessage });
 	}
