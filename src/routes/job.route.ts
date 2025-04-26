@@ -24,6 +24,8 @@ router.put('/:id/reject', jobController.rejectApplication);
 router.post('/:id/save', newAuthMiddleware, jobController.saveJob);
 router.delete('/:id/unsave', newAuthMiddleware, jobController.unSaveJob);
 router.post('/:id/apply', newAuthMiddleware, jobController.applyForJob);
+router.post('/:id/apply', newAuthMiddleware, jobController.uploadResume);
+
 
 router.get('/status', newAuthMiddleware, jobController.getStatus);
 

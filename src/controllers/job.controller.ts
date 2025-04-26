@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import * as jobService from '../services/job.service';
 import { ispremium } from '../services/users.service';
+import cloudinary from '../utils/cloudinary';
 
 export const getJobById = async (req: Request, res: Response) => {
 	try {
@@ -333,5 +334,58 @@ export const fetchCompanyLogo = async (req: Request, res: Response) => {
 	} catch (error) {
 		console.error('Error fetchong logo', error);
 		res.status(500).json({ message: 'Internal Server Error' });
+	}
+};
+
+export const uploadResume = async (req: Request, res: Response) => {
+	const userId = (req as any).user?.id;
+	const file = req.file;
+
+	if (!file) {
+		return res.status(400).json({ error: 'No file uploaded' });
+	}
+
+	const allowedMimeTypes = ['application/pdf'];
+	if (!allowedMimeTypes.includes(file.mimetype)) {
+		return res.status(400).json({ error: 'Invalid file type. Only PDF files are allowed.' });
+	}
+
+	try {
+		// Upload the resume to Cloudinary
+		const uploadToCloudinary = (): Promise<any> => {
+			return new Promise((resolve, reject) => {
+				const stream = cloudinary.uploader.upload_stream(
+					{
+						folder: 'jobs/resumes',
+						resource_type: 'auto',
+						use_filename: true,
+						unique_filename: true,
+					},
+					(error, result) => {
+						if (error) return reject(error);
+						resolve(result);
+					},
+				);
+				stream.end(file.buffer);
+			});
+		};
+
+		const result = await uploadToCloudinary();
+
+		// Update the resume URL in the database
+		const updatedProfile = await jobService.updateResume(userId, result.secure_url);
+
+		if (!updatedProfile) {
+			return res.status(404).json({ error: 'User not found' });
+		}
+
+		res.status(200).json({
+			message: 'Resume updated successfully',
+			resumeUrl: result.secure_url,
+		});
+	} catch (error) {
+		console.error('Error updating resume:', error); // Log the error for debugging
+		const errorMessage = error instanceof Error ? error.message : String(error);
+		res.status(500).json({ error: 'Internal server error', details: errorMessage });
 	}
 };
