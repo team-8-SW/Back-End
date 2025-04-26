@@ -185,7 +185,10 @@ export const registerwithoutcaptchaService = async (
 	}
 };
 
-export const forgotPasswordService = async (email: string): Promise<void> => {
+export const forgotPasswordService = async (
+	email: string,
+	platform: 'web' | 'mobile',
+): Promise<void> => {
 	const user = await findUserByEmail(email);
 	if (!user) {
 		throw new Error('User not found');
@@ -197,7 +200,15 @@ export const forgotPasswordService = async (email: string): Promise<void> => {
 
 	await updateResetToken(user.id, resetToken, expiry);
 
-	await sendResetEmail(user.email, resetToken);
+	let resetLink: string;
+
+	if (platform === 'web') {
+		resetLink = `${process.env.WEB_RESET_PASSWORD_URL}?token=${resetToken}`;
+	} else {
+		resetLink = `${process.env.MOBILE_RESET_PASSWORD_URL}?token=${resetToken}`;
+	}
+
+	await sendResetEmail(user.email, resetLink);
 };
 
 export const resetPasswordRequestService = async (
