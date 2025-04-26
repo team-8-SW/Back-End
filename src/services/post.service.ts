@@ -179,8 +179,12 @@ export const like = async (like: {
 			.where({ id: post_id })
 			.select('user_id')
 			.first();
-		const postOwnername = await knexInstance('users')
-			.where({ id: postOwner.user_id })
+		// const postOwnername = await knexInstance('users')
+		// 	.where({ id: postOwner.user_id })
+		// 	.select('user_name')
+		// 	.first();
+		const actionusername = await knexInstance('users')
+			.where({ id: user_id })
 			.select('user_name')
 			.first();
 		if (postOwner) {
@@ -189,7 +193,7 @@ export const like = async (like: {
 				postOwner.user_id,
 				{
 					type: 'like',
-					content: `Your post was liked by user ${postOwnername.user_name}`,
+					content: `Your post was liked by user ${actionusername}`,
 					post_id,
 				},
 				user_id,

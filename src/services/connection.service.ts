@@ -1,6 +1,6 @@
 import { v4 as uuidv4 } from 'uuid'; // Import UUID generator
 import { knexInstance } from '../config/db';
-
+import { notifyUser } from '../utils/notifications';
 //------------Send connection requests to other users---------//
 
 export const sendConnectionRequest = async (userId: string, targetUserId: string) => {
@@ -51,6 +51,20 @@ export const sendConnectionRequest = async (userId: string, targetUserId: string
 	};
 
 	await knexInstance('connections').insert(connectionRequest);
+		
+	const actionusername = await knexInstance('users')
+			.where({ id: userId })
+			.select('user_name')
+			.first();
+	// Emit a notification to the post owner
+	notifyUser(
+			targetUserId,
+			{
+				type: 'connection',
+				content: `You received a new connection from ${actionusername}`,
+			},
+			userId,
+	);
 	return connectionRequest;
 };
 

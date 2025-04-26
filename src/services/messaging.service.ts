@@ -2,7 +2,7 @@ import { v4 as uuidv4 } from 'uuid';
 import cloudinary from '../utils/cloudinary';
 import { knexInstance as db } from '../config/db';
 import { areUsersConnected } from '../models/connection.model';
-
+import { notifyUser } from '../utils/notifications';
 /* ======================= Send private messages to connections =============================*/
 export const createTextMessage = async (senderId: string, receiverId: string, content: string) => {
 	//check if user is in my connections or not first
@@ -17,6 +17,21 @@ export const createTextMessage = async (senderId: string, receiverId: string, co
 				status: 'sent',
 			})
 			.returning(['id', 'content', 'sent_at', 'status']);
+
+		const sendername = await db('users')
+			.where({ id: senderId })
+			.select('user_name')
+			.first();
+			// Emit a notification to the post owner
+			notifyUser(
+				receiverId,
+				{
+					type: 'message',
+					content: `You received a message from ${sendername}`,
+				},
+				senderId,
+		);
+		
 		return message;
 	} else {
 		//send a request
