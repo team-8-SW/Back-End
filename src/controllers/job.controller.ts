@@ -319,3 +319,18 @@ export const getStatus = async (req: Request, res: Response) => {
 		res.status(500).json({ message: 'Internal Server Error' });
 	}
 };
+
+export const fetchCompanyLogo = async (req: Request, res: Response) => {
+	try {
+		const { job_id } = req.params;
+
+		if (!job_id) return res.status(401).json({ message: 'Job id is required' });
+
+		const logo = await jobService.fetchCompanyLogo(job_id);
+
+		return res.status(200).json({ success: true, data: { logo } });
+	} catch (error) {
+		console.error('Error fetchong logo', error);
+		res.status(500).json({ message: 'Internal Server Error' });
+	}
+};

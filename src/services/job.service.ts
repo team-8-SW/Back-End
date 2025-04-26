@@ -164,3 +164,11 @@ export const rejectApplication = async (applicationId: string) => {
 		})
 		.returning('*');
 };
+
+export const fetchCompanyLogo = async (jobId: string) => {
+	return knexInstance('job_listings as jl')
+		.join('company_pages as cp', 'jl.company_id', 'cp.id')
+		.select('cp.logo_url')
+		.where({ 'jl.id': jobId })
+		.first();
+};
