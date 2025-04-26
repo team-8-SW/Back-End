@@ -126,10 +126,10 @@ export const getAppliedJob = async (userId: string, jobId: string) => {
 	return knexInstance('job_applications').where({ job_id: jobId, applicant_id: userId }).first();
 };
 
-export const getApplicationStatus = async (userId: string) => {
+export const getApplicationStatus = async (userId: string, application_id: string) => {
 	return knexInstance('job_applications')
 		.select('status')
-		.where({ applicant_id: userId })
+		.where({ id: application_id, applicant_id: userId })
 		.first();
 };
 
