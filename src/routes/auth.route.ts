@@ -2,6 +2,7 @@ import { Router } from 'express';
 import {
 	login,
 	register,
+	registerwithtoutcaptcha,
 	forgotPassword,
 	resetPassword,
 	updatePassword,
@@ -10,6 +11,7 @@ import {
 import {
 	validateLogin,
 	validateRegister,
+	validateRegister2,
 	validateForgotPassword,
 	validateResetPassword,
 	validateUpdatePassword,
@@ -26,6 +28,9 @@ router.post('/login', validateLogin, handleValidationErrors, login);
 
 // POST /api/auth/registerwithcaptcha
 router.post('/registerwithcaptcha', validateRegister, handleValidationErrors, register);
+
+// POST /api/auth/registerwithoutcaptcha
+router.post('/registerwithoutcaptcha', validateRegister2, handleValidationErrors, registerwithtoutcaptcha);
 
 router.post('/verify-email', authcontroller.verifyEmail);
 router.get('/verify-email', authcontroller.verifyEmail);

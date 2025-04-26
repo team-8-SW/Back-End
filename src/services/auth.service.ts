@@ -74,7 +74,7 @@ export const registerService = async (
 	const trx = await knexInstance.transaction();
 
 	// const created = await createUser(newUser);
-
+	
 	// await knexInstance('user_profiles').insert({
 	// 	id: uuidv4(),
 	// 	user_id: newUser.id,
@@ -90,6 +90,66 @@ export const registerService = async (
 	// 	emailVerified: created.emailVerified,
 	// 	verification_token: created.verification_token,
 	// };
+
+	try {
+		const created = await createUser(newUser);
+
+		await trx('user_profiles').insert({
+			id: uuidv4(),
+			user_id: created.id,
+			last_updated: trx.fn.now(),
+		});
+		await knexInstance('user_privacy_settings').insert({
+			id: uuidv4(),
+			user_id: created.id,
+			profile_visibility: 'public',
+			show_email: false,
+			allow_connection_requests: true,
+			allow_messages_from_non_connections: false,
+			show_active_status: true,
+		});
+		await trx.commit();
+
+		return {
+			id: created.id,
+			userName: created.userName,
+			email: created.email,
+			firstName: created.firstName,
+			lastName: created.lastName,
+			emailVerified: created.emailVerified,
+			verification_token: created.verification_token,
+		};
+	} catch (error) {
+		await trx.rollback();
+		throw error;
+	}
+};
+//registerwithoutcaptchaService
+export const registerwithoutcaptchaService = async (
+	userName: string,
+	email: string,
+	password: string,
+	firstName: string,
+	lastName: string,
+	emailVerified: boolean,
+// eslint-disable-next-line @typescript-eslint/no-unused-vars, @typescript-eslint/naming-convention
+	verificationToken: string,
+) => {
+	const passwordHash = await bcrypt.hash(password, 10);
+	const newUser: User = {
+		id: uuidv4(),
+		userName,
+		email,
+		passwordHash,
+		firstName,
+		lastName,
+		emailVerified: false,
+		isPremium: false,
+		isActive: true,
+		is_admin: false,
+		verification_token: null,
+	};
+	const trx = await knexInstance.transaction();
 
 	try {
 		const created = await createUser(newUser);

@@ -27,7 +27,7 @@ router.post('/:id/apply', newAuthMiddleware, jobController.applyForJob);
 router.post('/:id/apply', newAuthMiddleware, jobController.uploadResume);
 
 
-router.get('/status', newAuthMiddleware, jobController.getStatus);
+router.get('/:id/status', newAuthMiddleware, jobController.getStatus);
 
 // LAST: get job by id
 router.get('/:id', jobController.getJobById);
