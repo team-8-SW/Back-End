@@ -325,6 +325,7 @@ export const getStatus = async (req: Request, res: Response) => {
 
 export const fetchCompanyLogo = async (req: Request, res: Response) => {
 	try {
+		// eslint-disable-next-line @typescript-eslint/naming-convention
 		const { job_id } = req.params;
 
 		if (!job_id) return res.status(401).json({ message: 'Job id is required' });
@@ -386,6 +387,28 @@ export const uploadResume = async (req: Request, res: Response) => {
 		});
 	} catch (error) {
 		console.error('Error updating resume:', error); // Log the error for debugging
+		const errorMessage = error instanceof Error ? error.message : String(error);
+		res.status(500).json({ error: 'Internal server error', details: errorMessage });
+	}
+};
+
+export const getResume = async (req: Request, res: Response) => {
+	const userId = (req as any).user?.id;
+
+	try {
+		// Get the resume URL from the database
+		const resumeUrl = await jobService.getResume(userId);
+
+		if (!resumeUrl) {
+			return res.status(404).json({ error: 'Resume not found' });
+		}
+
+		res.status(200).json({
+			message: 'Resume fetched successfully',
+			resumeUrl: resumeUrl,
+		});
+	} catch (error) {
+		console.error('Error fetching resume:', error); // Log the error for debugging
 		const errorMessage = error instanceof Error ? error.message : String(error);
 		res.status(500).json({ error: 'Internal server error', details: errorMessage });
 	}

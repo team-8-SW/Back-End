@@ -15,6 +15,7 @@ export const getAllCompanies = async (req: Request, res: Response) => {
 
 export const getAllCompaniesByUserId = async (req: Request, res: Response) => {
 	try {
+		// eslint-disable-next-line @typescript-eslint/naming-convention
 		const admin_user_id = (req as any).user?.user_id;
 		if (!admin_user_id) return res.status(401).json({ message: 'Unauthorized' });
 
@@ -413,7 +414,9 @@ export const uploadLogoToCloudinary = async (file: Express.Multer.File): Promise
 
 export const addImpression = async (req: Request, res: Response) => {
 	try {
+		// eslint-disable-next-line @typescript-eslint/naming-convention
 		const { update_id } = req.params;
+		// eslint-disable-next-line @typescript-eslint/naming-convention
 		const user_id = (req as any).user?.user_id;
 
 		if (!update_id) {
@@ -448,8 +451,10 @@ export const addImpression = async (req: Request, res: Response) => {
 
 export const addReaction = async (req: Request, res: Response) => {
 	try {
+		// eslint-disable-next-line @typescript-eslint/naming-convention
 		const { update_id } = req.params;
 		const { type } = req.body;
+		// eslint-disable-next-line @typescript-eslint/naming-convention
 		const user_id = (req as any).user?.user_id;
 
 		if (!type) {
@@ -470,8 +475,10 @@ export const addReaction = async (req: Request, res: Response) => {
 
 export const addComment = async (req: Request, res: Response) => {
 	try {
+		// eslint-disable-next-line @typescript-eslint/naming-convention
 		const { update_id } = req.params;
 		const { content } = req.body;
+		// eslint-disable-next-line @typescript-eslint/naming-convention
 		const user_id = (req as any).user?.user_id;
 
 		if (!content) {
@@ -519,6 +526,7 @@ export const addRepost = async (req: Request, res: Response) => {
 
 export const getCommentCount = async (req: Request, res: Response) => {
 	try {
+		// eslint-disable-next-line @typescript-eslint/naming-convention
 		const { update_id } = req.params;
 		const userId = (req as any).user?.user_id;
 		// if (!userId) {

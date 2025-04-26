@@ -179,3 +179,12 @@ export const uploadResume = async (jobId: string, url: string) => {
 		.update({ resume_url: url })
 		.returning('*');
 };
+
+export const getResume = async (userId: string): Promise<string | null> => {
+	const result = await knexInstance('job_applications')
+		.select('resume_url')
+		.where({ applicant_id: userId })
+		.first();
+
+	return result?.resume_url || null;
+};
