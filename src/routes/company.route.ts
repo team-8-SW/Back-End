@@ -7,6 +7,7 @@ const router = express.Router();
 
 router.get('/updates', companyController.getAllCompaniesUpdates); //remaining in postman
 router.get('/', companyController.getAllCompanies); //remaining in postman
+router.get('/user', newAuthMiddleware, companyController.getAllCompaniesByUserId); //remaining in postman
 router.get('/:id', companyController.getCompanyById); //remaining in postman
 router.get('/:company_id/updates', companyController.getUpdatesByCompanyId); //remaining in postman
 router.post('/', newAuthMiddleware, upload.single('file'), companyController.createCompany);

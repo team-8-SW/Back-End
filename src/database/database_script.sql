@@ -213,6 +213,7 @@ CREATE TABLE job_listings (
     company_id UUID NOT NULL REFERENCES company_pages(id) ON DELETE CASCADE,
     company_name VARCHAR(255) NOT NULL,
     title VARCHAR(255) NOT NULL,
+    status VARCHAR(20) DEFAULT 'Pending';
     description TEXT NOT NULL,
     salary VARCHAR(255),
     industry VARCHAR(255),
@@ -233,8 +234,17 @@ CREATE TABLE saved_posts (
 CREATE TABLE reported_posts (
     id UUID PRIMARY KEY,
     user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    post_id UUID NOT NULL REFERENCES posts(id) ON DELETE CASCADE
+    post_id UUID NOT NULL REFERENCES posts(id) ON DELETE CASCADE,
+    resolved BOOLEAN DEFAULT FALSE
 );
+
+CREATE TABLE reported_comments (
+    id UUID PRIMARY KEY,
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    comment_id UUID NOT NULL REFERENCES comments(id) ON DELETE CASCADE,
+    resolved BOOLEAN DEFAULT FALSE
+);
+
 
 CREATE TABLE saved_jobs (
     id UUID PRIMARY KEY,
@@ -255,7 +265,7 @@ CREATE TABLE company_followers (
 CREATE TABLE job_applications (
     id UUID PRIMARY KEY,
     job_id UUID NOT NULL REFERENCES job_listings(id) ON DELETE CASCADE,
-    applicant_id UUID REFERENCES users(id) ON DELETE CASCADE, 
+    applicant_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     first_name VARCHAR(100) NOT NULL,
     last_name VARCHAR(100) NOT NULL,
     phone_number VARCHAR(20) NOT NULL,
@@ -369,6 +379,8 @@ ON DELETE CASCADE;
 ALTER TABLE job_listings
 ALTER COLUMN company_id DROP NOT NULL,
 ALTER COLUMN company_name DROP NOT NULL;
+
+
 
 
 
