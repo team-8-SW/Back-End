@@ -28,6 +28,6 @@ router.put('/jobs/:jobId/status', newAuthMiddleware, isAdmin, updateJobStatus);
 router.get('/analytics/jobs', newAuthMiddleware, isAdmin, getJobAnalytics);
 router.get('/users/statistics', newAuthMiddleware, isAdmin, getUserStats);
 router.get('/analytics/overview', newAuthMiddleware, isAdmin, getOverviewAnalytics);
-router.get('/analytics/most-reported', newAuthMiddleware, getMostReported);
+router.get('/analytics/most-reported', newAuthMiddleware, isAdmin, getMostReported);
 
 export default router;
