@@ -17,6 +17,8 @@ router.post('/post-job', newAuthMiddleware, jobController.postJob);
 
 // Dynamic routes come last
 router.get('/:id/applications', jobController.getApplicationsByJobId);
+router.get('/:job_id/logo', jobController.fetchCompanyLogo);
+
 router.put('/:id/accept', jobController.acceptApplication);
 router.put('/:id/reject', jobController.rejectApplication);
 router.post('/:id/save', newAuthMiddleware, jobController.saveJob);
