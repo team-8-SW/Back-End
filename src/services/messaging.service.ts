@@ -143,68 +143,93 @@ export const createMediaMessage = async (
 
 /* ======================= Get Conversation History =============================*/
 export const getConversationBetweenUsers = async (userId: string, otherUserId: string) => {
-	return db('messages')
-		.where(function () {
-			this.where({ sender_id: userId, receiver_id: otherUserId }).orWhere({
-				sender_id: otherUserId,
-				receiver_id: userId,
-			});
-		})
-		.andWhere(function () {
-			this.where('is_deleted_by_sender', false).orWhere('is_deleted_by_receiver', false);
-		})
-		.orderBy('sent_at', 'asc');
+    const messages = await db('messages')
+        .where(function () {
+            this.where({ sender_id: userId, receiver_id: otherUserId }).orWhere({
+                sender_id: otherUserId,
+                receiver_id: userId,
+            });
+        })
+        .andWhere(function () {
+            this.where('is_deleted_by_sender', false).orWhere('is_deleted_by_receiver', false);
+        })
+        .orderBy('sent_at', 'asc')
+        .select(
+            'id',
+            'sender_id',
+            'receiver_id',
+            'content',
+            'media_url',
+            'media_type',
+            'sent_at'
+        );
+
+    // Add `isSender` field to each message
+    const formattedMessages = messages.map((msg) => ({
+        ...msg,
+        isSender: msg.sender_id === userId, // true if the user is the sender
+    }));
+
+    return formattedMessages;
 };
 
 export const getConversationParticipants = async (userIds: string[]) => {
 	const result = await db('users')
-		.select('id', 'first_name as firstName', 'last_name as lastName')
+		.select('id', 'first_name as firstName', 'last_name as lastName', 'user_name')
 		.whereIn('id', userIds);
 	return result;
 };
 
 export const getAllConversationsForUser = async (userId: string) => {
-	// 1. Get all messages where user is sender or receiver
-	const rawMessages = await db('messages')
-		.where('sender_id', userId)
-		.orWhere('receiver_id', userId)
-		.select('id', 'sender_id', 'receiver_id', 'content', 'media_url', 'media_type', 'sent_at');
+    // 1. Get all messages where user is sender or receiver
+    const rawMessages = await db('messages')
+        .where('sender_id', userId)
+        .orWhere('receiver_id', userId)
+        .select('id', 'sender_id', 'receiver_id', 'content', 'media_url', 'media_type', 'sent_at');
 
-	// 2. Extract unique conversation user IDs
-	const userMap = new Map<string, any>();
+    // 2. Extract unique conversation user IDs
+    const userMap = new Map<string, any>();
 
-	for (const msg of rawMessages) {
-		const otherUserId = msg.sender_id === userId ? msg.receiver_id : msg.sender_id;
+    for (const msg of rawMessages) {
+        const otherUserId = msg.sender_id === userId ? msg.receiver_id : msg.sender_id;
 
-		if (!userMap.has(otherUserId)) {
-			userMap.set(otherUserId, msg); // first message we find (will replace below if newer)
-		}
+        if (!userMap.has(otherUserId)) {
+            userMap.set(otherUserId, msg); // first message we find (will replace below if newer)
+        }
 
-		// replace if newer
-		const existing = userMap.get(otherUserId);
-		if (new Date(msg.sent_at) > new Date(existing.sent_at)) {
-			userMap.set(otherUserId, msg);
-		}
-	}
+        // replace if newer
+        const existing = userMap.get(otherUserId);
+        if (new Date(msg.sent_at) > new Date(existing.sent_at)) {
+            userMap.set(otherUserId, msg);
+        }
+    }
 
-	const otherUserIds = Array.from(userMap.keys());
+    const otherUserIds = Array.from(userMap.keys());
 
-	// 3. Fetch user info
-	const users = await db('users')
-		.select('id', 'first_name as firstName', 'last_name as lastName')
-		.whereIn('id', otherUserIds);
+    // 3. Fetch user info (include profile_picture and user_name)
+    const users = await db('users')
+        .select(
+            'id',
+            'first_name as firstName',
+            'last_name as lastName',
+            'user_name',
+            'profile_picture'
+        )
+        .whereIn('id', otherUserIds);
 
-	const userMapInfo = new Map(users.map((u) => [u.id, u]));
+    const userMapInfo = new Map(users.map((u) => [u.id, u]));
 
-	// 4. Format response
-	const conversations = Array.from(userMap.entries()).map(([otherUserId, lastMsg]) => ({
-		id: `${userId}_${otherUserId}`,
-		participants: [userMapInfo.get(otherUserId)],
-		lastMessage: lastMsg.content || '', // could also append media_type
-		timestamp: lastMsg.sent_at,
-	}));
+    // 4. Format response
+    const conversations = Array.from(userMap.entries()).map(([otherUserId, lastMsg]) => ({
+        id: `${userId}_${otherUserId}`,
+        participants: [userMapInfo.get(otherUserId)],
+        lastMessage: lastMsg.content || '', // could also append media_type
+        timestamp: lastMsg.sent_at,
+        profilePicture: userMapInfo.get(otherUserId)?.profile_picture || null,
+        userName: userMapInfo.get(otherUserId)?.user_name || null,
+    }));
 
-	return conversations;
+    return conversations;
 };
 
 /* ======================= Get unseen messages count =============================*/
