@@ -46,6 +46,7 @@ export const getJobsByApplicant = async (req: Request, res: Response) => {
 
 export const getApplicationsByApplicantId = async (req: Request, res: Response) => {
 	try {
+		// eslint-disable-next-line @typescript-eslint/naming-convention
 		const applicant_id = (req as any).user?.user_id;
 
 		if (!applicant_id) {
@@ -373,7 +374,7 @@ export const uploadResume = async (req: Request, res: Response) => {
 		const result = await uploadToCloudinary();
 
 		// Update the resume URL in the database
-		const updatedProfile = await jobService.updateResume(userId, result.secure_url);
+		const updatedProfile = await jobService.uploadResume(userId, result.secure_url);
 
 		if (!updatedProfile) {
 			return res.status(404).json({ error: 'User not found' });
