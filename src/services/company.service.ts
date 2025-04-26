@@ -7,8 +7,8 @@ export const getAllCompanies = async () => {
 	return await knexInstance('company_pages').select('*');
 };
 
-export async function getAllCompaniesByUserId(id: string): Promise<companyModels.company | null> {
-	return knexInstance('company_pages').where({ admin_user_id: id }).first() || null;
+export async function getAllCompaniesByUserId(id: string): Promise<companyModels.company[]> {
+	return knexInstance('company_pages').where({ admin_user_id: id }).select('*');
 }
 
 export async function getCompanyById(id: string): Promise<companyModels.company | null> {
