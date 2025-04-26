@@ -10,6 +10,8 @@ const router = express.Router();
 // Static routes must come first
 router.get('/search', jobController.searchJob);
 router.get('/filter', jobController.filterJob);
+router.get('/resume', newAuthMiddleware, jobController.getResume);
+
 router.get('/', jobController.getJobs);
 router.get('/employer/jobs', newAuthMiddleware, jobController.getJobsByUserId);
 router.get('/applicant/jobs', newAuthMiddleware, jobController.getJobsByApplicant);
