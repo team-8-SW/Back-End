@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import * as jobService from '../services/job.service';
 import { ispremium } from '../services/users.service';
+import cloudinary from '../utils/cloudinary';
 
 export const getJobById = async (req: Request, res: Response) => {
 	try {
@@ -45,6 +46,7 @@ export const getJobsByApplicant = async (req: Request, res: Response) => {
 
 export const getApplicationsByApplicantId = async (req: Request, res: Response) => {
 	try {
+		// eslint-disable-next-line @typescript-eslint/naming-convention
 		const applicant_id = (req as any).user?.user_id;
 
 		if (!applicant_id) {
@@ -323,6 +325,7 @@ export const getStatus = async (req: Request, res: Response) => {
 
 export const fetchCompanyLogo = async (req: Request, res: Response) => {
 	try {
+		// eslint-disable-next-line @typescript-eslint/naming-convention
 		const { job_id } = req.params;
 
 		if (!job_id) return res.status(401).json({ message: 'Job id is required' });
@@ -333,5 +336,79 @@ export const fetchCompanyLogo = async (req: Request, res: Response) => {
 	} catch (error) {
 		console.error('Error fetchong logo', error);
 		res.status(500).json({ message: 'Internal Server Error' });
+	}
+};
+
+export const uploadResume = async (req: Request, res: Response) => {
+	const jobId = req.params.id;
+	const file = req.file;
+
+	if (!file) {
+		return res.status(400).json({ error: 'No file uploaded' });
+	}
+
+	const allowedMimeTypes = ['application/pdf'];
+	if (!allowedMimeTypes.includes(file.mimetype)) {
+		return res.status(400).json({ error: 'Invalid file type. Only PDF files are allowed.' });
+	}
+
+	try {
+		// Upload to Cloudinary
+		const uploadToCloudinary = (): Promise<any> => {
+			return new Promise((resolve, reject) => {
+				const stream = cloudinary.uploader.upload_stream(
+					{
+						folder: 'jobs/resumes',
+						resource_type: 'auto',
+						use_filename: true,
+						unique_filename: true,
+					},
+					(error, result) => {
+						if (error) return reject(error);
+						resolve(result);
+					},
+				);
+				stream.end(file.buffer);
+			});
+		};
+
+		const result = await uploadToCloudinary();
+
+		const updatedProfile = await jobService.uploadResume(jobId, result.secure_url);
+
+		if (!updatedProfile) {
+			return res.status(404).json({ error: 'Job application not found' });
+		}
+
+		res.status(200).json({
+			message: 'Resume updated successfully',
+			resumeUrl: result.secure_url,
+		});
+	} catch (error) {
+		console.error('Error updating resume:', error);
+		const errorMessage = error instanceof Error ? error.message : String(error);
+		res.status(500).json({ error: 'Internal server error', details: errorMessage });
+	}
+};
+
+export const getResume = async (req: Request, res: Response) => {
+	const userId = (req as any).user?.id;
+
+	try {
+		// Get the resume URL from the database
+		const resumeUrl = await jobService.getResume(userId);
+
+		if (!resumeUrl) {
+			return res.status(404).json({ error: 'Resume not found' });
+		}
+
+		res.status(200).json({
+			message: 'Resume fetched successfully',
+			resumeUrl: resumeUrl,
+		});
+	} catch (error) {
+		console.error('Error fetching resume:', error); // Log the error for debugging
+		const errorMessage = error instanceof Error ? error.message : String(error);
+		res.status(500).json({ error: 'Internal server error', details: errorMessage });
 	}
 };

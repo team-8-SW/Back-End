@@ -172,3 +172,19 @@ export const fetchCompanyLogo = async (jobId: string) => {
 		.where({ 'jl.id': jobId })
 		.first();
 };
+
+export const uploadResume = async (jobId: string, url: string) => {
+	return knexInstance('job_applications')
+		.where('job_id', jobId)
+		.update({ resume_url: url })
+		.returning('*');
+};
+
+export const getResume = async (userId: string): Promise<string | null> => {
+	const result = await knexInstance('job_applications')
+		.select('resume_url')
+		.where({ applicant_id: userId })
+		.first();
+
+	return result?.resume_url || null;
+};
