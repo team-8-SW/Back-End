@@ -46,7 +46,7 @@ export const fetchJobAnalytics = async () => {
     return {
         totalJobs: parseInt(String(total?.count || '0'), 10),
         // approvedJobs: parseInt(String(approved?.count || '0'), 10),
-        pendingJobs: parseInt(String(pending?.count || '0'), 10),
+        pendingJobs: parseInt(String(pending.count || '0')),
         // rejectedJobs: parseInt(String(rejected?.count || '0'), 10),
         // flaggedJobs: parseInt(String(flagged?.count || '0'), 10),
     };
