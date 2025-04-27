@@ -74,7 +74,7 @@ export const registerService = async (
 	const trx = await knexInstance.transaction();
 
 	// const created = await createUser(newUser);
-
+	
 	// await knexInstance('user_profiles').insert({
 	// 	id: uuidv4(),
 	// 	user_id: newUser.id,
@@ -132,7 +132,7 @@ export const registerwithoutcaptchaService = async (
 	firstName: string,
 	lastName: string,
 	emailVerified: boolean,
-	// eslint-disable-next-line @typescript-eslint/no-unused-vars, @typescript-eslint/naming-convention
+// eslint-disable-next-line @typescript-eslint/no-unused-vars, @typescript-eslint/naming-convention
 	verificationToken: string,
 ) => {
 	const passwordHash = await bcrypt.hash(password, 10);
@@ -185,10 +185,7 @@ export const registerwithoutcaptchaService = async (
 	}
 };
 
-export const forgotPasswordService = async (
-	email: string,
-	platform: 'web' | 'mobile',
-): Promise<void> => {
+export const forgotPasswordService = async (email: string): Promise<void> => {
 	const user = await findUserByEmail(email);
 	if (!user) {
 		throw new Error('User not found');
@@ -200,15 +197,7 @@ export const forgotPasswordService = async (
 
 	await updateResetToken(user.id, resetToken, expiry);
 
-	let resetLink: string;
-
-	if (platform === 'web') {
-		resetLink = `${process.env.WEB_RESET_PASSWORD_URL}?token=${resetToken}`;
-	} else {
-		resetLink = `${process.env.MOBILE_RESET_PASSWORD_URL}?token=${resetToken}`;
-	}
-
-	await sendResetEmail(user.email, resetLink);
+	await sendResetEmail(user.email, resetToken);
 };
 
 export const resetPasswordRequestService = async (

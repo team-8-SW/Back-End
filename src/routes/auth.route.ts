@@ -30,12 +30,7 @@ router.post('/login', validateLogin, handleValidationErrors, login);
 router.post('/registerwithcaptcha', validateRegister, handleValidationErrors, register);
 
 // POST /api/auth/registerwithoutcaptcha
-router.post(
-	'/registerwithoutcaptcha',
-	validateRegister2,
-	handleValidationErrors,
-	registerwithtoutcaptcha,
-);
+router.post('/registerwithoutcaptcha', validateRegister2, handleValidationErrors, registerwithtoutcaptcha);
 
 router.post('/verify-email', authcontroller.verifyEmail);
 router.get('/verify-email', authcontroller.verifyEmail);
