@@ -60,7 +60,11 @@ export const setupMessagingSocket = (io: Server) => {
 				if (await isUserBlocked(userId, receiverId)) return;
 
 				const message = await createTextMessage(userId, receiverId, content);
+
+				// Emit to the receiver
 				io.to(receiverId).emit('receive_message', message);
+				// Emit to the sender as well
+				io.to(userId).emit('receive_message', message);
 			} catch (error) {
 				console.error('Error in send_text:', error);
 			}
@@ -72,7 +76,9 @@ export const setupMessagingSocket = (io: Server) => {
 				if (await isUserBlocked(userId, receiverId)) return;
 
 				const message = await createMediaMessage(userId, receiverId, file);
+				// Emit to both receiver and sender
 				io.to(receiverId).emit('receive_message', message);
+				io.to(userId).emit('receive_message', message);
 			} catch (error) {
 				console.error('Error in send_media:', error);
 			}
