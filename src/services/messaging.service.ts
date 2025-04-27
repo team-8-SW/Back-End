@@ -79,6 +79,7 @@ export const acceptthisRequest = async (userId: string, senderId: string) => {
 
 	return requests;
 };
+
 //rejectRequest -noor
 export const declinehisRequest = async (userId: string, senderId: string) => {
 	const requests = await db('messages')
@@ -167,7 +168,7 @@ export const getConversationBetweenUsers = async (userId: string, otherUserId: s
 			this.where('is_deleted_by_sender', false).orWhere('is_deleted_by_receiver', false);
 		})
 		.orderBy('sent_at', 'asc')
-		.select('id', 'sender_id', 'receiver_id', 'content', 'media_url', 'media_type', 'sent_at');
+		.select('id', 'sender_id', 'receiver_id', 'content', 'media_url', 'media_type', 'sent_at', 'is_read');
 
 	// Add `isSender` field to each message
 	const formattedMessages = messages.map((msg) => ({
