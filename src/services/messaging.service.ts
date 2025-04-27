@@ -5,96 +5,90 @@ import { areUsersConnected } from '../models/connection.model';
 import { notifyUser } from '../utils/notifications';
 /* ======================= Send private messages to connections =============================*/
 export const createTextMessage = async (senderId: string, receiverId: string, content: string) => {
-    // Check if user is in my connections or not first
-    const connected = await areUsersConnected(senderId, receiverId);
-    if (connected) {
-        const [message] = await db('messages')
-            .insert({
-                id: uuidv4(),
-                sender_id: senderId,
-                receiver_id: receiverId,
-                content,
-                status: 'sent',
-            })
-            .returning(['id', 'content', 'sent_at', 'status']);
+	// Check if user is in my connections or not first
+	const connected = await areUsersConnected(senderId, receiverId);
+	if (connected) {
+		const [message] = await db('messages')
+			.insert({
+				id: uuidv4(),
+				sender_id: senderId,
+				receiver_id: receiverId,
+				content,
+				status: 'sent',
+			})
+			.returning(['id', 'content', 'sent_at', 'status']);
 
-        const sendername = await db('users')
-            .where({ id: senderId })
-            .select('user_name')
-            .first();
+		const sendername = await db('users').where({ id: senderId }).select('user_name').first();
 
-        // Emit a notification to the receiver
-        notifyUser(
-            receiverId,
-            {
-                type: 'message',
-                content: `You received a message from ${sendername.user_name}`,
-            },
-            senderId,
-        );
+		// Emit a notification to the receiver
+		notifyUser(
+			receiverId,
+			{
+				type: 'message',
+				content: `You received a message from ${sendername.user_name}`,
+			},
+			senderId,
+		);
 
-        // Add `isSender: true` to the response
-        return {
-            ...message,
-            isSender: true,
-        };
-    } else {
-        // Send a request
-        const [request] = await db('messages')
-            .insert({
-                id: uuidv4(),
-                sender_id: senderId,
-                receiver_id: receiverId,
-                content,
-                is_request: true,
-            })
-            .returning(['id', 'content', 'sent_at', 'status']);
+		// Add `isSender: true` to the response
+		return {
+			...message,
+			isSender: true,
+		};
+	} else {
+		// Send a request
+		const [request] = await db('messages')
+			.insert({
+				id: uuidv4(),
+				sender_id: senderId,
+				receiver_id: receiverId,
+				content,
+				is_request: true,
+			})
+			.returning(['id', 'content', 'sent_at', 'status']);
 
-        const sendername = await db('users')
-            .where({ id: senderId })
-            .select('user_name')
-            .first();
+		const sendername = await db('users').where({ id: senderId }).select('user_name').first();
 
-        // Emit a notification to the receiver
-        notifyUser(
-            receiverId,
-            {
-                type: 'message',
-                content: `You received a message request from ${sendername.user_name}`,
-            },
-            senderId,
-        );
+		// Emit a notification to the receiver
+		notifyUser(
+			receiverId,
+			{
+				type: 'message',
+				content: `You received a message request from ${sendername.user_name}`,
+			},
+			senderId,
+		);
 
-        // Add `isSender: true` to the response
-        return {
-            ...request,
-            isSender: true,
-        };
-    }
+		// Add `isSender: true` to the response
+		return {
+			...request,
+			isSender: true,
+		};
+	}
 };
 //acceptRequest -noor
 export const acceptthisRequest = async (userId: string, senderId: string) => {
 	const requests = await db('messages')
-    .where({ sender_id: senderId, receiver_id: userId })
-    .update({ is_request: false })
-    .returning("*");
+		.where({ sender_id: senderId, receiver_id: userId })
+		.update({ is_request: false })
+		.returning('*');
 
-if (!requests || requests.length === 0) {
-    throw new Error('No messages found or not authorized to accept.');
-}
+	if (!requests || requests.length === 0) {
+		throw new Error('No messages found or not authorized to accept.');
+	}
 
 	return requests;
 };
 //rejectRequest -noor
 export const declinehisRequest = async (userId: string, senderId: string) => {
 	const requests = await db('messages')
-    .where({ sender_id: senderId, receiver_id: userId })
-    .update({ is_request: true })
-    .returning("*");
+		.where({ sender_id: senderId, receiver_id: userId })
+		.update({ is_request: true })
+		.returning('*');
 
-if (!requests || requests.length === 0) {
-    throw new Error('No messages found or not authorized to accept.');
-}
+	if (!requests || requests.length === 0) {
+		throw new Error('No messages found or not authorized to accept.');
+	}
 
 	return requests;
 };
@@ -162,34 +156,26 @@ export const createMediaMessage = async (
 
 /* ======================= Get Conversation History =============================*/
 export const getConversationBetweenUsers = async (userId: string, otherUserId: string) => {
-    const messages = await db('messages')
-        .where(function () {
-            this.where({ sender_id: userId, receiver_id: otherUserId }).orWhere({
-                sender_id: otherUserId,
-                receiver_id: userId,
-            });
-        })
-        .andWhere(function () {
-            this.where('is_deleted_by_sender', false).orWhere('is_deleted_by_receiver', false);
-        })
-        .orderBy('sent_at', 'asc')
-        .select(
-            'id',
-            'sender_id',
-            'receiver_id',
-            'content',
-            'media_url',
-            'media_type',
-            'sent_at'
-        );
+	const messages = await db('messages')
+		.where(function () {
+			this.where({ sender_id: userId, receiver_id: otherUserId }).orWhere({
+				sender_id: otherUserId,
+				receiver_id: userId,
+			});
+		})
+		.andWhere(function () {
+			this.where('is_deleted_by_sender', false).orWhere('is_deleted_by_receiver', false);
+		})
+		.orderBy('sent_at', 'asc')
+		.select('id', 'sender_id', 'receiver_id', 'content', 'media_url', 'media_type', 'sent_at');
 
-    // Add `isSender` field to each message
-    const formattedMessages = messages.map((msg) => ({
-        ...msg,
-        isSender: msg.sender_id === userId, // true if the user is the sender
-    }));
+	// Add `isSender` field to each message
+	const formattedMessages = messages.map((msg) => ({
+		...msg,
+		isSender: msg.sender_id === userId, // true if the user is the sender
+	}));
 
-    return formattedMessages;
+	return formattedMessages;
 };
 
 export const getConversationParticipants = async (userIds: string[]) => {
@@ -200,54 +186,49 @@ export const getConversationParticipants = async (userIds: string[]) => {
 };
 
 export const getAllConversationsForUser = async (userId: string) => {
-    // 1. Get all messages where user is sender or receiver
-    const rawMessages = await db('messages')
-        .where('sender_id', userId)
-        .orWhere('receiver_id', userId)
-        .select('id', 'sender_id', 'receiver_id', 'content', 'media_url', 'media_type', 'sent_at');
+	// 1. Get all messages where user is sender or receiver
+	const rawMessages = await db('messages')
+		.where('sender_id', userId)
+		.orWhere('receiver_id', userId)
+		.select('id', 'sender_id', 'receiver_id', 'content', 'media_url', 'media_type', 'sent_at');
 
-    // 2. Extract unique conversation user IDs
-    const userMap = new Map<string, any>();
+	// 2. Extract unique conversation user IDs
+	const userMap = new Map<string, any>();
 
-    for (const msg of rawMessages) {
-        const otherUserId = msg.sender_id === userId ? msg.receiver_id : msg.sender_id;
+	for (const msg of rawMessages) {
+		const otherUserId = msg.sender_id === userId ? msg.receiver_id : msg.sender_id;
 
-        if (!userMap.has(otherUserId)) {
-            userMap.set(otherUserId, msg); // first message we find (will replace below if newer)
-        }
+		if (!userMap.has(otherUserId)) {
+			userMap.set(otherUserId, msg); // first message we find (will replace below if newer)
+		}
 
-        // replace if newer
-        const existing = userMap.get(otherUserId);
-        if (new Date(msg.sent_at) > new Date(existing.sent_at)) {
-            userMap.set(otherUserId, msg);
-        }
-    }
+		// replace if newer
+		const existing = userMap.get(otherUserId);
+		if (new Date(msg.sent_at) > new Date(existing.sent_at)) {
+			userMap.set(otherUserId, msg);
+		}
+	}
 
-    const otherUserIds = Array.from(userMap.keys());
+	const otherUserIds = Array.from(userMap.keys());
 
-    // 3. Fetch user info (include profile_picture and user_name)
-    const users = await db('users')
-        .select(
-            'id',
-            'first_name as firstName',
-            'last_name as lastName',
-            'user_name',
-        )
-        .whereIn('id', otherUserIds);
+	// 3. Fetch user info (include profile_picture and user_name)
+	const users = await db('users')
+		.select('id', 'first_name as firstName', 'last_name as lastName', 'user_name')
+		.whereIn('id', otherUserIds);
 
-    const userMapInfo = new Map(users.map((u) => [u.id, u]));
+	const userMapInfo = new Map(users.map((u) => [u.id, u]));
 
-    // 4. Format response
-    const conversations = Array.from(userMap.entries()).map(([otherUserId, lastMsg]) => ({
-        id: `${userId}_${otherUserId}`,
-        participants: [userMapInfo.get(otherUserId)],
-        lastMessage: lastMsg.content || '', // could also append media_type
-        timestamp: lastMsg.sent_at,
-        profilePicture: userMapInfo.get(otherUserId)?.profile_picture || null,
-        userName: userMapInfo.get(otherUserId)?.user_name || null,
-    }));
+	// 4. Format response
+	const conversations = Array.from(userMap.entries()).map(([otherUserId, lastMsg]) => ({
+		id: `${userId}_${otherUserId}`,
+		participants: [userMapInfo.get(otherUserId)],
+		lastMessage: lastMsg.content || '', // could also append media_type
+		timestamp: lastMsg.sent_at,
+		profilePicture: userMapInfo.get(otherUserId)?.profile_picture || null,
+		userName: userMapInfo.get(otherUserId)?.user_name || null,
+	}));
 
-    return conversations;
+	return conversations;
 };
 
 /* ======================= Get unseen messages count =============================*/
@@ -304,45 +285,45 @@ export const getLastMessageReadStatus = async (userId1: string, userId2: string)
 
 /*============================== Get All Requests ===============================*/
 export const getAllRequests = async (userId: string) => {
-    // 1. Get all messages where the user is the receiver and `is_request` is true
-    const rawMessages = await db('messages')
-        .where('receiver_id', userId)
-        .andWhere('is_request', true)
-        .select('id', 'sender_id', 'receiver_id', 'content', 'media_url', 'media_type', 'sent_at');
+	// 1. Get all messages where the user is the receiver and `is_request` is true
+	const rawMessages = await db('messages')
+		.where('receiver_id', userId)
+		.andWhere('is_request', true)
+		.select('id', 'sender_id', 'receiver_id', 'content', 'media_url', 'media_type', 'sent_at');
 
-    // 2. Extract unique conversation user IDs
-    const userMap = new Map<string, any>();
+	// 2. Extract unique conversation user IDs
+	const userMap = new Map<string, any>();
 
-    for (const msg of rawMessages) {
-        const otherUserId = msg.sender_id;
+	for (const msg of rawMessages) {
+		const otherUserId = msg.sender_id;
 
-        if (!userMap.has(otherUserId)) {
-            userMap.set(otherUserId, msg); // First message we find (will replace below if newer)
-        }
+		if (!userMap.has(otherUserId)) {
+			userMap.set(otherUserId, msg); // First message we find (will replace below if newer)
+		}
 
-        // Replace if newer
-        const existing = userMap.get(otherUserId);
-        if (new Date(msg.sent_at) > new Date(existing.sent_at)) {
-            userMap.set(otherUserId, msg);
-        }
-    }
+		// Replace if newer
+		const existing = userMap.get(otherUserId);
+		if (new Date(msg.sent_at) > new Date(existing.sent_at)) {
+			userMap.set(otherUserId, msg);
+		}
+	}
 
-    const otherUserIds = Array.from(userMap.keys());
+	const otherUserIds = Array.from(userMap.keys());
 
-    // 3. Fetch user info (include first name, last name, and user name)
-    const users = await db('users')
-        .select('id', 'first_name as firstName', 'last_name as lastName', 'user_name')
-        .whereIn('id', otherUserIds);
+	// 3. Fetch user info (include first name, last name, and user name)
+	const users = await db('users')
+		.select('id', 'first_name as firstName', 'last_name as lastName', 'user_name')
+		.whereIn('id', otherUserIds);
 
-    const userMapInfo = new Map(users.map((u) => [u.id, u]));
+	const userMapInfo = new Map(users.map((u) => [u.id, u]));
 
-    // 4. Format response
-    const requests = Array.from(userMap.entries()).map(([otherUserId, lastMsg]) => ({
-        id: lastMsg.id,
-        participants: [userMapInfo.get(otherUserId)],
-        lastMessage: lastMsg.content || '',
-        timestamp: lastMsg.sent_at,
-    }));
+	// 4. Format response
+	const requests = Array.from(userMap.entries()).map(([otherUserId, lastMsg]) => ({
+		id: lastMsg.id,
+		participants: [userMapInfo.get(otherUserId)],
+		lastMessage: lastMsg.content || '',
+		timestamp: lastMsg.sent_at,
+	}));
 
-    return requests;
+	return requests;
 };
