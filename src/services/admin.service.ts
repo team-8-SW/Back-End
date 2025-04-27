@@ -38,7 +38,7 @@ export const changeJobStatus = async (jobId: string, status: string) => {
 };
 export const fetchJobAnalytics = async () => {
 	const [total] = await db('job_listings').count('* as count');
-	const [approved] = await db('job_listings').where({ status: 'Approved' }).count('* as count');
+	const [approved] = await db('job_listings').where({ status: 'Approved' }).count('* as count ');
 	const [pending] = await db('job_listings').where({ status: 'Pending' }).count('* as count');
 	const [rejected] = await db('job_listings').where({ status: 'Rejected' }).count('* as count');
 	const [flagged] = await db('job_listings').where({ status: 'Flagged' }).count('* as count');

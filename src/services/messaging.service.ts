@@ -27,7 +27,7 @@ export const createTextMessage = async (senderId: string, receiverId: string, co
 				receiverId,
 				{
 					type: 'message',
-					content: `You received a message from ${sendername}`,
+					content: `You received a message from ${sendername.user_name}`,
 				},
 				senderId,
 		);
@@ -41,44 +41,51 @@ export const createTextMessage = async (senderId: string, receiverId: string, co
 				sender_id: senderId,
 				receiver_id: receiverId,
 				content,
-				status: 'pending',
+				is_request: true,
 			})
 			.returning(['id', 'content', 'sent_at', 'status']);
+			const sendername = await db('users')
+			.where({ id: senderId })
+			.select('user_name')
+			.first();
+			// Emit a notification to the post owner
+			notifyUser(
+				receiverId,
+				{
+					type: 'message',
+					content: `You received a message  request from ${sendername.user_name}`,
+				},
+				senderId,
+		);
 		return request;
 	}
 };
-// //acceptRequest -noor
-// export const acceptthisRequest = async (userId: string, request_id: string) => {
-// 	const [request] = await db('messages_requests')
-// 		.where({ id: request_id, receiver_id: userId })
-// 		.update({ status: 'accepted' })
-// 		.returning("*");
-// 		if (!request) {
-// 			throw new Error('Message request not found or not authorized to accept.');
-// 		}
-// 	const [message] = await db('messages')
-// 		.insert({
-// 			id: uuidv4(),
-// 			sender_id: request.sender_id,
-// 			receiver_id: request.receiver_id,
-// 			content: request.content,
-// 			sent_at: request.sent_at,
-// 			status: 'sent',
-// 		})
-// 		.returning("*");
-// 	return message;
-// };
-// //rejectRequest -noor
-// export const declinethisRequest = async (userId: string, request_id: string) => {
-// 	const [request] = await db('messages_requests')
-// 		.where({ id: request_id, receiver_id: userId })
-// 		.update({ status: 'declined' })
-// 		.returning("*");
-// 		if (!request) {
-// 			throw new Error('Message request not found or not authorized to accept.');
-// 		}
-// 	return request;
-// };
+//acceptRequest -noor
+export const acceptthisRequest = async (userId: string, senderId: string) => {
+	const requests = await db('messages')
+    .where({ sender_id: senderId, receiver_id: userId })
+    .update({ is_request: false })
+    .returning("*");
+
+if (!requests || requests.length === 0) {
+    throw new Error('No messages found or not authorized to accept.');
+}
+
+	return requests;
+};
+//rejectRequest -noor
+export const declinehisRequest = async (userId: string, senderId: string) => {
+	const requests = await db('messages')
+    .where({ sender_id: senderId, receiver_id: userId })
+    .update({ is_request: true })
+    .returning("*");
+
+if (!requests || requests.length === 0) {
+    throw new Error('No messages found or not authorized to accept.');
+}
+
+	return requests;
+};
 /* ======================= Send media messages to connections =============================*/
 export const createMediaMessage = async (
 	senderId: string,
@@ -285,38 +292,45 @@ export const getLastMessageReadStatus = async (userId1: string, userId2: string)
 
 /*============================== Get All Requests ===============================*/
 export const getAllRequests = async (userId: string) => {
-	const rawMessages = await db('messages')
-		.where('receiver_id', userId)
-		.andWhere('status', 'pending')
-		.select('id', 'sender_id', 'receiver_id', 'content', 'media_url', 'media_type', 'sent_at');
+    // 1. Get all messages where the user is the receiver and `is_request` is true
+    const rawMessages = await db('messages')
+        .where('receiver_id', userId)
+        .andWhere('is_request', true)
+        .select('id', 'sender_id', 'receiver_id', 'content', 'media_url', 'media_type', 'sent_at');
 
-	const userMap = new Map<string, any>();
+    // 2. Extract unique conversation user IDs
+    const userMap = new Map<string, any>();
 
-	for (const msg of rawMessages) {
-		const otherUserId = msg.sender_id;
-		if (!userMap.has(otherUserId)) {
-			userMap.set(otherUserId, msg);
-		}
-		const existing = userMap.get(otherUserId);
-		if (new Date(msg.sent_at) > new Date(existing.sent_at)) {
-			userMap.set(otherUserId, msg);
-		}
-	}
+    for (const msg of rawMessages) {
+        const otherUserId = msg.sender_id;
 
-	const otherUserIds = Array.from(userMap.keys());
+        if (!userMap.has(otherUserId)) {
+            userMap.set(otherUserId, msg); // First message we find (will replace below if newer)
+        }
 
-	const users = await db('users')
-		.select('id', 'first_name as firstName', 'last_name as lastName')
-		.whereIn('id', otherUserIds);
+        // Replace if newer
+        const existing = userMap.get(otherUserId);
+        if (new Date(msg.sent_at) > new Date(existing.sent_at)) {
+            userMap.set(otherUserId, msg);
+        }
+    }
 
-	const userMapInfo = new Map(users.map((u) => [u.id, u]));
+    const otherUserIds = Array.from(userMap.keys());
 
-	const requests = Array.from(userMap.entries()).map(([otherUserId, lastMsg]) => ({
-		id: lastMsg.id,
-		participants: [userMapInfo.get(otherUserId)],
-		lastMessage: lastMsg.content || '',
-		timestamp: lastMsg.sent_at,
-	}));
+    // 3. Fetch user info (include first name, last name, and user name)
+    const users = await db('users')
+        .select('id', 'first_name as firstName', 'last_name as lastName', 'user_name')
+        .whereIn('id', otherUserIds);
 
-	return requests;
+    const userMapInfo = new Map(users.map((u) => [u.id, u]));
+
+    // 4. Format response
+    const requests = Array.from(userMap.entries()).map(([otherUserId, lastMsg]) => ({
+        id: lastMsg.id,
+        participants: [userMapInfo.get(otherUserId)],
+        lastMessage: lastMsg.content || '',
+        timestamp: lastMsg.sent_at,
+    }));
+
+    return requests;
 };
