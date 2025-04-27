@@ -14,6 +14,8 @@ import {
 	markConversationAsUnread,
 	getLastMessageReadStatus,
 	getAllRequests,
+	acceptthisRequest,
+	declinehisRequest,
 } from '../services/messaging.service';
 import { isUserBlocked } from '../models/block.model';
 import { isUserTypingTo, setUserTyping } from '../utils/typingStatus';
@@ -101,19 +103,34 @@ export const setupMessagingSocket = (io: Server) => {
 			try {
 				if (!requestId) return;
 
+				const receiverId = socket.data.userId;
+
 				const request = await db('messages')
-					.where({ id: requestId, status: 'pending' })
+					.where({ id: requestId, receiver_id: receiverId, status: 'pending' })
 					.first();
-				if (!request) return;
 
-				await db('messages').where({ id: requestId }).update({ status: 'sent' });
+				if (!request) {
+					socket.emit('error', { message: 'Request not found or not authorized.' });
+					return;
+				}
 
-				io.to(request.receiver_id).emit('receive_message', {
-					...request,
+				await db('messages').where({ id: requestId }).update({
 					status: 'sent',
+				});
+
+				io.to(request.sender_id).emit('message_request_accepted', {
+					requestId,
+					senderId: request.sender_id,
+					receiverId: request.receiver_id,
+				});
+
+				socket.emit('accept_success', {
+					message: 'Message request accepted successfully.',
+					requestId,
 				});
 			} catch (error) {
 				console.error('Error in accept_message_request:', error);
+				socket.emit('error', { message: 'Failed to accept message request.' });
 			}
 		});
 
