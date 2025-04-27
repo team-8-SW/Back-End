@@ -5,60 +5,72 @@ import { areUsersConnected } from '../models/connection.model';
 import { notifyUser } from '../utils/notifications';
 /* ======================= Send private messages to connections =============================*/
 export const createTextMessage = async (senderId: string, receiverId: string, content: string) => {
-	//check if user is in my connections or not first
-	const connected = await areUsersConnected(senderId, receiverId);
-	if (connected) {
-		const [message] = await db('messages')
-			.insert({
-				id: uuidv4(),
-				sender_id: senderId,
-				receiver_id: receiverId,
-				content,
-				status: 'sent',
-			})
-			.returning(['id', 'content', 'sent_at', 'status']);
+    // Check if user is in my connections or not first
+    const connected = await areUsersConnected(senderId, receiverId);
+    if (connected) {
+        const [message] = await db('messages')
+            .insert({
+                id: uuidv4(),
+                sender_id: senderId,
+                receiver_id: receiverId,
+                content,
+                status: 'sent',
+            })
+            .returning(['id', 'content', 'sent_at', 'status']);
 
-		const sendername = await db('users')
-			.where({ id: senderId })
-			.select('user_name')
-			.first();
-			// Emit a notification to the post owner
-			notifyUser(
-				receiverId,
-				{
-					type: 'message',
-					content: `You received a message from ${sendername.user_name}`,
-				},
-				senderId,
-		);
-		
-		return message;
-	} else {
-		//send a request
-		const [request] = await db('messages')
-			.insert({
-				id: uuidv4(),
-				sender_id: senderId,
-				receiver_id: receiverId,
-				content,
-				is_request: true,
-			})
-			.returning(['id', 'content', 'sent_at', 'status']);
-			const sendername = await db('users')
-			.where({ id: senderId })
-			.select('user_name')
-			.first();
-			// Emit a notification to the post owner
-			notifyUser(
-				receiverId,
-				{
-					type: 'message',
-					content: `You received a message  request from ${sendername.user_name}`,
-				},
-				senderId,
-		);
-		return request;
-	}
+        const sendername = await db('users')
+            .where({ id: senderId })
+            .select('user_name')
+            .first();
+
+        // Emit a notification to the receiver
+        notifyUser(
+            receiverId,
+            {
+                type: 'message',
+                content: `You received a message from ${sendername.user_name}`,
+            },
+            senderId,
+        );
+
+        // Add `isSender: true` to the response
+        return {
+            ...message,
+            isSender: true,
+        };
+    } else {
+        // Send a request
+        const [request] = await db('messages')
+            .insert({
+                id: uuidv4(),
+                sender_id: senderId,
+                receiver_id: receiverId,
+                content,
+                is_request: true,
+            })
+            .returning(['id', 'content', 'sent_at', 'status']);
+
+        const sendername = await db('users')
+            .where({ id: senderId })
+            .select('user_name')
+            .first();
+
+        // Emit a notification to the receiver
+        notifyUser(
+            receiverId,
+            {
+                type: 'message',
+                content: `You received a message request from ${sendername.user_name}`,
+            },
+            senderId,
+        );
+
+        // Add `isSender: true` to the response
+        return {
+            ...request,
+            isSender: true,
+        };
+    }
 };
 //acceptRequest -noor
 export const acceptthisRequest = async (userId: string, senderId: string) => {
