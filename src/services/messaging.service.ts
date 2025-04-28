@@ -191,6 +191,7 @@ export const getAllConversationsForUser = async (userId: string) => {
 	const rawMessages = await db('messages')
 		.where('sender_id', userId)
 		.orWhere('receiver_id', userId)
+		.andWhere('is_request', false)
 		.select('id', 'sender_id', 'receiver_id', 'content', 'media_url', 'media_type', 'sent_at');
 
 	// 2. Extract unique conversation user IDs
