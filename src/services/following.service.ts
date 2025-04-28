@@ -41,14 +41,13 @@ export const followAUser = async (userId: string, followUserId: string) => {
 		throw new Error('You are already following this user');
 	}
 
-	const [newFollow] = await knexInstance('following')
+	const newFollow = await knexInstance('following')
 		.insert({
 			id: uuidv4(),
 			follower_id: userId,
 			followed_id: followUserId,
 		})
 		.returning('*');
-
 	return newFollow;
 };
 
