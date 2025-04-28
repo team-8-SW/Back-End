@@ -90,11 +90,13 @@ export const getfeedposts = async (user_id: string): Promise<posts[]> => {
 			.andWhere('user_id', user_id) // Get likes where user_id is the current user
 			.select('post_id'); // Select only the post_id of the liked posts
 		const likedposts = new Set(liked.map((like) => like.post_id)); // Create a Set of liked post IDs for quick lookup
-		const postsWithLikes = posts.map((post) => ({
-			...post,
-			liked: likedposts.has(post.id), // Check if the post ID is in the likedPostIds set
-		}));
-		return postsWithLikes;
+		const postsWithLikesAndOwnership = posts.map((post) => ({
+            ...post,
+            liked: likedposts.has(post.id), // Check if the post ID is in the likedPostIds set
+            mypost: post.user_id === user_id, // Check if the post belongs to the current user
+        }));
+
+		return postsWithLikesAndOwnership;
 	} catch (error) {
 		console.error(`Error fetching feed posts for user ${user_id}:`, error);
 		throw new Error('Failed to fetch feed posts');
