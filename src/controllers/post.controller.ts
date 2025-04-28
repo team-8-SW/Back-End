@@ -245,6 +245,19 @@ export const getcomments = async (req: Request, res: Response) => {
 		res.status(500).json({ message: 'Failed to view post comments' });
 	}
 };
+export const getallsavedposts = async (req: Request, res: Response) => {
+	try {
+		const user_id = (req as any).user?.user_id; // Extract user_id from authenticated user
+		if (!user_id) {
+			return res.status(400).json({ message: 'User ID is required' });
+		}
+		const posts = await postService.getallsaved(user_id);
+		res.status(201).json(posts);
+	} catch (error) {
+		console.error('Error viewing saved posts:', error);
+		res.status(500).json({ message: 'Failed to view saved posts' });
+	}
+};
 export const sharePost = async (req: Request, res: Response) => {
 	try {
 		const user_id = (req as any).user?.user_id; // Extract user_id from authenticated user

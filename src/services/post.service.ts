@@ -522,6 +522,23 @@ export const getallcomments = async (engagement: {
 		throw new Error('Failed to view post comments');
 	}
 };
+//getallsavedposts
+export const getallsaved = async (user_id: string): Promise<posts[]> => {
+	try {
+		if (!user_id) {
+			throw new Error('User ID is required');
+		}
+
+		const posts = await knexInstance('saved_posts')
+			.where({ user_id })
+			.select('*')
+	
+		return posts;
+	} catch (error) {
+		console.error(`Error fetching saved posts for user ${user_id}:`, error);
+		throw new Error('Failed to fetch saved posts');
+	}
+};
 //share
 export const share = async (share: { post_id: string; user_id: string }): Promise<any> => {
 	try {
@@ -728,7 +745,7 @@ export const unsave = async (unsave_post: { post_id: string; user_id: string }):
 		if (!post_id) {
 			throw new Error('post_id must be provided');
 		}
-		
+
 		// Ensure the post is saved
 		//DELETE FROM likes
 		// WHERE post_id = '<post_id>' AND user_id = '<user_id>';
