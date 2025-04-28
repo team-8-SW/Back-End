@@ -313,11 +313,10 @@ export const searchPost = async (req: Request, res: Response) => {
 	}
 };
 //editpost
-//zabaty this function
 export const editPost = async (req: Request, res: Response) => {
 	try {
 		const { post_id, content, media_url, media_type, visibility, company_id } = req.body;
-		const user_id = (req as any).user?.user_id; // Extract user_id from authenticated user
+		const user_id = (req as any).user?.user_id;
 		if (!user_id) {
 			return res.status(400).json({ message: 'User ID is required' });
 		}
@@ -470,5 +469,33 @@ export const tagUser = async (req: Request, res: Response) => {
 	} catch (error) {
 		console.error('Error tagging user:', error);
 		res.status(500).json({ message: 'Failed to create tag' });
+	}
+};
+
+export const unsavepost = async (req: Request, res: Response) => {
+	try {
+		const user_id = (req as any).user?.user_id;
+		console.log('User ID in controller:', user_id);
+		if (!user_id) {
+			return res.status(400).json({ message: 'User ID is required' });
+		}
+		const { post_id } = req.body;
+		// Validate required fields
+		if (!post_id) {
+			return res.status(400).json({ message: 'postid is required' });
+		}
+
+		// Call the service to create the post
+		const unsaved = await postService.unsave({
+			user_id,
+			post_id,
+		});
+		console.log('unsaved post:', unsaved);
+
+		res.status(200).json('unsaved');
+	} catch (error) {
+		console.error('Error unsaving post:', error);
+		const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+		res.status(500).json({ message: 'Failed to unsave post', error: errorMessage });
 	}
 };

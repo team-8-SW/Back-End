@@ -24,4 +24,5 @@ router.get('/me/postengagement', newAuthMiddleware, postsController.viewPostEnga
 router.get('/me/postcomments', newAuthMiddleware, postsController.getcomments); //get all comments
 router.post('/me/:tagged_user_id/taguser', newAuthMiddleware, postsController.tagUser); //tag user in post or comment
 router.post('/me/report', newAuthMiddleware, postsController.reportPost); //report for inappropriate content, frontend elmafrood yeshiloo men elfeed w yektebo eno post removed
+router.delete('/me/unsavepost', newAuthMiddleware, postsController.unsavepost)
 export default router;

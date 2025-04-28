@@ -712,3 +712,37 @@ export const deletelike = async (del_like: { post_id: string; user_id: string })
 		throw new Error('Failed to delete like');
 	}
 };
+
+export const unsave = async (unsave_post: { post_id: string; user_id: string }): Promise<any> => {
+	try {
+		const { user_id, post_id } = unsave_post;
+
+		// Validate inputs
+		if (!user_id || !isUUID(user_id)) {
+			throw new Error('Invalid user_id');
+		}
+
+		if (post_id && !isUUID(post_id)) {
+			throw new Error('Invalid post_id');
+		}
+		if (!post_id) {
+			throw new Error('post_id must be provided');
+		}
+		
+		// Ensure the post is saved
+		//DELETE FROM likes
+		// WHERE post_id = '<post_id>' AND user_id = '<user_id>';
+		const savedpostExists = await knexInstance('saved_posts').where({ user_id, post_id }).first();
+		if (!savedpostExists) {
+			throw new Error('post not saved yet');
+		}
+		await knexInstance('saved_posts')
+			.where({ post_id, user_id }) // Match post_id and user_id
+			.del(); // Delete the matching row(s)
+
+		console.log(`post unsaved successfully.`);
+	} catch (error) {
+		console.error('Error unsaving post:', error);
+		throw new Error('Failed to unsave a post');
+	}
+};
