@@ -37,19 +37,19 @@ export const changeJobStatus = async (jobId: string, status: string) => {
 	return await db('job_listings').where({ id: jobId }).update({ status });
 };
 export const fetchJobAnalytics = async () => {
-    const [total] = await db('job_listings').count({ count: '*' });
-    const [approved] = await db('job_listings').where({ status: 'Approved' }).count({ count: '*' });
-    const [pending] = await db('job_listings').where({ status: 'pending' }).count({ count: '*' });
-    const [rejected] = await db('job_listings').where({ status: 'Rejected' }).count({ count: '*' });
-    const [flagged] = await db('job_listings').where({ status: 'Flagged' }).count({ count: '*' });
+	const [total] = await db('job_listings').count({ count: '*' });
+	const [approved] = await db('job_listings').where({ status: 'Approved' }).count({ count: '*' });
+	const [pending] = await db('job_listings').where({ status: 'pending' }).count({ count: '*' });
+	const [rejected] = await db('job_listings').where({ status: 'Rejected' }).count({ count: '*' });
+	const [flagged] = await db('job_listings').where({ status: 'Flagged' }).count({ count: '*' });
 
-    return {
-        totalJobs: parseInt(String(total?.count || '0'), 10),
-        approvedJobs: parseInt(String(approved?.count || '0'), 10),
-        pendingJobs: parseInt(String(pending.count || '0')),
-        rejectedJobs: parseInt(String(rejected?.count || '0'), 10),
-        flaggedJobs: parseInt(String(flagged?.count || '0'), 10),
-    };
+	return {
+		totalJobs: parseInt(String(total?.count || '0'), 10),
+		approvedJobs: parseInt(String(approved?.count || '0'), 10),
+		pendingJobs: parseInt(String(pending.count || '0')),
+		rejectedJobs: parseInt(String(rejected?.count || '0'), 10),
+		flaggedJobs: parseInt(String(flagged?.count || '0'), 10),
+	};
 };
 export const fetchUserStats = async () => {
 	const [total] = await db('users').count('* as count');

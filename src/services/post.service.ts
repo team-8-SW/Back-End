@@ -91,10 +91,10 @@ export const getfeedposts = async (user_id: string): Promise<posts[]> => {
 			.select('post_id'); // Select only the post_id of the liked posts
 		const likedposts = new Set(liked.map((like) => like.post_id)); // Create a Set of liked post IDs for quick lookup
 		const postsWithLikesAndOwnership = posts.map((post) => ({
-            ...post,
-            liked: likedposts.has(post.id), // Check if the post ID is in the likedPostIds set
-            mypost: post.user_id === user_id, // Check if the post belongs to the current user
-        }));
+			...post,
+			liked: likedposts.has(post.id), // Check if the post ID is in the likedPostIds set
+			mypost: post.user_id === user_id, // Check if the post belongs to the current user
+		}));
 
 		return postsWithLikesAndOwnership;
 	} catch (error) {

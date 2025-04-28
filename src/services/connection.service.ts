@@ -51,19 +51,19 @@ export const sendConnectionRequest = async (userId: string, targetUserId: string
 	};
 
 	await knexInstance('connections').insert(connectionRequest);
-		
+
 	const actionusername = await knexInstance('users')
-			.where({ id: userId })
-			.select('user_name')
-			.first();
+		.where({ id: userId })
+		.select('user_name')
+		.first();
 	// Emit a notification to the post owner
 	notifyUser(
-			targetUserId,
-			{
-				type: 'connection',
-				content: `You received a new connection from ${actionusername}`,
-			},
-			userId,
+		targetUserId,
+		{
+			type: 'connection',
+			content: `You received a new connection from ${actionusername}`,
+		},
+		userId,
 	);
 	return connectionRequest;
 };
