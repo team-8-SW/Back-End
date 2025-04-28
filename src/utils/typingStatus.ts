@@ -3,7 +3,7 @@ const typingMap = new Map<string, NodeJS.Timeout>();
 // Generate a consistent key for sender → receiver
 const typingKey = (from: string, to: string) => `${from}_${to}`;
 
-export const setUserTyping = (fromUserId: string, toUserId: string, timeout = 45000) => {
+export const setUserTyping = (fromUserId: string, toUserId: string, timeout = 999999000) => {
 	const key = typingKey(fromUserId, toUserId);
 
 	// Clear previous timeout if it exists
