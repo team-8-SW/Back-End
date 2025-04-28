@@ -3,10 +3,19 @@ import cloudinary from '../utils/cloudinary';
 import { knexInstance as db } from '../config/db';
 import { areUsersConnected } from '../models/connection.model';
 import { notifyUser } from '../utils/notifications';
+import { canSendMessageToday } from '../models/payment.model';
 /* ======================= Send private messages to connections =============================*/
 export const createTextMessage = async (senderId: string, receiverId: string, content: string) => {
 	// Check if user is in my connections or not first
 	const connected = await areUsersConnected(senderId, receiverId);
+
+	//premium check --adam
+	const canSend = await canSendMessageToday(senderId);
+	if (!canSend) {
+		throw new Error(
+			'Daily message limit reached. Upgrade to Premium to send unlimited messages.',
+		);
+	}
 	if (connected) {
 		const [message] = await db('messages')
 			.insert({
@@ -100,6 +109,13 @@ export const createMediaMessage = async (
 	file: Express.Multer.File,
 ) => {
 	let resourceType: 'image' | 'video' | 'auto' = 'image';
+	//premium check --adam
+	const canSend = await canSendMessageToday(senderId);
+	if (!canSend) {
+		throw new Error(
+			'Daily message limit reached. Upgrade to Premium to send unlimited messages.',
+		);
+	}
 
 	if (file.mimetype.startsWith('video')) {
 		resourceType = 'video';
@@ -168,7 +184,16 @@ export const getConversationBetweenUsers = async (userId: string, otherUserId: s
 			this.where('is_deleted_by_sender', false).orWhere('is_deleted_by_receiver', false);
 		})
 		.orderBy('sent_at', 'asc')
-		.select('id', 'sender_id', 'receiver_id', 'content', 'media_url', 'media_type', 'sent_at', 'is_read');
+		.select(
+			'id',
+			'sender_id',
+			'receiver_id',
+			'content',
+			'media_url',
+			'media_type',
+			'sent_at',
+			'is_read',
+		);
 
 	// Add `isSender` field to each message
 	const formattedMessages = messages.map((msg) => ({

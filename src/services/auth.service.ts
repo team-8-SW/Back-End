@@ -74,7 +74,7 @@ export const registerService = async (
 	const trx = await knexInstance.transaction();
 
 	// const created = await createUser(newUser);
-	
+
 	// await knexInstance('user_profiles').insert({
 	// 	id: uuidv4(),
 	// 	user_id: newUser.id,
@@ -132,7 +132,7 @@ export const registerwithoutcaptchaService = async (
 	firstName: string,
 	lastName: string,
 	emailVerified: boolean,
-// eslint-disable-next-line @typescript-eslint/no-unused-vars, @typescript-eslint/naming-convention
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars, @typescript-eslint/naming-convention
 	verificationToken: string,
 ) => {
 	const passwordHash = await bcrypt.hash(password, 10);
