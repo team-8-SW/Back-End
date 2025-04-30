@@ -21,7 +21,7 @@ router.post(
 router.get('/search', postsController.searchPost); //search by post content
 router.delete('/me/delete', newAuthMiddleware, postsController.deletePost); //delete post //should we check reposts bardo?? elmafrood cascade by default hat delete it
 router.get('/me/postengagement', newAuthMiddleware, postsController.viewPostEngagement); //view post details as in like counts w kda
-router.get('/me/postcomments', newAuthMiddleware, postsController.getcomments); //get all comments
+router.get('/me/:post_id/comments', newAuthMiddleware, postsController.getcomments); //get all comments
 router.post('/me/:tagged_user_id/taguser', newAuthMiddleware, postsController.tagUser); //tag user in post or comment
 router.post('/me/report', newAuthMiddleware, postsController.reportPost); //report for inappropriate content, frontend elmafrood yeshiloo men elfeed w yektebo eno post removed
 router.delete('/me/unsavepost', newAuthMiddleware, postsController.unsavepost);
