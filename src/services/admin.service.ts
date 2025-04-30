@@ -72,14 +72,14 @@ export const getOverviewStats = async (range: string) => {
 				? subWeeks(now, 1)
 				: subMonths(now, 1);
 
-	const [newUsers] = await db('users').where('created_at', '>=', cutoff).count('* as count');
-	const [newJobs] = await db('job_listings').where('posted_at', '>=', cutoff).count('* as count');
-	const [newPosts] = await db('posts').where('created_at', '>=', cutoff).count('* as count');
+	//const [newUsers] = await db('users').where('created_at', '>=', cutoff).count('*');
+	const [newJobs] = await db('job_listings').where('posted_at', '>=', cutoff).count('*');
+	const [newPosts] = await db('posts').where('created_at', '>=', cutoff).count('*');
 
 	return {
-		newUsers: parseInt(String(newUsers.count)),
-		newJobListings: parseInt(String(newJobs.count)),
-		newPosts: parseInt(String(newPosts.count)),
+		//newUsers: parseInt(String(newUsers.count|| '0'), 10),
+		newJobListings: parseInt(String(newJobs.count|| '0'), 10),
+		newPosts: parseInt(String(newPosts.count|| '0'), 10),
 	};
 };
 export const getMostReportedContent = async () => {
