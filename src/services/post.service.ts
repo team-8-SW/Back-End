@@ -195,7 +195,7 @@ export const like = async (like: {
 				postOwner.user_id,
 				{
 					type: 'like',
-					content: `Your post was liked by user ${actionusername}`,
+					content: `Your post was liked by user ${actionusername.user_name}`,
 					post_id,
 				},
 				user_id,
@@ -368,13 +368,17 @@ export const commentpost = async (comment: {
 			.where({ id: postOwner.user_id })
 			.select('user_name')
 			.first();
+		const actionusername = await knexInstance('users')
+			.where({ id: user_id })
+			.select('user_name')
+			.first();
 		if (postOwner) {
 			// Emit a notification to the post owner
 			notifyUser(
 				postOwner.user_id,
 				{
 					type: 'like',
-					content: `Your post was commented on by user ${postOwnername.user_name}`,
+					content: `Your post was commented on by user ${actionusername.user_name}`,
 					post_id,
 					comment_id: parent_comment_id,
 				},

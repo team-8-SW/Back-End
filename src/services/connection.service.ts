@@ -61,7 +61,7 @@ export const sendConnectionRequest = async (userId: string, targetUserId: string
 		targetUserId,
 		{
 			type: 'connection',
-			content: `You received a new connection from ${actionusername}`,
+			content: `You received a new connection from ${actionusername.user_name}`,
 		},
 		userId,
 	);
