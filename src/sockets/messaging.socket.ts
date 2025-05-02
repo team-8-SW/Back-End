@@ -19,7 +19,7 @@ import {
 } from '../services/messaging.service';
 import { isUserBlocked } from '../models/block.model';
 import { isUserTypingTo, setUserTyping } from '../utils/typingStatus';
-
+import { canSendMessageToday } from '../models/payment.model';
 dotenv.config();
 const jwtSecret = process.env.JWT_SECRET!;
 
@@ -58,7 +58,12 @@ export const setupMessagingSocket = (io: Server) => {
 			try {
 				if (!receiverId || !content) return;
 				if (await isUserBlocked(userId, receiverId)) return;
-
+				const canSend = await canSendMessageToday(userId);
+					if (!canSend) {
+						throw new Error(
+							'Daily message limit reached. Upgrade to Premium to send unlimited messages.',
+						);
+					}
 				const message = await createTextMessage(userId, receiverId, content);
 
 				// Emit to the receiver
@@ -74,7 +79,12 @@ export const setupMessagingSocket = (io: Server) => {
 			try {
 				if (!receiverId || !file) return;
 				if (await isUserBlocked(userId, receiverId)) return;
-
+				const canSend = await canSendMessageToday(userId);
+				if (!canSend) {
+					throw new Error(
+						'Daily message limit reached. Upgrade to Premium to send unlimited messages.',
+					);
+				}
 				const message = await createMediaMessage(userId, receiverId, file);
 				// Emit to both receiver and sender
 				io.to(receiverId).emit('receive_message', message);

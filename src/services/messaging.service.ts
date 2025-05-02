@@ -3,19 +3,14 @@ import cloudinary from '../utils/cloudinary';
 import { knexInstance as db } from '../config/db';
 import { areUsersConnected } from '../models/connection.model';
 import { notifyUser } from '../utils/notifications';
-import { canSendMessageToday } from '../models/payment.model';
+
 /* ======================= Send private messages to connections =============================*/
 export const createTextMessage = async (senderId: string, receiverId: string, content: string) => {
 	// Check if user is in my connections or not first
 	const connected = await areUsersConnected(senderId, receiverId);
 
 	//premium check --adam
-	const canSend = await canSendMessageToday(senderId);
-	if (!canSend) {
-		throw new Error(
-			'Daily message limit reached. Upgrade to Premium to send unlimited messages.',
-		);
-	}
+	
 	if (connected) {
 		const [message] = await db('messages')
 			.insert({
@@ -110,12 +105,7 @@ export const createMediaMessage = async (
 ) => {
 	let resourceType: 'image' | 'video' | 'auto' = 'image';
 	//premium check --adam
-	const canSend = await canSendMessageToday(senderId);
-	if (!canSend) {
-		throw new Error(
-			'Daily message limit reached. Upgrade to Premium to send unlimited messages.',
-		);
-	}
+	
 
 	if (file.mimetype.startsWith('video')) {
 		resourceType = 'video';

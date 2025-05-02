@@ -20,7 +20,7 @@ import {
 import { handleValidationErrors } from '../middleware/validation.middleware';
 import * as authcontroller from '../controllers/auth.controller';
 import { authMiddleware } from '../middleware/auth.middleware';
-
+import { newAuthMiddleware } from '../middleware/auth.middleware';
 const router = Router();
 
 // POST /api/auth/login
@@ -44,7 +44,7 @@ router.post('/resend-confirmation', authcontroller.resendVerificationEmail);
 
 router.put('/:id/username', authcontroller.updateUserName);
 
-router.put('/:id/email', authcontroller.updateEmail);
+router.patch('/updateemail', newAuthMiddleware, authcontroller.updateEmail);
 
 router.delete('/:id', authcontroller.deleteAccount);
 // POST /api/auth/reset-password
