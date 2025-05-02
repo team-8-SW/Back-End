@@ -269,15 +269,41 @@ export const socialLoginGoogleService = async (idToken: string): Promise<string>
 			googleId: sub,
 		});
 	}
-	const jwtToken = jwt.sign(
-		{ id: user.id, email: user.email },
-		process.env.JWT_SECRET as string,
-		{
-			expiresIn: '1h',
-		},
-	);
+	const trx = await knexInstance.transaction();
+	try {
+		const created = await createUser(user);
 
-	return jwtToken;
+		await trx('user_profiles').insert({
+			id: uuidv4(),
+			user_id: created.id,
+			last_updated: trx.fn.now(),
+		});
+		await knexInstance('user_privacy_settings').insert({
+			id: uuidv4(),
+			user_id: created.id,
+			profile_visibility: 'public',
+			show_email: false,
+			allow_connection_requests: true,
+			allow_messages_from_non_connections: false,
+			show_active_status: true,
+		});
+		await trx.commit();
+
+		const jwtToken = jwt.sign(
+			{ id: user.id, email: user.email },
+			process.env.JWT_SECRET as string,
+			{
+				expiresIn: '1h',
+			},
+		);
+	
+		return jwtToken;
+	} catch (error) {
+		await trx.rollback();
+		throw error;
+	}
+
+	
 };
 
 //dev2
