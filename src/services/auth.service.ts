@@ -271,16 +271,14 @@ export const socialLoginGoogleService = async (idToken: string): Promise<string>
 	}
 	const trx = await knexInstance.transaction();
 	try {
-		const created = await createUser(user);
-
 		await trx('user_profiles').insert({
 			id: uuidv4(),
-			user_id: created.id,
+			user_id: user.id,
 			last_updated: trx.fn.now(),
 		});
 		await knexInstance('user_privacy_settings').insert({
 			id: uuidv4(),
-			user_id: created.id,
+			user_id: user.id,
 			profile_visibility: 'public',
 			show_email: false,
 			allow_connection_requests: true,
