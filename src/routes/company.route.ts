@@ -45,6 +45,7 @@ router.post('/:update_id/reactions', newAuthMiddleware, companyController.addRea
 router.post('/:update_id/comments', newAuthMiddleware, companyController.addComment); // Add comment
 router.post('/:update_id/reposts', newAuthMiddleware, companyController.addRepost); // Add repost
 router.get('/:update_id/comment-count', companyController.getCommentCount);
+router.get('/:update_id/repost-count', companyController.getRepostCount);
 router.post(
 	'/cover/:company_id',
 	newAuthMiddleware,

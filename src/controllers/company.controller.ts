@@ -545,6 +545,27 @@ export const getCommentCount = async (req: Request, res: Response) => {
 	}
 };
 
+export const getRepostCount = async (req: Request, res: Response) => {
+	try {
+		// eslint-disable-next-line @typescript-eslint/naming-convention
+		const { update_id } = req.params;
+		const userId = (req as any).user?.user_id;
+		// if (!userId) {
+		// 	return res.status(401).json({ message: 'Unauthorized' });
+		// }
+
+		if (!update_id) {
+			return res.status(400).json({ message: 'Update ID is required' });
+		}
+
+		const count = await companyService.getRepostsCountByUpdateId(update_id);
+		res.json({ update_id, repostCount: count });
+	} catch (err) {
+		console.error('Error fetching repost count:', err);
+		res.status(500).json({ message: 'Internal server error' });
+	}
+};
+
 export const updateCoverPhoto = async (req: Request, res: Response) => {
 	// eslint-disable-next-line @typescript-eslint/naming-convention
 	const { company_id } = req.params;

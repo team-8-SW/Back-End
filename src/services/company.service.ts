@@ -357,6 +357,14 @@ export const getCommentCountByUpdateId = async (updateId: string): Promise<numbe
 	return Number(result?.count || 0);
 };
 
+export const getRepostsCountByUpdateId = async (updateId: string): Promise<number> => {
+	const result = await knexInstance('company_update_reposts')
+		.where({ update_id: updateId })
+		.count<{ count: string }>('id as count')
+		.first();
+	return Number(result?.count || 0);
+};
+
 export const updateCoverPhoto = async (companyId: string, coverPhotoURL: string) => {
 	const rowsUpdated = await knexInstance('company_pages')
 		.where({ id: companyId })
