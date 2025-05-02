@@ -53,7 +53,9 @@ export const setupMessagingSocket = (io: Server) => {
 		const userId = socket.data.userId;
 		console.log('🔌 New WebSocket connection:', socket.id);
 		console.log('User connected:', userId);
-
+		socket.on('join_room', (roomId: string) => {
+            if (roomId) socket.join(roomId);
+        });
 		 // Send text message
 		 socket.on('send_text', async ({ receiverId, content }: MessagePayload) => {
             try {
@@ -127,7 +129,7 @@ export const setupMessagingSocket = (io: Server) => {
 		socket.on('get_typing_status', ({ receiverId }: { receiverId: string }) => {
 			if (!receiverId) return;
 			const isTyping = isUserTypingTo(userId, receiverId);
-			socket.emit('typing_status_response', { senderId: userId, receiverId, isTyping });
+			socket.emit('typing_status', { senderId: userId, receiverId, isTyping });
 		});
 
 		socket.on('mark_as_read', async ({ otherUserId }: { otherUserId: string }) => {
