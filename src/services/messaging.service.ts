@@ -8,9 +8,6 @@ import { notifyUser } from '../utils/notifications';
 export const createTextMessage = async (senderId: string, receiverId: string, content: string) => {
 	// Check if user is in my connections or not first
 	const connected = await areUsersConnected(senderId, receiverId);
-
-	//premium check --adam
-	
 	if (connected) {
 		const [message] = await db('messages')
 			.insert({
@@ -21,9 +18,7 @@ export const createTextMessage = async (senderId: string, receiverId: string, co
 				status: 'sent',
 			})
 			.returning(['id', 'content', 'sent_at', 'status']);
-
 		const sendername = await db('users').where({ id: senderId }).select('user_name').first();
-
 		// Emit a notification to the receiver
 		notifyUser(
 			receiverId,
@@ -33,7 +28,6 @@ export const createTextMessage = async (senderId: string, receiverId: string, co
 			},
 			senderId,
 		);
-
 		// Add `isSender: true` to the response
 		return {
 			...message,
@@ -50,9 +44,7 @@ export const createTextMessage = async (senderId: string, receiverId: string, co
 				is_request: true,
 			})
 			.returning(['id', 'content', 'sent_at', 'status']);
-
 		const sendername = await db('users').where({ id: senderId }).select('user_name').first();
-
 		// Emit a notification to the receiver
 		notifyUser(
 			receiverId,
@@ -62,7 +54,6 @@ export const createTextMessage = async (senderId: string, receiverId: string, co
 			},
 			senderId,
 		);
-
 		// Add `isSender: true` to the response
 		return {
 			...request,
@@ -75,24 +66,20 @@ export const acceptthisRequest = async (userId: string, senderId: string) => {
 	const requests = await db('messages')
 		.where({ sender_id: senderId, receiver_id: userId })
 		.update({ is_request: false })
-		.returning('*');
-
+		.returning(['id', 'content', 'sent_at', 'status']);
 	if (!requests || requests.length === 0) {
 		throw new Error('No messages found or not authorized to accept.');
 	}
-
 	return requests;
 };
-
 //rejectRequest -noor
 export const declinehisRequest = async (userId: string, senderId: string) => {
 	const requests = await db('messages')
 		.where({ sender_id: senderId, receiver_id: userId })
 		.update({ is_request: true })
-		.returning('*');
-
+		.returning(['id', 'content', 'sent_at', 'status']);
 	if (!requests || requests.length === 0) {
-		throw new Error('No messages found or not authorized to accept.');
+		throw new Error('No messages found or not authorized to decline.');
 	}
 
 	return requests;
@@ -104,9 +91,6 @@ export const createMediaMessage = async (
 	file: Express.Multer.File,
 ) => {
 	let resourceType: 'image' | 'video' | 'auto' = 'image';
-	//premium check --adam
-	
-
 	if (file.mimetype.startsWith('video')) {
 		resourceType = 'video';
 	} else if (
@@ -127,7 +111,6 @@ export const createMediaMessage = async (
 	} else if (file.mimetype.startsWith('audio')) {
 		mediaType = 'audio';
 	}
-
 	const uploadToCloudinary = (): Promise<any> => {
 		return new Promise((resolve, reject) => {
 			const stream = cloudinary.uploader.upload_stream(
@@ -144,7 +127,6 @@ export const createMediaMessage = async (
 			stream.end(file.buffer);
 		});
 	};
-
 	const uploadResult = await uploadToCloudinary();
 
 	const [message] = await db('messages')
@@ -157,7 +139,7 @@ export const createMediaMessage = async (
 			media_type: mediaType,
 			status: 'sent',
 		})
-		.returning(['id', 'media_url', 'media_type', 'sent_at']);
+		.returning(['id', 'content', 'sent_at', 'status']);
 	return message;
 };
 
@@ -302,45 +284,48 @@ export const getLastMessageReadStatus = async (userId1: string, userId2: string)
 
 /*============================== Get All Requests ===============================*/
 export const getAllRequests = async (userId: string) => {
-	// 1. Get all messages where the user is the receiver and `is_request` is true
-	const rawMessages = await db('messages')
-		.where('receiver_id', userId)
-		.andWhere('is_request', true)
-		.select('id', 'sender_id', 'receiver_id', 'content', 'media_url', 'media_type', 'sent_at');
-
-	// 2. Extract unique conversation user IDs
-	const userMap = new Map<string, any>();
-
-	for (const msg of rawMessages) {
-		const otherUserId = msg.sender_id;
-
-		if (!userMap.has(otherUserId)) {
-			userMap.set(otherUserId, msg); // First message we find (will replace below if newer)
+		// 1. Get all messages where user is sender or receiver
+		const rawMessages = await db('messages')
+			.where('sender_id', userId)
+			.orWhere('receiver_id', userId)
+			.andWhere('is_request', true)
+			.select('id', 'sender_id', 'receiver_id', 'content', 'media_url', 'media_type', 'sent_at');
+	
+		// 2. Extract unique conversation user IDs
+		const userMap = new Map<string, any>();
+	
+		for (const msg of rawMessages) {
+			const otherUserId = msg.sender_id === userId ? msg.receiver_id : msg.sender_id;
+	
+			if (!userMap.has(otherUserId)) {
+				userMap.set(otherUserId, msg); // first message we find (will replace below if newer)
+			}
+	
+			// replace if newer
+			const existing = userMap.get(otherUserId);
+			if (new Date(msg.sent_at) > new Date(existing.sent_at)) {
+				userMap.set(otherUserId, msg);
+			}
 		}
-
-		// Replace if newer
-		const existing = userMap.get(otherUserId);
-		if (new Date(msg.sent_at) > new Date(existing.sent_at)) {
-			userMap.set(otherUserId, msg);
-		}
-	}
-
-	const otherUserIds = Array.from(userMap.keys());
-
-	// 3. Fetch user info (include first name, last name, and user name)
-	const users = await db('users')
-		.select('id', 'first_name as firstName', 'last_name as lastName', 'user_name')
-		.whereIn('id', otherUserIds);
-
-	const userMapInfo = new Map(users.map((u) => [u.id, u]));
-
-	// 4. Format response
-	const requests = Array.from(userMap.entries()).map(([otherUserId, lastMsg]) => ({
-		id: lastMsg.id,
-		participants: [userMapInfo.get(otherUserId)],
-		lastMessage: lastMsg.content || '',
-		timestamp: lastMsg.sent_at,
-	}));
-
-	return requests;
-};
+	
+		const otherUserIds = Array.from(userMap.keys());
+	
+		// 3. Fetch user info (include profile_picture and user_name)
+		const users = await db('users')
+			.select('id', 'first_name as firstName', 'last_name as lastName', 'user_name')
+			.whereIn('id', otherUserIds);
+	
+		const userMapInfo = new Map(users.map((u) => [u.id, u]));
+	
+		// 4. Format response
+		const conversations = Array.from(userMap.entries()).map(([otherUserId, lastMsg]) => ({
+			id: `${userId}_${otherUserId}`,
+			participants: [userMapInfo.get(otherUserId)],
+			lastMessage: lastMsg.content || '', // could also append media_type
+			timestamp: lastMsg.sent_at,
+			profilePicture: userMapInfo.get(otherUserId)?.profile_picture || null,
+			userName: userMapInfo.get(otherUserId)?.user_name || null,
+		}));
+	
+		return conversations;
+	};

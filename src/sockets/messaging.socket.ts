@@ -54,97 +54,69 @@ export const setupMessagingSocket = (io: Server) => {
 		console.log('🔌 New WebSocket connection:', socket.id);
 		console.log('User connected:', userId);
 
-		socket.on('send_text', async ({ receiverId, content }: MessagePayload) => {
-			try {
-				if (!receiverId || !content) return;
-				if (await isUserBlocked(userId, receiverId)) return;
-				const canSend = await canSendMessageToday(userId);
-					if (!canSend) {
-						throw new Error(
-							'Daily message limit reached. Upgrade to Premium to send unlimited messages.',
-						);
-					}
-				const message = await createTextMessage(userId, receiverId, content);
+		 // Send text message
+		 socket.on('send_text', async ({ receiverId, content }: MessagePayload) => {
+            try {
+                if (!receiverId || !content) return;
+                if (await isUserBlocked(userId, receiverId)) return;
 
-				// Emit to the receiver
-				io.to(receiverId).emit('receive_message', message);
-				// Emit to the sender as well
-				io.to(userId).emit('receive_message', message);
-			} catch (error) {
-				console.error('Error in send_text:', error);
-			}
-		});
+                const canSend = await canSendMessageToday(userId);
+                if (!canSend) {
+                    socket.emit('error', {
+                        type: 'send_text',
+                        message: 'Daily message limit reached. Upgrade to Premium to send unlimited messages.',
+                    });
+                    return;
+				}
+				const message = await createTextMessage(userId, receiverId, content);
+                io.to(receiverId).emit('receive_message', message);
+                io.to(userId).emit('receive_message', message);
+            } catch (error) {
+                console.error('Error in send_text:', error);
+                socket.emit('error', { type: 'send_text', message: 'Failed to send text message.' });
+            }
+        });
 
 		socket.on('send_media', async ({ receiverId, file }: MessagePayload) => {
-			try {
-				if (!receiverId || !file) return;
-				if (await isUserBlocked(userId, receiverId)) return;
+            try {
+                if (!receiverId || !file) return;
+                if (await isUserBlocked(userId, receiverId)) return;
 
-				const message = await createMediaMessage(userId, receiverId, file);
-				// Emit to both receiver and sender
-				io.to(receiverId).emit('receive_message', message);
-				io.to(userId).emit('receive_message', message);
-			} catch (error) {
-				console.error('Error in send_media:', error);
-			}
+                const message = await createMediaMessage(userId, receiverId, file);
+                io.to(receiverId).emit('receive_message', message);
+                io.to(userId).emit('receive_message', message);
+            } catch (error) {
+                console.error('Error in send_media:', error);
+                socket.emit('error', { type: 'send_media', message: 'Failed to send media message.' });
+            }
 		});
+		socket.on('accept_request', async ({ senderId }: { senderId: string }) => {
+            try {
+                if (!senderId) return;
 
-		socket.on('send_message_request', async ({ receiverId, content }: MessagePayload) => {
-			try {
-				if (!receiverId || !content) return;
-				if (await isUserBlocked(userId, receiverId)) return;
-
-				const [message] = await db('messages')
-					.insert({
-						id: uuidv4(),
-						sender_id: userId,
-						receiver_id: receiverId,
-						content,
-						status: 'pending',
-					})
-					.returning(['id', 'sender_id', 'receiver_id', 'content', 'sent_at', 'status']);
-
-				io.to(receiverId).emit('receive_message_request', message);
-			} catch (error) {
-				console.error('Error in send_message_request:', error);
-			}
+                const requests = await acceptthisRequest(userId, senderId);
+                io.to(senderId).emit('request_accepted', { by: userId });
+                socket.emit('accept_success', { requests });
+            } catch (error) {
+                console.error('Error in accept_request:', error);
+                socket.emit('error', { type: 'accept_request', message: 'Failed to accept request.' });
+            }
 		});
+		
+		 // Decline message request
+		 socket.on('decline_request', async ({ senderId }: { senderId: string }) => {
+            try {
+                if (!senderId) return;
 
-		socket.on('accept_message_request', async ({ requestId }: { requestId: string }) => {
-			try {
-				if (!requestId) return;
-
-				const receiverId = socket.data.userId;
-
-				const request = await db('messages')
-					.where({ id: requestId, receiver_id: receiverId, status: 'pending' })
-					.first();
-
-				if (!request) {
-					socket.emit('error', { message: 'Request not found or not authorized.' });
-					return;
-				}
-
-				await db('messages').where({ id: requestId }).update({
-					status: 'sent',
-				});
-
-				io.to(request.sender_id).emit('message_request_accepted', {
-					requestId,
-					senderId: request.sender_id,
-					receiverId: request.receiver_id,
-				});
-
-				socket.emit('accept_success', {
-					message: 'Message request accepted successfully.',
-					requestId,
-				});
-			} catch (error) {
-				console.error('Error in accept_message_request:', error);
-				socket.emit('error', { message: 'Failed to accept message request.' });
-			}
-		});
-
+                const requests = await declinehisRequest(userId, senderId);
+                io.to(senderId).emit('request_declined', { by: userId });
+                socket.emit('decline_success', { requests });
+            } catch (error) {
+                console.error('Error in decline_request:', error);
+                socket.emit('error', { type: 'decline_request', message: 'Failed to decline request.' });
+            }
+		 });
+		
 		socket.on('typing', ({ receiverId }: { receiverId: string }) => {
 			if (receiverId) {
 				setUserTyping(userId, receiverId);
@@ -165,6 +137,7 @@ export const setupMessagingSocket = (io: Server) => {
 				io.to(otherUserId).emit('conversation_read', { by: userId });
 			} catch (error) {
 				console.error('Error in mark_as_read:', error);
+				socket.emit('error', { type: 'mark_as_read', message: 'Failed to mark conversation as read.' });
 			}
 		});
 
@@ -175,57 +148,63 @@ export const setupMessagingSocket = (io: Server) => {
 				io.to(otherUserId).emit('conversation_unread', { by: userId });
 			} catch (error) {
 				console.error('Error in mark_as_unread:', error);
+				socket.emit('error', { type: 'mark_as_unread', message: 'Failed to mark conversation as unread.' });
 			}
 		});
 
 		socket.on('get_conversation', async ({ otherUserId }: { otherUserId: string }) => {
-			try {
-				if (!otherUserId) return;
-				const messages = await getConversationBetweenUsers(userId, otherUserId);
-				socket.emit('conversation_history', messages);
-			} catch (error) {
-				console.error('Error in get_conversation:', error);
-			}
-		});
+            try {
+                if (!otherUserId) return;
+
+                const messages = await getConversationBetweenUsers(userId, otherUserId);
+                socket.emit('conversation_history', messages);
+            } catch (error) {
+                console.error('Error in get_conversation:', error);
+                socket.emit('error', { type: 'get_conversation', message: 'Failed to fetch conversation history.' });
+            }
+        });
 
 		socket.on('get_all_conversations', async () => {
-			try {
-				const conversations = await getAllConversationsForUser(userId);
-				socket.emit('all_conversations', conversations);
-			} catch (error) {
-				console.error('Error in get_all_conversations:', error);
-			}
-		});
+            try {
+                const conversations = await getAllConversationsForUser(userId);
+                socket.emit('all_conversations', conversations);
+            } catch (error) {
+                console.error('Error in get_all_conversations:', error);
+                socket.emit('error', { type: 'get_all_conversations', message: 'Failed to fetch all conversations.' });
+            }
+        });
 
 		socket.on('get_unseen_count', async () => {
-			try {
-				const count = await getUnreadMessageCount(userId);
-				socket.emit('unseen_count', count);
-			} catch (error) {
-				console.error('Error in get_unseen_count:', error);
-			}
-		});
+            try {
+                const count = await getUnreadMessageCount(userId);
+                socket.emit('unseen_count', count);
+            } catch (error) {
+                console.error('Error in get_unseen_count:', error);
+                socket.emit('error', { type: 'get_unseen_count', message: 'Failed to fetch unseen message count.' });
+            }
+        });
 
 		socket.on('get_read_status', async ({ userId2 }: { userId2: string }) => {
-			try {
-				if (!userId2) return;
-				const status = await getLastMessageReadStatus(userId, userId2);
-				socket.emit('read_status', status);
-			} catch (error) {
-				console.error('Error in get_read_status:', error);
-			}
-		});
+            try {
+                if (!userId2) return;
 
-		socket.on('get_message_requests', async () => {
-			try {
-				const requests = await getAllRequests(userId);
-				socket.emit('message_requests', requests);
-			} catch (error) {
-				socket.emit('error', {
-					type: 'message_requests',
-					message: 'Failed to fetch requests',
-				});
-			}
-		});
+                const status = await getLastMessageReadStatus(userId, userId2);
+                socket.emit('read_status', status);
+            } catch (error) {
+                console.error('Error in get_read_status:', error);
+                socket.emit('error', { type: 'get_read_status', message: 'Failed to fetch read status.' });
+            }
+        });
+
+		 // Get message requests
+		 socket.on('get_message_requests', async () => {
+            try {
+                const requests = await getAllRequests(userId);
+                socket.emit('message_requests', requests);
+            } catch (error) {
+                console.error('Error in get_message_requests:', error);
+                socket.emit('error', { type: 'get_message_requests', message: 'Failed to fetch message requests.' });
+            }
+        });
 	});
 };
