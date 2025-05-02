@@ -15,7 +15,7 @@ import {
 	getLastMessageReadStatus,
 	getAllRequests,
 	acceptthisRequest,
-	declinehisRequest,
+	declinethisRequest,
 } from '../services/messaging.service';
 import { isUserBlocked } from '../models/block.model';
 import { isUserTypingTo, setUserTyping } from '../utils/typingStatus';
@@ -120,7 +120,7 @@ export const setupMessagingSocket = (io: Server) => {
             try {
                 if (!senderId) return;
 
-                const requests = await declinehisRequest(userId, senderId);
+                const requests = await declinethisRequest(userId, senderId);
                 io.to(senderId).emit('request_declined', { by: userId });
                 socket.emit('decline_success', { requests });
             } catch (error) {

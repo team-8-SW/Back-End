@@ -73,16 +73,16 @@ export const acceptthisRequest = async (userId: string, senderId: string) => {
 	return requests;
 };
 //rejectRequest -noor
-export const declinehisRequest = async (userId: string, senderId: string) => {
-	const requests = await db('messages')
-		.where({ sender_id: senderId, receiver_id: userId })
-		.update({ is_request: true })
-		.returning(['id', 'content', 'sent_at', 'status']);
-	if (!requests || requests.length === 0) {
-		throw new Error('No messages found or not authorized to decline.');
-	}
+export const declinethisRequest = async (userId: string, senderId: string) => {
+    const deletedRequests = await db('messages')
+        .where({ sender_id: senderId, receiver_id: userId })
+        .del(); // Deletes the matching rows
 
-	return requests;
+    if (!deletedRequests) {
+        throw new Error('No messages found or not authorized to decline.');
+    }
+
+    return { success: true, message: 'Message requests successfully declined.' };
 };
 /* ======================= Send media messages to connections =============================*/
 export const createMediaMessage = async (
