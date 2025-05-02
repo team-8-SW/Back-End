@@ -43,8 +43,8 @@ router.get('/verify-email', authcontroller.verifyEmail);
 router.post('/resend-confirmation', authcontroller.resendVerificationEmail);
 
 router.put('/:id/username', authcontroller.updateUserName);
-
-router.patch('/updateemail', newAuthMiddleware, authcontroller.updateEmail);
+router.put('/:id/email', authcontroller.updateEmail1); //for cross shaghala
+router.patch('/updateemail', newAuthMiddleware, authcontroller.updateEmail2); //for front
 
 router.delete('/:id', authcontroller.deleteAccount);
 // POST /api/auth/reset-password

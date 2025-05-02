@@ -242,8 +242,25 @@ export const updateUserName = async (req: Request, res: Response) => {
 		res.status(500).json({ message: 'Internal Server Error' });
 	}
 };
+export const updateEmail1 = async (req: Request, res: Response) => {
+	try {
+		const { id } = req.params;
+		const { email } = req.body;
 
-export const updateEmail = async (req: Request, res: Response) => {
+		const user = await userModel.getUserById(id);
+		if (!user) return res.status(404).json({ message: 'User not found' });
+
+		const updateUser = await userModel.updateEmail(id, email);
+		if (!updateUser || updateUser.length === 0)
+			return res.status(400).json({ message: 'Failed to update email' });
+		res.status(200).json({ message: 'Email updated successfully', user: updateUser[0] });
+	} catch (error) {
+		console.error('Error in updating email', error);
+		res.status(500).json({ message: 'Internal Server Error' });
+	}
+};
+
+export const updateEmail2 = async (req: Request, res: Response) => {
 	try {
 		const user_id = (req as any).user?.user_id;
 		const { email } = req.body;
