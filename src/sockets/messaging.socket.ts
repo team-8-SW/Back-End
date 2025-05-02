@@ -61,7 +61,6 @@ export const setupMessagingSocket = (io: Server) => {
             try {
                 if (!receiverId || !content) return;
                 if (await isUserBlocked(userId, receiverId)) return;
-
                 // const canSend = await canSendMessageToday(userId);
                 // if (!canSend) {
                 //     socket.emit('error', {
@@ -79,18 +78,29 @@ export const setupMessagingSocket = (io: Server) => {
             }
         });
 
-		socket.on('send_media', async ({ receiverId, file }: MessagePayload) => {
-            try {
-                if (!receiverId || !file) return;
-                if (await isUserBlocked(userId, receiverId)) return;
-
-                const message = await createMediaMessage(userId, receiverId, file);
-                io.to(receiverId).emit('receive_message', message);
-                io.to(userId).emit('receive_message', message);
-            } catch (error) {
-                console.error('Error in send_media:', error);
-                socket.emit('error', { type: 'send_media', message: 'Failed to send media message.' });
-            }
+		socket.on('send_media', async ({ senderId, receiverId, file }, callback) => {
+			try {
+				if (!senderId || !receiverId || !file) {
+					return callback({ error: 'Invalid data. Missing senderId, receiverId, or file.' });
+				}
+		
+				const message = await createMediaMessage(senderId, receiverId, file);
+		
+				// Send acknowledgment back to the client
+				callback({
+					id: message.id,
+					timestamp: message.timestamp,
+					media_url: message.media_url,
+					media_type: message.media_type,
+				});
+		
+				// Emit the message to both sender and receiver
+				io.to(receiverId).emit('receive_message', message);
+				io.to(senderId).emit('receive_message', message);
+			} catch (error) {
+				console.error('Error in send_media:', error);
+				callback({ error: 'Failed to send media message.' });
+			}
 		});
 		socket.on('accept_message_request', async ({ senderId }: { senderId: string }) => {
             try {

@@ -286,8 +286,8 @@ export const getLastMessageReadStatus = async (userId1: string, userId2: string)
 export const getAllRequests = async (userId: string) => {
 		// 1. Get all messages where user is sender or receiver
 		const rawMessages = await db('messages')
-			.where('sender_id', userId)
-			.orWhere('receiver_id', userId)
+			//.where('sender_id', userId)
+			.where('receiver_id', userId)
 			.andWhere('is_request', true)
 			.select('id', 'sender_id', 'receiver_id', 'content', 'media_url', 'media_type', 'sent_at');
 	
