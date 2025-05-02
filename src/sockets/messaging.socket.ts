@@ -79,12 +79,7 @@ export const setupMessagingSocket = (io: Server) => {
 			try {
 				if (!receiverId || !file) return;
 				if (await isUserBlocked(userId, receiverId)) return;
-				const canSend = await canSendMessageToday(userId);
-				if (!canSend) {
-					throw new Error(
-						'Daily message limit reached. Upgrade to Premium to send unlimited messages.',
-					);
-				}
+
 				const message = await createMediaMessage(userId, receiverId, file);
 				// Emit to both receiver and sender
 				io.to(receiverId).emit('receive_message', message);

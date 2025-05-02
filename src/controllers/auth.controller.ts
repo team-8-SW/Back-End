@@ -245,13 +245,13 @@ export const updateUserName = async (req: Request, res: Response) => {
 
 export const updateEmail = async (req: Request, res: Response) => {
 	try {
-		const { id } = req.params;
+		const user_id = (req as any).user?.user_id;
 		const { email } = req.body;
 
-		const user = await userModel.getUserById(id);
+		const user = await userModel.getUserById(user_id);
 		if (!user) return res.status(404).json({ message: 'User not found' });
 
-		const updateUser = await userModel.updateEmail(id, email);
+		const updateUser = await userModel.updateEmail(user_id, email);
 		if (!updateUser || updateUser.length === 0)
 			return res.status(400).json({ message: 'Failed to update email' });
 
