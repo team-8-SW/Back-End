@@ -62,14 +62,14 @@ export const setupMessagingSocket = (io: Server) => {
                 if (!receiverId || !content) return;
                 if (await isUserBlocked(userId, receiverId)) return;
 
-                const canSend = await canSendMessageToday(userId);
-                if (!canSend) {
-                    socket.emit('error', {
-                        type: 'send_text',
-                        message: 'Daily message limit reached. Upgrade to Premium to send unlimited messages.',
-                    });
-                    return;
-				}
+                // const canSend = await canSendMessageToday(userId);
+                // if (!canSend) {
+                //     socket.emit('error', {
+                //         type: 'send_text',
+                //         message: 'Daily message limit reached. Upgrade to Premium to send unlimited messages.',
+                //     });
+                //     return;
+				// }s
 				const message = await createTextMessage(userId, receiverId, content);
                 io.to(receiverId).emit('receive_message', message);
                 io.to(userId).emit('receive_message', message);
@@ -92,13 +92,13 @@ export const setupMessagingSocket = (io: Server) => {
                 socket.emit('error', { type: 'send_media', message: 'Failed to send media message.' });
             }
 		});
-		socket.on('accept_request', async ({ senderId }: { senderId: string }) => {
+		socket.on('accept_message_request', async ({ senderId }: { senderId: string }) => {
             try {
                 if (!senderId) return;
 
                 const requests = await acceptthisRequest(userId, senderId);
                 io.to(senderId).emit('request_accepted', { by: userId });
-                socket.emit('accept_success', { requests });
+                socket.emit('request_accepted', { requests });
             } catch (error) {
                 console.error('Error in accept_request:', error);
                 socket.emit('error', { type: 'accept_request', message: 'Failed to accept request.' });
