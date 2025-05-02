@@ -2,24 +2,24 @@ import { knexInstance as db } from '../config/db';
 
 export const getReportsFromDB = async () => {
 	const postReports = await db('reported_posts')
-    .join('users', 'reported_posts.user_id', 'users.id') // Join with the users table
-    .join('posts', 'reported_posts.post_id', 'posts.id') // Join with the posts table
-    .select(
-        'reported_posts.id as reportId',
-        'reported_posts.post_id as contentId',
-        'reported_posts.user_id as reportedBy',
-        'users.first_name as firstName', // Fetch the first name of the user
-        'users.last_name as lastName', // Fetch the last name of the user
-        'posts.content as postContent', // Fetch the content of the post
-        'posts.created_at as postCreatedAt' // Fetch the creation timestamp of the post
-    )
-    .then((rows) =>
-        rows.map((row) => ({
-            ...row,
-            contentType: 'post',
-            status: 'pending',
-        })),
-    );
+		.join('users', 'reported_posts.user_id', 'users.id') // Join with the users table
+		.join('posts', 'reported_posts.post_id', 'posts.id') // Join with the posts table
+		.select(
+			'reported_posts.id as reportId',
+			'reported_posts.post_id as contentId',
+			'reported_posts.user_id as reportedBy',
+			'users.first_name as firstName', // Fetch the first name of the user
+			'users.last_name as lastName', // Fetch the last name of the user
+			'posts.content as postContent', // Fetch the content of the post
+			'posts.created_at as postCreatedAt', // Fetch the creation timestamp of the post
+		)
+		.then((rows) =>
+			rows.map((row) => ({
+				...row,
+				contentType: 'post',
+				status: 'pending',
+			})),
+		);
 
 	const commentReports = await db('reported_comments')
 		.select(

@@ -225,28 +225,28 @@ export const viewPostEngagement = async (req: Request, res: Response) => {
 };
 //getcomments
 export const getcomments = async (req: Request, res: Response) => {
-    try {
-        const user_id = (req as any).user?.user_id; // Extract user_id from authenticated user
-        if (!user_id) {
-            return res.status(400).json({ message: 'User ID is required' });
-        }
+	try {
+		const user_id = (req as any).user?.user_id; // Extract user_id from authenticated user
+		if (!user_id) {
+			return res.status(400).json({ message: 'User ID is required' });
+		}
 
-        const { post_id } = req.params; // Extract post_id from URL parameters
+		const { post_id } = req.params; // Extract post_id from URL parameters
 
-        // Validate required fields
-        if (!post_id) {
-            return res.status(400).json({ message: 'post_id is required' });
-        }
+		// Validate required fields
+		if (!post_id) {
+			return res.status(400).json({ message: 'post_id is required' });
+		}
 
-        const comments = await postService.getallcomments({
-            user_id,
-            post_id,
-        });
-        res.status(200).json(comments);
-    } catch (error) {
-        console.error('Error viewing post comments:', error);
-        res.status(500).json({ message: 'Failed to view post comments' });
-    }
+		const comments = await postService.getallcomments({
+			user_id,
+			post_id,
+		});
+		res.status(200).json(comments);
+	} catch (error) {
+		console.error('Error viewing post comments:', error);
+		res.status(500).json({ message: 'Failed to view post comments' });
+	}
 };
 export const getallsavedposts = async (req: Request, res: Response) => {
 	try {

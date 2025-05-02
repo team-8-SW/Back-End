@@ -365,6 +365,13 @@ export const getRepostsCountByUpdateId = async (updateId: string): Promise<numbe
 	return Number(result?.count || 0);
 };
 
+export const checkLiked = async (updateId: string, userId: string): Promise<boolean> => {
+	const like = await knexInstance('company_update_impressions')
+		.where({ update_id: updateId, user_id: userId })
+		.first();
+	return !!like;
+};
+
 export const updateCoverPhoto = async (companyId: string, coverPhotoURL: string) => {
 	const rowsUpdated = await knexInstance('company_pages')
 		.where({ id: companyId })

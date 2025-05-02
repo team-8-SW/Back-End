@@ -44,6 +44,7 @@ router.post('/:update_id/impressions', newAuthMiddleware, companyController.addI
 router.post('/:update_id/reactions', newAuthMiddleware, companyController.addReaction); // Add reaction
 router.post('/:update_id/comments', newAuthMiddleware, companyController.addComment); // Add comment
 router.post('/:update_id/reposts', newAuthMiddleware, companyController.addRepost); // Add repost
+router.get('/:update_id/check', newAuthMiddleware, companyController.checkLike);
 router.get('/:update_id/comment-count', companyController.getCommentCount);
 router.get('/:update_id/repost-count', companyController.getRepostCount);
 router.post(

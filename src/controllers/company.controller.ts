@@ -528,7 +528,7 @@ export const getCommentCount = async (req: Request, res: Response) => {
 	try {
 		// eslint-disable-next-line @typescript-eslint/naming-convention
 		const { update_id } = req.params;
-		const userId = (req as any).user?.user_id;
+		// const userId = (req as any).user?.user_id;
 		// if (!userId) {
 		// 	return res.status(401).json({ message: 'Unauthorized' });
 		// }
@@ -549,7 +549,7 @@ export const getRepostCount = async (req: Request, res: Response) => {
 	try {
 		// eslint-disable-next-line @typescript-eslint/naming-convention
 		const { update_id } = req.params;
-		const userId = (req as any).user?.user_id;
+		// const userId = (req as any).user?.user_id;
 		// if (!userId) {
 		// 	return res.status(401).json({ message: 'Unauthorized' });
 		// }
@@ -560,6 +560,21 @@ export const getRepostCount = async (req: Request, res: Response) => {
 
 		const count = await companyService.getRepostsCountByUpdateId(update_id);
 		res.json({ update_id, repostCount: count });
+	} catch (err) {
+		console.error('Error fetching repost count:', err);
+		res.status(500).json({ message: 'Internal server error' });
+	}
+};
+
+export const checkLike = async (req: Request, res: Response) => {
+	try {
+		// eslint-disable-next-line @typescript-eslint/naming-convention
+		const { update_id } = req.params;
+		// eslint-disable-next-line @typescript-eslint/naming-convention
+		const user_id = (req as any).user?.user_id;
+
+		const liked = await companyService.checkLiked(update_id, user_id);
+		res.json({ liked });
 	} catch (err) {
 		console.error('Error fetching repost count:', err);
 		res.status(500).json({ message: 'Internal server error' });

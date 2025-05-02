@@ -78,8 +78,8 @@ export const getOverviewStats = async (range: string) => {
 
 	return {
 		//newUsers: parseInt(String(newUsers.count|| '0'), 10),
-		newJobListings: parseInt(String(newJobs.count|| '0'), 10),
-		newPosts: parseInt(String(newPosts.count|| '0'), 10),
+		newJobListings: parseInt(String(newJobs.count || '0'), 10),
+		newPosts: parseInt(String(newPosts.count || '0'), 10),
 	};
 };
 export const getMostReportedContent = async () => {

@@ -533,10 +533,8 @@ export const getallsaved = async (user_id: string): Promise<posts[]> => {
 			throw new Error('User ID is required');
 		}
 
-		const posts = await knexInstance('saved_posts')
-			.where({ user_id })
-			.select('*')
-	
+		const posts = await knexInstance('saved_posts').where({ user_id }).select('*');
+
 		return posts;
 	} catch (error) {
 		console.error(`Error fetching saved posts for user ${user_id}:`, error);
@@ -753,7 +751,9 @@ export const unsave = async (unsave_post: { post_id: string; user_id: string }):
 		// Ensure the post is saved
 		//DELETE FROM likes
 		// WHERE post_id = '<post_id>' AND user_id = '<user_id>';
-		const savedpostExists = await knexInstance('saved_posts').where({ user_id, post_id }).first();
+		const savedpostExists = await knexInstance('saved_posts')
+			.where({ user_id, post_id })
+			.first();
 		if (!savedpostExists) {
 			throw new Error('post not saved yet');
 		}
