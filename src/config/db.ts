@@ -5,29 +5,26 @@ import knexConfig from '../../knexfile';
 
 dotenv.config();
 
-// Ensure required environment variables are set
-if (
-	!process.env.DATABASE_USER ||
-	!process.env.DATABASE_HOST ||
-	!process.env.DATABASE_NAME ||
-	!process.env.DATABASE_PASSWORD
-) {
-	console.error('❌ Missing required database environment variables');
+if (!process.env.DATABASE_URL) {
+	console.error('❌ DATABASE_URL is not set in .env');
 	process.exit(1);
 }
 
-// Create a PostgreSQL Pool instance
+// PostgreSQL connection using pg
 export const pool = new Pool({
-	user: process.env.DATABASE_USER,
-	host: process.env.DATABASE_HOST,
-	database: process.env.DATABASE_NAME,
-	password: process.env.DATABASE_PASSWORD,
-	port: parseInt(process.env.DATABASE_PORT || '5432', 10),
+	connectionString: process.env.DATABASE_URL,
+	ssl: {
+		rejectUnauthorized: false, // required for Railway
+	},
 });
 
-// Determine the environment and load the corresponding Knex configuration
+// Knex setup
 const environment = process.env.NODE_ENV || 'development';
-const configOptions = knexConfig[environment];
 
-// Create a Knex instance
+// Inject DATABASE_URL into knex config dynamically
+const configOptions = {
+	...knexConfig[environment],
+	connection: process.env.DATABASE_URL,
+};
+
 export const knexInstance = knex(configOptions);

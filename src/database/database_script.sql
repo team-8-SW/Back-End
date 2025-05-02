@@ -119,7 +119,7 @@ CREATE TABLE company_pages (
     website VARCHAR(255),
     size VARCHAR(20) NOT NULL CHECK (size IN ('0-1 employees', '2-10 employees', '11-50 employees', '51-200 employees', '201-500 employees', '501-1000 employees', '1001-5000 employees', '5001-10000 employees', '10000+ employees')),
     location VARCHAR(100),
-    admin_user_id UUID REFERENCES users(id) ON DELETE CASCADE
+    admin_user_id UUID REFERENCES users(id) ON DELETE CASCADE,
     created_at TIMESTAMP NOT NULL DEFAULT NOW(),
     about TEXT,
     cover_photo_url VARCHAR(255),
@@ -213,7 +213,7 @@ CREATE TABLE job_listings (
     company_id UUID NOT NULL REFERENCES company_pages(id) ON DELETE CASCADE,
     company_name VARCHAR(255) NOT NULL,
     title VARCHAR(255) NOT NULL,
-    status VARCHAR(20) DEFAULT 'Pending';
+    status VARCHAR(20) DEFAULT 'Pending',
     description TEXT NOT NULL,
     salary VARCHAR(255),
     industry VARCHAR(255),
