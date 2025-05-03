@@ -662,6 +662,7 @@ export const getUserProfile = async (userId: string) => {
 			'users.last_name as lastName',
 			'users.is_premium',
 			'users.is_active',
+			'users.is_admin',
 		)
 		.where('user_profiles.user_id', userId)
 		.first();
