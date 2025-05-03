@@ -630,6 +630,11 @@ export const searchpost = async (share: { keyword: string }): Promise<any> => {
 		throw new Error('Failed to search in posts');
 	}
 };
+export const searchUsers = async (query: string) => {
+	const results = await knexInstance('posts').where('content', 'like', `%${query}%`); // Search for the keyword in the 'content' column
+		return results;
+};
+
 
 export const editpost = async (post: {
 	post_id: string;

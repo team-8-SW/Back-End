@@ -314,18 +314,19 @@ export const deletePost = async (req: Request, res: Response) => {
 //searchpost
 export const searchPost = async (req: Request, res: Response) => {
 	try {
-		const { keyword } = req.body;
-		// Validate required fields
-		if (!keyword) {
-			return res.status(400).json({ message: 'keyword is required' });
+		const { query } = req.query;
+		if (!query) {
+			return res.status(400).json({ message: 'At least one keyword is required' });
 		}
-		const result = await postService.searchpost({
-			keyword,
-		});
-		res.status(201).json(result); // Return the created like
+		const posts = await postService.searchpost({ keyword: query as string });
+
+		if (posts.length === 0) {
+			return res.status(200).json({ message: 'No posts found', posts: [] });
+		}
+		res.status(201).json({ message: 'posts retrieved successfully', posts });
 	} catch (error) {
-		console.error('Error searching:', error);
-		res.status(500).json({ message: 'Failed to search posts' });
+		const errorMessage = error instanceof Error ? error.message : JSON.stringify(error);
+		res.status(500).json({ error: 'Internal server error', details: errorMessage });
 	}
 };
 //editpost
