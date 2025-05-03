@@ -90,6 +90,7 @@ export const createMediaMessage = async (
 	receiverId: string,
 	file: Express.Multer.File,
 ) => {
+	try{
 	let resourceType: 'image' | 'video' | 'auto' = 'image';
 	if (file.mimetype.startsWith('video')) {
 		resourceType = 'video';
@@ -120,9 +121,12 @@ export const createMediaMessage = async (
 					type: 'upload',
 				},
 				(error, result) => {
-					if (error) return reject(error);
+					if (error) {
+						console.error('Cloudinary upload error:', error);
+						return reject(error);
+					}
 					resolve(result);
-				},
+				}
 			);
 			stream.end(file.buffer);
 		});
@@ -141,6 +145,11 @@ export const createMediaMessage = async (
 		})
 		.returning(['id', 'content', 'sent_at', 'status']);
 	return message;
+} catch (error) {
+	console.error('Error creating media message:', error);
+	throw new Error('Failed to create media message.');
+}
+
 };
 
 /* ======================= Get Conversation History =============================*/

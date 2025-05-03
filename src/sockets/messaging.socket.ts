@@ -33,7 +33,13 @@ interface MessagePayload {
 	content?: string;
 	file?: Express.Multer.File;
 }
-
+interface SendMediaPayload {
+	receiverId: string;
+	media: {
+	  type: 'image' | 'video' | 'audio';
+	  data: string; // base64
+	};
+  }
 export const setupMessagingSocket = (io: Server) => {
 	io.use((socket, next) => {
 		const token = socket.handshake.auth?.token;
@@ -76,32 +82,71 @@ export const setupMessagingSocket = (io: Server) => {
                 console.error('Error in send_text:', error);
                 socket.emit('error', { type: 'send_text', message: 'Failed to send text message.' });
             }
-        });
-
-		socket.on('send_media', async ({ senderId, receiverId, file }, callback) => {
+		 });
+		
+		 socket.on('send_media', async ({ receiverId, file, tempId, mimetype }, callback) => {
 			try {
-				if (!senderId || !receiverId || !file) {
-					return callback({ error: 'Invalid data. Missing senderId, receiverId, or file.' });
-				}
+				console.log('send_media payload:', { receiverId, file, tempId });
+				if (!receiverId || !file || !tempId) {
+				   return callback({ error: 'Invalid data. Missing receiverId, file, or tempId.' });
+			   }
+	   
+			   if (await isUserBlocked(userId, receiverId)) {
+				   return callback({ error: 'You are blocked by this user.' });
+			   }
+	   
+			   // Convert the file back to a buffer
+			   const fileBuffer = Buffer.from(file, 'base64');
+				console.log('File buffer created:', fileBuffer);
+				
+			   // Create the media message
+			   const [message] = await createMediaMessage(userId, receiverId, {
+				buffer: fileBuffer,
+				mimetype: mimetype || 'application/octet-stream', // ← Use provided MIME type
+			} as Express.Multer.File);
+	   
+			   // Send acknowledgment back to the client, including the tempId
+			   callback({
+				   tempId, // Echo the tempId back
+				   id: message.id,
+				   timestamp: message.sent_at,
+				   media_url: message.media_url,
+				   media_type: message.media_type,
+			   });
+	   
+			   // Emit the message to both sender and receiver
+			   io.to(receiverId).emit('receive_message', message);
+			   io.to(userId).emit('receive_message', message);
+		   } catch (error) {
+			   console.error('Error in send_media:', error);
+			   callback({ error: 'Failed to send media message.' });
+		   }
+	   });
+		  
+		// socket.on('send_media', async ({ senderId, receiverId, file }, callback) => {
+		// 	try {
+		// 		if (!senderId || !receiverId || !file) {
+		// 			return callback({ error: 'Invalid data. Missing senderId, receiverId, or file.' });
+		// 		}
 		
-				const message = await createMediaMessage(senderId, receiverId, file);
+		// 		const message = await createMediaMessage(senderId, receiverId, file);
 		
-				// Send acknowledgment back to the client
-				callback({
-					id: message.id,
-					timestamp: message.timestamp,
-					media_url: message.media_url,
-					media_type: message.media_type,
-				});
+		// 		// Send acknowledgment back to the client
+		// 		callback({
+		// 			id: message.id,
+		// 			timestamp: message.timestamp,
+		// 			media_url: message.media_url,
+		// 			media_type: message.media_type,
+		// 		});
 		
-				// Emit the message to both sender and receiver
-				io.to(receiverId).emit('receive_message', message);
-				io.to(senderId).emit('receive_message', message);
-			} catch (error) {
-				console.error('Error in send_media:', error);
-				callback({ error: 'Failed to send media message.' });
-			}
-		});
+		// 		// Emit the message to both sender and receiver
+		// 		io.to(receiverId).emit('receive_message', message);
+		// 		io.to(senderId).emit('receive_message', message);
+		// 	} catch (error) {
+		// 		console.error('Error in send_media:', error);
+		// 		callback({ error: 'Failed to send media message.' });
+		// 	}
+		// });
 		socket.on('accept_message_request', async ({ senderId }: { senderId: string }) => {
             try {
                 if (!senderId) return;
