@@ -453,6 +453,31 @@ export const reportpost = async (save: { post_id: string; user_id: string }): Pr
 				user_id: user_id,
 			})
 			.returning('*');
+		// Fetch the post owner to notify them
+		const postOwner = await knexInstance('posts')
+			.where({ id: post_id })
+			.select('user_id')
+			.first();
+		const postOwnername = await knexInstance('users')
+			.where({ id: postOwner.user_id })
+			.select('user_name')
+			.first();
+		const actionusername = await knexInstance('users')
+			.where({ id: user_id })
+			.select('user_name')
+			.first();
+		if (postOwner) {
+			// Emit a notification to the post owner
+			notifyUser(
+				postOwner.user_id,
+				{
+					type: 'repost',
+					content: `Your post was reposted on by user ${actionusername.user_name}`,
+					post_id,
+				},
+				user_id,
+			);
+		}
 		return reportedpost;
 	} catch (error) {
 		console.error('Error reporting post:', error);
@@ -629,10 +654,6 @@ export const searchpost = async (share: { keyword: string }): Promise<any> => {
 		console.error('Error searching:', error);
 		throw new Error('Failed to search in posts');
 	}
-};
-export const searchUsers = async (query: string) => {
-	const results = await knexInstance('posts').where('content', 'like', `%${query}%`); // Search for the keyword in the 'content' column
-		return results;
 };
 
 
