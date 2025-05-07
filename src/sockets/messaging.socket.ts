@@ -69,11 +69,11 @@ export const setupMessagingSocket = (io: Server) => {
                 if (await isUserBlocked(userId, receiverId)) return;
                 const canSend = await canSendMessageToday(userId);
                 if (!canSend) {
-                    socket.emit('error', {
+                    socket.emit('payment_error', {
                         type: 'send_text',
                         message: 'Daily message limit reached. Upgrade to Premium to send unlimited messages.',
                     });
-                    return;
+                    throw Error('error, max limit exceeded.')
 				}
 				const message = await createTextMessage(userId, receiverId, content);
                 io.to(receiverId).emit('receive_message', message);
